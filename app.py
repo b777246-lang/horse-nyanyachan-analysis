@@ -2,68 +2,71 @@ import glob
 import os
 import re
 import pandas as pd
-import streamlit as st
+iimport streamlit as st
 
-# ページの設定（ワイドレイアウト）
 st.set_page_config(
     page_title="競馬指数 総合分析Webアプリケーション", layout="wide"
+)
+
+# 📱 iPhoneでピンチイン（拡大・縮小）を使えるようにするメタタグ
+st.markdown(
+    """
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    """,
+    unsafe_allow_html=True,
 )
 
 # --- カスタムCSS（テーブルの列幅やセル背景色のスタイル） ---
 st.markdown(
     """
     <style>
-    /* 画面全体のパディングを狭めて表示領域を広げる */
+    /* ページの余白をゼロにして画面を最大限に使う */
     .main .block-container {
         max-width: 100% !important;
-        padding-left: 0.5rem;
-        padding-right: 0.5rem;
+        padding-left: 0.2rem;
+        padding-right: 0.2rem;
         padding-top: 1rem;
     }
     
-    /* 横スクロール可能なテーブルコンテナ */
+    /* 横スクロールさせず、スマホの画面幅（100%）にテーブル全体を強制的に収める */
     .table-container {
         width: 100%;
-        max-height: 70vh;
-        overflow-x: auto !important;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch;
+        overflow-x: hidden !important; /* 横スクロールを禁止して全体を縮小表示させる */
+        overflow-y: auto;
         border: 1px solid #ddd;
-        border-radius: 6px;
+        border-radius: 4px;
         margin-bottom: 20px;
         background-color: white;
     }
 
     .custom-horse-table {
-        width: max-content !important; /* 内容に合わせて幅を広げ、スクロールできるようにする */
-        min-width: 100% !important;
+        width: 100% !important; /* 画面幅いっぱいに縮めて収める */
+        table-layout: fixed;   /* 列幅を均等・強制的に固定する */
         border-collapse: collapse;
-        font-size: 12px;
+        font-size: 8px;        /* 縦持ち全体で見えるように文字を極限まで小さくする */
         background-color: white;
         color: #31333F;
     }
 
     .custom-horse-table th, .custom-horse-table td {
         border: 1px solid #e0e0e0;
-        padding: 8px 10px;
+        padding: 2px 3px;      /* パディングを最小限にして情報密度のバランスを取る */
         text-align: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
         white-space: nowrap;
     }
 
     .custom-horse-table th {
         background-color: #f0f2f6;
-        position: sticky;
-        top: 0;
-        z-index: 10;
         font-weight: 600;
+        font-size: 8px;
     }
 
-    /* 最後の列（総合評価・コース相性判定） */
+    /* 馬名や評価コメントなど、少し幅を確保したい列の調整（必要に応じて） */
     .custom-horse-table th:last-child, 
     .custom-horse-table td:last-child {
-        min-width: 250px;
-        white-space: normal !important;
-        text-align: left !important;
+        white-space: nowrap !important;
     }
     </style>
     """,
