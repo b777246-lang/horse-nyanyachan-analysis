@@ -13,39 +13,37 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    /* 画面全体のパディングを狭めて表示領域を広げる */
+    /* 全体のコンテナ幅をモバイル対応に調整 */
     .main .block-container {
         max-width: 100% !important;
-        padding-left: 0.5rem;
-        padding-right: 0.5rem;
-        padding-top: 1rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        padding-top: 2rem;
     }
     
-    /* 横スクロール可能なテーブルコンテナ */
+    /* テーブルのスクロールコンテナ（スマホでも滑らかに指でスクロールできるようにする） */
     .table-container {
-        width: 100%;
-        max-height: 70vh;
-        overflow-x: auto !important;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch;
+        max-height: 60vh; /* スマホ画面の高さの60%程度を最大に */
+        overflow-y: auto;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch; /* iPhoneでのスクロールを滑らかにする */
         border: 1px solid #ddd;
         border-radius: 6px;
         margin-bottom: 20px;
-        background-color: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
 
     .custom-horse-table {
-        width: max-content !important; /* 内容に合わせて幅を広げ、スクロールできるようにする */
-        min-width: 100% !important;
+        width: 100% !important;
         border-collapse: collapse;
-        font-size: 12px;
+        font-size: 12px; /* スマホで見やすい少しコンパクトな文字サイズ */
         background-color: white;
         color: #31333F;
     }
 
     .custom-horse-table th, .custom-horse-table td {
         border: 1px solid #e0e0e0;
-        padding: 8px 10px;
+        padding: 6px 8px; /* パディングを少し狭めて情報量を増やす */
         text-align: center;
         white-space: nowrap;
     }
@@ -58,12 +56,25 @@ st.markdown(
         font-weight: 600;
     }
 
-    /* 最後の列（総合評価・コース相性判定） */
+    /* 最後の列（総合評価・コース相性判定）の幅と折り返し */
     .custom-horse-table th:last-child, 
     .custom-horse-table td:last-child {
-        min-width: 250px;
+        min-width: 200px;
         white-space: normal !important;
         text-align: left !important;
+    }
+
+    /* 📱 iPhoneなどのスマホ画面（幅768px以下）での特別調整 */
+    @media screen and (max-width: 768px) {
+        .custom-horse-table {
+            font-size: 11px; /* スマホではさらに文字をスッキリさせる */
+        }
+        .custom-horse-table th, .custom-horse-table td {
+            padding: 5px 6px;
+        }
+        h1 {
+            font-size: 1.5rem !important; /* タイトルをスマホ用に小さく収める */
+        }
     }
     </style>
     """,
