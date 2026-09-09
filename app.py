@@ -20,7 +20,7 @@ st.markdown(
 st.markdown(
     """
     <style>
-    /* ページの余白をゼロにして画面を最大限に使う */
+    /* 全体のパディング調整 */
     .main .block-container {
         max-width: 100% !important;
         padding-left: 0.2rem;
@@ -28,11 +28,13 @@ st.markdown(
         padding-top: 1rem;
     }
     
-    /* 横スクロールさせず、スマホの画面幅（100%）にテーブル全体を強制的に収める */
+    /* 横スクロール可能なテーブルコンテナに戻す */
     .table-container {
         width: 100%;
-        overflow-x: hidden !important; /* 横スクロールを禁止して全体を縮小表示させる */
-        overflow-y: auto;
+        max-height: 75vh;
+        overflow-x: auto !important; /* 横スクロールを許可して隠れないようにする */
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
         border: 1px solid #ddd;
         border-radius: 4px;
         margin-bottom: 20px;
@@ -40,33 +42,35 @@ st.markdown(
     }
 
     .custom-horse-table {
-        width: 100% !important; /* 画面幅いっぱいに縮めて収める */
-        table-layout: fixed;   /* 列幅を均等・強制的に固定する */
+        width: max-content !important; /* 内容に合わせて幅を確保し、全列を表示する */
+        min-width: 100% !important;
         border-collapse: collapse;
-        font-size: 8px;        /* 縦持ち全体で見えるように文字を極限まで小さくする */
+        font-size: 11px; /* 潰れすぎない見やすいサイズに調整 */
         background-color: white;
         color: #31333F;
     }
 
     .custom-horse-table th, .custom-horse-table td {
         border: 1px solid #e0e0e0;
-        padding: 2px 3px;      /* パディングを最小限にして情報密度のバランスを取る */
+        padding: 6px 8px;
         text-align: center;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        white-space: nowrap; /* 各セルが勝手に折り返して崩れるのを防ぐ */
     }
 
     .custom-horse-table th {
         background-color: #f0f2f6;
+        position: sticky;
+        top: 0;
+        z-index: 10;
         font-weight: 600;
-        font-size: 8px;
     }
 
-    /* 馬名や評価コメントなど、少し幅を確保したい列の調整（必要に応じて） */
+    /* 最後の列（総合評価・コメント）の幅をしっかり確保 */
     .custom-horse-table th:last-child, 
     .custom-horse-table td:last-child {
-        white-space: nowrap !important;
+        min-width: 220px;
+        white-space: normal !important;
+        text-align: left !important;
     }
     </style>
     """,
