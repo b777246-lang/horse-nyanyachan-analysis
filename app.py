@@ -13,7 +13,7 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    /* 全体のパディング調整 */
+    /* 全体のコンテナ幅調整 */
     .main .block-container {
         max-width: 100% !important;
         padding-left: 0.5rem;
@@ -21,13 +21,11 @@ st.markdown(
         padding-top: 1rem;
     }
     
-    /* 横スクロール可能なテーブルコンテナ */
+    /* 基本のテーブルコンテナ */
     .table-container {
         width: 100%;
-        max-height: 75vh;
-        overflow-x: auto !important;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch; /* iPhoneでの滑らかなスクロール */
+        max-height: 80vh;
+        overflow-y: auto;
         border: 1px solid #ddd;
         border-radius: 6px;
         margin-bottom: 20px;
@@ -35,8 +33,7 @@ st.markdown(
     }
 
     .custom-horse-table {
-        width: max-content !important;
-        min-width: 100% !important;
+        width: 100% !important;
         border-collapse: collapse;
         font-size: 11px;
         background-color: white;
@@ -58,12 +55,29 @@ st.markdown(
         font-weight: 600;
     }
 
-    /* 最後の列（総合評価・コメント欄）の幅をしっかり確保 */
     .custom-horse-table th:last-child, 
     .custom-horse-table td:last-child {
-        min-width: 250px;
+        min-width: 200px;
         white-space: normal !important;
         text-align: left !important;
+    }
+
+    /* 🔄【重要】スマホを横向き（ランドスケープ）にしたときだけの特別設定 */
+    @media screen and (max-height: 500px) and (orientation: landscape) {
+        .table-container {
+            overflow-x: auto !important; /* 万が一入り切らない場合だけスクロールを許可 */
+        }
+        .custom-horse-table {
+            width: 100% !important;
+            font-size: 9.5px !important; /* 横向き時は文字を少し小さくして全列を収める */
+        }
+        .custom-horse-table th, .custom-horse-table td {
+            padding: 3px 4px !important; /* 余白を狭めて全列を画面内にギュッと押し込む */
+        }
+        .custom-horse-table th:last-child, 
+        .custom-horse-table td:last-child {
+            min-width: 150px !important; /* コメント欄の幅を少しスリムにする */
+        }
     }
     </style>
     """,
