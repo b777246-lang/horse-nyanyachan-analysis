@@ -2,7 +2,7 @@ import glob
 import os
 import re
 import pandas as pd
-iimport streamlit as st
+import streamlit as st
 
 st.set_page_config(
     page_title="競馬指数 総合分析Webアプリケーション", layout="wide"
