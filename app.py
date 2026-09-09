@@ -8,69 +8,62 @@ st.set_page_config(
     page_title="競馬指数 総合分析Webアプリケーション", layout="wide"
 )
 
-# 📱 iPhoneでピンチイン（拡大・縮小）を使えるようにするメタタグ
-st.markdown(
-    """
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    """,
-    unsafe_allow_html=True,
-)
 
 # --- カスタムCSS（テーブルの列幅やセル背景色のスタイル） ---
 st.markdown(
     """
     <style>
-    /* 画面の左右の余白を完全にゼロにして全幅を使う */
+    /* 全体のパディング調整 */
     .main .block-container {
         max-width: 100% !important;
-        padding-left: 0.2rem !important;
-        padding-right: 0.2rem !important;
-        padding-top: 1rem !important;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        padding-top: 1rem;
     }
     
-    /* 横スクロールを完全に禁止し、全体を画面内に収めるコンテナ */
+    /* 横スクロール可能なテーブルコンテナ */
     .table-container {
-        width: 100% !important;
-        max-height: 80vh;
-        overflow-x: hidden !important; /* 横スクロールバーを出さない */
+        width: 100%;
+        max-height: 75vh;
+        overflow-x: auto !important;
         overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch; /* iPhoneでの滑らかなスクロール */
         border: 1px solid #ddd;
-        border-radius: 4px;
+        border-radius: 6px;
         margin-bottom: 20px;
         background-color: white;
     }
 
-    /* テーブル全体を強制的にスマホの画面幅（100%）に押し込める */
     .custom-horse-table {
-        width: 100% !important;
-        table-layout: fixed !important; /* 全列の幅を強制的に均等割・固定する */
+        width: max-content !important;
+        min-width: 100% !important;
         border-collapse: collapse;
-        font-size: 7.5px !important;     /* スマホの縦持ちでも全列入るように文字を極小化 */
+        font-size: 11px;
         background-color: white;
         color: #31333F;
     }
 
     .custom-horse-table th, .custom-horse-table td {
         border: 1px solid #e0e0e0;
-        padding: 2px 1px !important;
+        padding: 6px 8px;
         text-align: center;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
+        white-space: nowrap;
     }
 
     .custom-horse-table th {
         background-color: #f0f2f6;
+        position: sticky;
+        top: 0;
+        z-index: 10;
         font-weight: 600;
-        font-size: 7.5px !important;
     }
 
-    /* 最後の列（総合評価・コメント欄）もはみ出させずに縮める */
+    /* 最後の列（総合評価・コメント欄）の幅をしっかり確保 */
     .custom-horse-table th:last-child, 
     .custom-horse-table td:last-child {
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
+        min-width: 250px;
+        white-space: normal !important;
+        text-align: left !important;
     }
     </style>
     """,
