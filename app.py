@@ -571,11 +571,12 @@ if df is not None:
 
   # --- ダウンロードボタン ---
   download_raw_df = raw_csv_df.drop(columns=["original_index", "score"])
-  download_res_df = res_df.drop(columns=["original_index", "score"])
+
+  # HTMLレポート用には、HTMLタグを含まない生データ（raw_csv_dfベース）を使用する
+  download_html_df = raw_csv_df.drop(columns=["original_index", "score"])
 
   col1, col2 = st.columns(2)
   with col1:
-    # 💡 Excelで文字化けしないよう「utf-8-sig」に変更済み
     csv_data = download_raw_df.to_csv(index=False, encoding="utf-8-sig")
     st.download_button(
         label="💾 TARGET用CSVダウンロード",
@@ -584,7 +585,7 @@ if df is not None:
         mime="text/csv",
     )
   with col2:
-    html_data = download_res_df.to_html(index=False, escape=False)
+    html_data = download_html_df.to_html(index=False, escape=True)
     html_full = f"""<!DOCTYPE html>
         <html lang="ja">
         <head>
@@ -596,9 +597,6 @@ if df is not None:
             th, td {{ border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 13px; }}
             th {{ background-color: #3498db; color: white; }}
             th:last-child, td:last-child {{ text-align: left; }}
-            .rank-1 {{ background-color: #fff2b2 !important; font-weight: bold; }}
-            .rank-2 {{ background-color: #e6f2ff !important; }}
-            .rank-3 {{ background-color: #d4edda !important; }}
         </style>
         </head>
         <body>
@@ -612,5 +610,3 @@ if df is not None:
         file_name="horse_analysis_result.html",
         mime="text/html",
     )
-else:
-  st.info("左側のサイドバーから指数CSVファイルをアップロードしてください。")
