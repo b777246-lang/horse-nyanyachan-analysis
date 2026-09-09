@@ -8,6 +8,10 @@ st.set_page_config(
     page_title="競馬指数 総合分析Webアプリケーション", layout="wide"
 )
 
+# --- セッション状態の初期化（初期配列とソート状態の保持用） ---
+if "sort_mode" not in st.session_state:
+    st.session_state.sort_mode = "初期配列"
+
 
 # --- カスタムCSS（テーブルの列幅やセル背景色のスタイル） ---
 st.markdown(
@@ -62,6 +66,18 @@ st.markdown(
         text-align: left !important;
     }
 
+    /* 順位に応じたハイライト用クラス */
+    .rank-1 {
+        background-color: #fff2b2 !important; /* 1位: 黄色系統 */
+        font-weight: bold;
+    }
+    .rank-2 {
+        background-color: #e6f2ff !important; /* 2位: 水色系統 */
+    }
+    .rank-3 {
+        background-color: #d4edda !important; /* 3位: 黄緑系統 */
+    }
+
     /* 🔄【重要】スマホを横向き（ランドスケープ）にしたときだけの特別設定 */
     @media screen and (max-height: 500px) and (orientation: landscape) {
         .table-container {
@@ -78,69 +94,6 @@ st.markdown(
         .custom-horse-table td:last-child {
             min-width: 150px !important; /* コメント欄の幅を少しスリムにする */
         }
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-st.markdown(
-    """
-    <style>
-    .main .block-container {
-        max-width: 98% !important;
-        padding-left: 2rem;
-        padding-right: 2rem;
-    }
-    
-    .table-container {
-        max-height: 550px;
-        overflow-y: auto;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        margin-bottom: 20px;
-    }
-
-    .custom-horse-table {
-        width: 100% !important;
-        border-collapse: collapse;
-        font-size: 13px;
-        background-color: white;
-        color: #31333F;
-    }
-
-    .custom-horse-table th, .custom-horse-table td {
-        border: 1px solid #e0e0e0;
-        padding: 8px 10px;
-        text-align: center;
-        white-space: nowrap;
-    }
-
-    .custom-horse-table th {
-        background-color: #f0f2f6;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        font-weight: 600;
-    }
-
-    /* 最後の列（総合評価・コース相性判定）だけ幅を広げ、テキストを折り返す */
-    .custom-horse-table th:last-child, 
-    .custom-horse-table td:last-child {
-        width: 100% !important;
-        white-space: normal !important;
-        text-align: left !important;
-    }
-
-    /* 順位に応じたハイライト用クラス */
-    .rank-1 {
-        background-color: #fff2b2 !important; /* 1位: 黄色系統 */
-        font-weight: bold;
-    }
-    .rank-2 {
-        background-color: #e6f2ff !important; /* 2位: 水色系統 */
-    }
-    .rank-3 {
-        background-color: #d4edda !important; /* 3位: 黄緑系統 */
     }
     </style>
     """,
@@ -214,6 +167,7 @@ def get_course_compatibility(
           }
   return None
 
+
 # --- サイドバー：ファイル読み込みエリア ---
 st.sidebar.header("📂 ファイル読み込み")
 
@@ -235,12 +189,10 @@ if uploaded_file is not None:
 
 # 2. アップロードされていない場合は、GitHub内にある「YYYYMMDD.csv」形式のファイルを自動検索する
 else:
-  # 8桁の数字.csv というパターンのファイルを自動で探す
   pattern = re.compile(r"^\d{8}\.csv$")
   matched_files = [f for f in os.listdir(".") if pattern.match(f)]
 
   if matched_files:
-    # 最も新しい（ファイル名が一番大きい＝日付が新しい）ものを自動選択
     default_main_csv = sorted(matched_files)[-1]
     try:
       df = pd.read_csv(default_main_csv, encoding="cp932", header=None)
@@ -258,11 +210,10 @@ else:
         "左側のサイドバーから「指数CSVファイル」をアップロードしてください。"
     )
 
-# 外部コメントの自動読み込み処理（未選択の場合の自動検出）
+# 外部コメントの自動読み込み処理
 if uploaded_ext_comment is not None:
   ext_file_to_read = uploaded_ext_comment
 else:
-  # YYYYMMDDcomment.csv というパターンのファイルを自動検索
   ext_pattern = re.compile(r"^\d{8}comment\.csv$")
   matched_ext_files = [f for f in os.listdir(".") if ext_pattern.match(f)]
   ext_file_to_read = sorted(matched_ext_files)[-1] if matched_ext_files else None
@@ -272,7 +223,13 @@ if ext_file_to_read is not None:
   try:
     df_ext = pd.read_csv(ext_file_to_read, encoding="cp932", header=None)
     for _, row in df_ext.iterrows():
-      vals = [str(v).string().strip() if hasattr(str(v), 'string') else str(v).strip() for v in row.values if pd.notna(v)]
+      vals = [
+          str(v).string().strip()
+          if hasattr(str(v), "string")
+          else str(v).strip()
+          for v in row.values
+          if pd.notna(v)
+      ]
       if len(vals) >= 6:
         h_name = vals[2]
         c_text = vals[5]
@@ -281,10 +238,14 @@ if ext_file_to_read is not None:
     if uploaded_ext_comment is not None:
       st.sidebar.success(f"外部コメント読込成功（{len(ext_comment_dict)}頭分）")
     else:
-      st.sidebar.info(f"📌 自動検出コメント読込: {os.path.basename(str(ext_file_to_read))}（{len(ext_comment_dict)}頭分）")
+      st.sidebar.info(
+          f"📌 自動検出コメント読込:"
+          f" {os.path.basename(str(ext_file_to_read))}（{len(ext_comment_dict)}頭分）"
+      )
   except Exception as e:
     pass
 
+if df is not None:
   # --- データ処理ロジック ---
   df["arms_val"] = pd.to_numeric(df.iloc[:, 7], errors="coerce").fillna(0)
   df["arms2_val"] = pd.to_numeric(df.iloc[:, 8], errors="coerce").fillna(0)
@@ -327,7 +288,7 @@ if ext_file_to_read is not None:
   export_data_list = []
   raw_data_list = []
 
-  for idx, row in df.iterrows():
+  for original_index, row in df.iterrows():
     race_raw = str(row.get(0, ""))
     cond_name = str(row.get(1, ""))
     surface = str(row.get(2, ""))
@@ -549,7 +510,6 @@ if ext_file_to_read is not None:
       ext_c = ext_comment_dict[name]
       eval_text = f"{ext_c} ▼ {eval_text}" if eval_text else ext_c
 
-    # --- 各指数の順位に応じたHTMLセル装飾（色分け）関数 ---
     def get_cell_html(val, rank):
       if rank == 1:
         return f'<td class="rank-1">{val}</td>'
@@ -560,8 +520,9 @@ if ext_file_to_read is not None:
       else:
         return f"<td>{val}</td>"
 
-    # 画面表示用のHTML埋め込みデータ
     export_data_list.append({
+        "original_index": original_index,
+        "score": score,
         "レース": race_raw,
         "条件": cond_raw,
         "枠番": wakuban,
@@ -576,8 +537,9 @@ if ext_file_to_read is not None:
         "総合評価・コース相性判定": eval_text,
     })
 
-    # CSV出力用の生データ
     raw_data_list.append({
+        "original_index": original_index,
+        "score": score,
         "レース": race_raw,
         "条件": cond_raw,
         "枠番": wakuban,
@@ -597,31 +559,75 @@ if ext_file_to_read is not None:
 
   st.success(f"ファイルを正常に読み込みました（全 {len(res_df)} 頭）")
 
-  # --- カスタムHTMLテーブルの組み立て（確実に列のズレやインデックスを防止） ---
+  # --- ソート＆初期化コントロール UI ---
   st.subheader("📊 出走馬・指数一覧分析")
+
+  c_btn1, c_btn2, c_spacer = st.columns([2, 2, 6])
+  with c_btn1:
+    if st.button("🔥 評価点数順にソート"):
+      st.session_state.sort_mode = "スコア順"
+  with c_btn2:
+    if st.button("🔄 初期配列に戻す"):
+      st.session_state.sort_mode = "初期配列"
+
+  # ソート状態の適用
+  if st.session_state.sort_mode == "スコア順":
+    # 総合評価のスコアが高い順にソート（同点の場合は元の順番を維持）
+    res_df = res_df.sort_values(
+        by=["score", "original_index"], ascending=[False, True]
+    ).reset_index(drop=True)
+    raw_csv_df = raw_csv_df.sort_values(
+        by=["score", "original_index"], ascending=[False, True]
+    ).reset_index(drop=True)
+    st.info("📌 現在の表示: 評価点数（コース相性・推奨度）の高い順に並び替えています")
+  else:
+    res_df = res_df.sort_values(by="original_index", ascending=True).reset_index(
+        drop=True
+    )
+    raw_csv_df = raw_csv_df.sort_values(
+        by="original_index", ascending=True
+    ).reset_index(drop=True)
 
 
   def render_html_table(dataframe):
     html = ['<div class="table-container"><table class="custom-horse-table">']
 
-    # ヘッダー行の作成
+    # 表示する列名（original_index と score 以外の列を描画）
+    display_columns = [
+        "レース",
+        "条件",
+        "枠番",
+        "馬番",
+        "馬名",
+        "arms",
+        "arms2",
+        "TUA",
+        "S",
+        "F",
+        "厩舎F-UP2",
+        "総合評価・コース相性判定",
+    ]
+
     html.append("<thead><tr>")
-    for col in dataframe.columns:
+    for col in display_columns:
       html.append(f"<th>{col}</th>")
     html.append("</tr></thead>")
 
-    # ボディ行の作成
     html.append("<tbody>")
     for _, row in dataframe.iterrows():
       html.append("<tr>")
-      # レース〜馬番までは通常セル
-      for i in range(5):
-        html.append(f"<td>{row.iloc[i]}</td>")
-      # 指数カラム（HTMLタグがすでに入っているためそのまま出力）
-      for i in range(5, 11):
-        html.append(str(row.iloc[i]))
-      # 総合評価カラム
-      html.append(f"<td>{row.iloc[11]}</td>")
+      html.append(f"<td>{row['レース']}</td>")
+      html.append(f"<td>{row['条件']}</td>")
+      html.append(f"<td>{row['枠番']}</td>")
+      html.append(f"<td>{row['馬番']}</td>")
+      html.append(f"<td>{row['馬名']}</td>")
+      html.append(str(row["arms"]))
+      html.append(str(row["arms2"]))
+      html.append(str(row["TUA"]))
+      html.append(str(row["S"]))
+      html.append(str(row["F"]))
+      html.append(str(row["厩舎F-UP2"]))
+      html.append(f"<td>{row['総合評価・コース相性判定']}</td>")
       html.append("</tr>")
     html.append("</tbody>")
 
@@ -632,11 +638,17 @@ if ext_file_to_read is not None:
   table_html = render_html_table(res_df)
   st.markdown(table_html, unsafe_allow_html=True)
 
+  # --- ダウンロードボタン用のDataFrameから内部管理列を削除 ---
+  download_raw_df = raw_csv_df.drop(columns=["original_index", "score"])
+  download_res_df = res_df.drop(columns=["original_index", "score"])
+
   # --- ダウンロードボタン ---
   col1, col2 = st.columns(2)
 
   with col1:
-    csv_data = raw_csv_df.to_csv(index=False, encoding="cp932", errors="ignore")
+    csv_data = download_raw_df.to_csv(
+        index=False, encoding="cp932", errors="ignore"
+    )
     st.download_button(
         label="💾 TARGET用CSVファイルでダウンロード",
         data=csv_data,
@@ -645,7 +657,7 @@ if ext_file_to_read is not None:
     )
 
   with col2:
-    html_data = res_df.to_html(index=False, escape=False)
+    html_data = download_res_df.to_html(index=False, escape=False)
     html_full = f"""<!DOCTYPE html>
         <html lang="ja">
         <head>
