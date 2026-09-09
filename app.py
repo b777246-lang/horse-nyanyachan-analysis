@@ -504,7 +504,6 @@ if df is not None:
   st.write("▼ **表示順序の切り替え**")
   col_s1, col_s2 = st.columns(2)
   with col_s1:
-    # 互換性のために use_container_width を削除しました
     if st.button("🔥 評価点数順にソート"):
       st.session_state.sort_mode = "スコア順"
   with col_s2:
@@ -576,11 +575,11 @@ if df is not None:
 
   col1, col2 = st.columns(2)
   with col1:
+    # 💡 Excelで文字化けしないよう「utf-8-sig」に変更済み
+    csv_data = download_raw_df.to_csv(index=False, encoding="utf-8-sig")
     st.download_button(
         label="💾 TARGET用CSVダウンロード",
-        data=download_raw_df.to_csv(
-            index=False, encoding="cp932", errors="ignore"
-        ),
+        data=csv_data,
         file_name="horse_analysis_result.csv",
         mime="text/csv",
     )
