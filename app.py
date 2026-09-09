@@ -10,10 +10,10 @@ st.set_page_config(
 
 # --- セッション状態の初期化（初期配列とソート状態の保持用） ---
 if "sort_mode" not in st.session_state:
-    st.session_state.sort_mode = "初期配列"
+  st.session_state.sort_mode = "初期配列"
 
 
-# --- カスタムCSS（テーブルの列幅やセル背景色のスタイル） ---
+# --- カスタムCSS（スマホ表示・テーブル・ボタンの最適化） ---
 st.markdown(
     """
     <style>
@@ -78,21 +78,31 @@ st.markdown(
         background-color: #d4edda !important; /* 3位: 黄緑系統 */
     }
 
-    /* 🔄【重要】スマホを横向き（ランドスケープ）にしたときだけの特別設定 */
+    /* 🔄 スマホ・縦画面用の表示調整 */
+    @media screen and (max-width: 768px) {
+        .custom-horse-table {
+            font-size: 10px !important;
+        }
+        .custom-horse-table th, .custom-horse-table td {
+            padding: 4px 5px !important;
+        }
+    }
+
+    /* 🔄 スマホを横向き（ランドスケープ）にしたときだけの特別設定 */
     @media screen and (max-height: 500px) and (orientation: landscape) {
         .table-container {
-            overflow-x: auto !important; /* 万が一入り切らない場合だけスクロールを許可 */
+            overflow-x: auto !important;
         }
         .custom-horse-table {
             width: 100% !important;
-            font-size: 9.5px !important; /* 横向き時は文字を少し小さくして全列を収める */
+            font-size: 9.5px !important;
         }
         .custom-horse-table th, .custom-horse-table td {
-            padding: 3px 4px !important; /* 余白を狭めて全列を画面内にギュッと押し込む */
+            padding: 3px 4px !important;
         }
         .custom-horse-table th:last-child, 
         .custom-horse-table td:last-child {
-            min-width: 150px !important; /* コメント欄の幅を少しスリムにする */
+            min-width: 150px !important;
         }
     }
     </style>
@@ -224,11 +234,7 @@ if ext_file_to_read is not None:
     df_ext = pd.read_csv(ext_file_to_read, encoding="cp932", header=None)
     for _, row in df_ext.iterrows():
       vals = [
-          str(v).string().strip()
-          if hasattr(str(v), "string")
-          else str(v).strip()
-          for v in row.values
-          if pd.notna(v)
+          str(v).strip() for v in row.values if pd.notna(v)
       ]
       if len(vals) >= 6:
         h_name = vals[2]
@@ -562,24 +568,25 @@ if df is not None:
   # --- ソート＆初期化コントロール UI ---
   st.subheader("📊 出走馬・指数一覧分析")
 
-  c_btn1, c_btn2, c_spacer = st.columns([2, 2, 6])
-  with c_btn1:
-    if st.button("🔥 評価点数順にソート"):
+  # 📱 スマホでも縦並びまたは押しやすいようにカラムをシンプルに変更
+  st.write("▼ **表示順序の切り替え**")
+  col_s1, col_s2 = st.columns(2)
+  with col_s1:
+    if st.button("🔥 評価点数順にソート", use_container_width=True):
       st.session_state.sort_mode = "スコア順"
-  with c_btn2:
-    if st.button("🔄 初期配列に戻す"):
+  with col_s2:
+    if st.button("🔄 初期配列に戻す", use_container_width=True):
       st.session_state.sort_mode = "初期配列"
 
   # ソート状態の適用
   if st.session_state.sort_mode == "スコア順":
-    # 総合評価のスコアが高い順にソート（同点の場合は元の順番を維持）
     res_df = res_df.sort_values(
         by=["score", "original_index"], ascending=[False, True]
     ).reset_index(drop=True)
     raw_csv_df = raw_csv_df.sort_values(
         by=["score", "original_index"], ascending=[False, True]
     ).reset_index(drop=True)
-    st.info("📌 現在の表示: 評価点数（コース相性・推奨度）の高い順に並び替えています")
+    st.info("📌 現在の表示: 評価点数（コース相性・推奨度）の高い順")
   else:
     res_df = res_df.sort_values(by="original_index", ascending=True).reset_index(
         drop=True
@@ -592,7 +599,6 @@ if df is not None:
   def render_html_table(dataframe):
     html = ['<div class="table-container"><table class="custom-horse-table">']
 
-    # 表示する列名（original_index と score 以外の列を描画）
     display_columns = [
         "レース",
         "条件",
@@ -650,10 +656,11 @@ if df is not None:
         index=False, encoding="cp932", errors="ignore"
     )
     st.download_button(
-        label="💾 TARGET用CSVファイルでダウンロード",
+        label="💾 TARGET用CSVダウンロード",
         data=csv_data,
         file_name="horse_analysis_result.csv",
         mime="text/csv",
+        use_container_width=True,
     )
 
   with col2:
@@ -681,10 +688,11 @@ if df is not None:
         </html>
         """
     st.download_button(
-        label="🌐 HTMLレポートとしてダウンロード",
+        label="🌐 HTMLレポートダウンロード",
         data=html_full,
         file_name="horse_analysis_result.html",
         mime="text/html",
+        use_container_width=True,
     )
 
 else:
