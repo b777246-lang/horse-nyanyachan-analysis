@@ -141,40 +141,76 @@ def get_course_compatibility(
           }
   return None
 
-
-# --- サイドバー：ファイルアップロードエリア ---
+# --- サイドバー：ファイル読み込みエリア ---
 st.sidebar.header("📂 ファイル読み込み")
 
 uploaded_file = st.sidebar.file_uploader(
-    "メイン指数CSVファイルを選択", type=["csv"]
+    "メイン指数CSVファイルを選択（上書き用）", type=["csv"]
 )
 uploaded_ext_comment = st.sidebar.file_uploader(
     "💬 外部コメントCSVを選択（任意）", type=["csv"]
 )
 
-ext_comment_dict = {}
-if uploaded_ext_comment is not None:
-  try:
-    df_ext = pd.read_csv(uploaded_ext_comment, encoding="cp932", header=None)
-    for _, row in df_ext.iterrows():
-      vals = [str(v).strip() for v in row.values if pd.notna(v)]
-      if len(vals) >= 6:
-        h_name = vals[2]
-        c_text = vals[5]
-        if h_name and c_text:
-          ext_comment_dict[h_name] = c_text
-    st.sidebar.success(
-        f"外部コメント読込成功（{len(ext_comment_dict)}頭分）"
-    )
-  except Exception as e:
-    st.sidebar.error(f"外部コメント読込エラー: {e}")
-
+# 1. ユーザーが新しくメインファイルをアップロードした場合
 if uploaded_file is not None:
   try:
     df = pd.read_csv(uploaded_file, encoding="cp932", header=None)
   except Exception:
     uploaded_file.seek(0)
     df = pd.read_csv(uploaded_file, encoding="utf-8", header=None)
+  st.sidebar.success("アップロードされたメインファイルを読み込みました")
+
+# 2. アップロードされていない場合は、GitHub内にある「YYYYMMDD.csv」形式のファイルを自動検索する
+else:
+  # 8桁の数字.csv というパターンのファイルを自動で探す
+  pattern = re.compile(r"^\d{8}\.csv$")
+  matched_files = [f for f in os.listdir(".") if pattern.match(f)]
+
+  if matched_files:
+    # 最も新しい（ファイル名が一番大きい＝日付が新しい）ものを自動選択
+    default_main_csv = sorted(matched_files)[-1]
+    try:
+      df = pd.read_csv(default_main_csv, encoding="cp932", header=None)
+      st.sidebar.info(
+          f"📌 自動検出: {default_main_csv} を読み込んでいます"
+      )
+    except Exception:
+      df = pd.read_csv(default_main_csv, encoding="utf-8", header=None)
+      st.sidebar.info(
+          f"📌 自動検出: {default_main_csv} を読み込んでいます"
+      )
+  else:
+    df = None
+    st.sidebar.info(
+        "左側のサイドバーから「指数CSVファイル」をアップロードしてください。"
+    )
+
+# 外部コメントの自動読み込み処理（未選択の場合の自動検出）
+if uploaded_ext_comment is not None:
+  ext_file_to_read = uploaded_ext_comment
+else:
+  # YYYYMMDDcomment.csv というパターンのファイルを自動検索
+  ext_pattern = re.compile(r"^\d{8}comment\.csv$")
+  matched_ext_files = [f for f in os.listdir(".") if ext_pattern.match(f)]
+  ext_file_to_read = sorted(matched_ext_files)[-1] if matched_ext_files else None
+
+ext_comment_dict = {}
+if ext_file_to_read is not None:
+  try:
+    df_ext = pd.read_csv(ext_file_to_read, encoding="cp932", header=None)
+    for _, row in df_ext.iterrows():
+      vals = [str(v).string().strip() if hasattr(str(v), 'string') else str(v).strip() for v in row.values if pd.notna(v)]
+      if len(vals) >= 6:
+        h_name = vals[2]
+        c_text = vals[5]
+        if h_name and c_text:
+          ext_comment_dict[h_name] = c_text
+    if uploaded_ext_comment is not None:
+      st.sidebar.success(f"外部コメント読込成功（{len(ext_comment_dict)}頭分）")
+    else:
+      st.sidebar.info(f"📌 自動検出コメント読込: {os.path.basename(str(ext_file_to_read))}（{len(ext_comment_dict)}頭分）")
+  except Exception as e:
+    pass
 
   # --- データ処理ロジック ---
   df["arms_val"] = pd.to_numeric(df.iloc[:, 7], errors="coerce").fillna(0)
