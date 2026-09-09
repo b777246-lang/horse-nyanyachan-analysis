@@ -8,24 +8,20 @@ st.set_page_config(
     page_title="競馬指数 総合分析Webアプリケーション", layout="wide"
 )
 
-# --- セッション状態の初期化（初期配列とソート状態の保持用） ---
+# --- セッション状態の初期化 ---
 if "sort_mode" not in st.session_state:
   st.session_state.sort_mode = "初期配列"
 
-
-# --- カスタムCSS（スマホ表示・テーブル・ボタンの最適化） ---
+# --- カスタムCSS ---
 st.markdown(
     """
     <style>
-    /* 全体のコンテナ幅調整 */
     .main .block-container {
         max-width: 100% !important;
         padding-left: 0.5rem;
         padding-right: 0.5rem;
         padding-top: 1rem;
     }
-    
-    /* 基本のテーブルコンテナ */
     .table-container {
         width: 100%;
         max-height: 80vh;
@@ -35,7 +31,6 @@ st.markdown(
         margin-bottom: 20px;
         background-color: white;
     }
-
     .custom-horse-table {
         width: 100% !important;
         border-collapse: collapse;
@@ -43,14 +38,12 @@ st.markdown(
         background-color: white;
         color: #31333F;
     }
-
     .custom-horse-table th, .custom-horse-table td {
         border: 1px solid #e0e0e0;
         padding: 6px 8px;
         text-align: center;
         white-space: nowrap;
     }
-
     .custom-horse-table th {
         background-color: #f0f2f6;
         position: sticky;
@@ -58,52 +51,19 @@ st.markdown(
         z-index: 10;
         font-weight: 600;
     }
-
     .custom-horse-table th:last-child, 
     .custom-horse-table td:last-child {
         min-width: 200px;
         white-space: normal !important;
         text-align: left !important;
     }
+    .rank-1 { background-color: #fff2b2 !important; font-weight: bold; }
+    .rank-2 { background-color: #e6f2ff !important; }
+    .rank-3 { background-color: #d4edda !important; }
 
-    /* 順位に応じたハイライト用クラス */
-    .rank-1 {
-        background-color: #fff2b2 !important; /* 1位: 黄色系統 */
-        font-weight: bold;
-    }
-    .rank-2 {
-        background-color: #e6f2ff !important; /* 2位: 水色系統 */
-    }
-    .rank-3 {
-        background-color: #d4edda !important; /* 3位: 黄緑系統 */
-    }
-
-    /* 🔄 スマホ・縦画面用の表示調整 */
     @media screen and (max-width: 768px) {
-        .custom-horse-table {
-            font-size: 10px !important;
-        }
-        .custom-horse-table th, .custom-horse-table td {
-            padding: 4px 5px !important;
-        }
-    }
-
-    /* 🔄 スマホを横向き（ランドスケープ）にしたときだけの特別設定 */
-    @media screen and (max-height: 500px) and (orientation: landscape) {
-        .table-container {
-            overflow-x: auto !important;
-        }
-        .custom-horse-table {
-            width: 100% !important;
-            font-size: 9.5px !important;
-        }
-        .custom-horse-table th, .custom-horse-table td {
-            padding: 3px 4px !important;
-        }
-        .custom-horse-table th:last-child, 
-        .custom-horse-table td:last-child {
-            min-width: 150px !important;
-        }
+        .custom-horse-table { font-size: 10px !important; }
+        .custom-horse-table th, .custom-horse-table td { padding: 4px 5px !important; }
     }
     </style>
     """,
@@ -113,14 +73,13 @@ st.markdown(
 st.title("🏇 競馬指数 総合分析Webアプリケーション")
 
 
-# --- コース別成績データの事前読み込み（キャッシュ機能で高速化） ---
 @st.cache_data
 def load_course_data():
   course_stats = {}
   try:
     df = pd.read_csv("arms及びarms2及びTUA指数の全てが一位.csv", encoding="cp932")
     course_stats["triple"] = df
-  except Exception as e:
+  except Exception:
     pass
 
   csv_files = glob.glob("*指数*位のコース別成績.csv")
@@ -129,7 +88,7 @@ def load_course_data():
     try:
       df = pd.read_csv(filename, encoding="cp932")
       course_stats[filename] = df
-    except Exception as e:
+    except Exception:
       pass
   return course_stats
 
@@ -178,9 +137,8 @@ def get_course_compatibility(
   return None
 
 
-# --- サイドバー：ファイル読み込みエリア ---
+# --- サイドバー ---
 st.sidebar.header("📂 ファイル読み込み")
-
 uploaded_file = st.sidebar.file_uploader(
     "メイン指数CSVファイルを選択（上書き用）", type=["csv"]
 )
@@ -188,20 +146,16 @@ uploaded_ext_comment = st.sidebar.file_uploader(
     "💬 外部コメントCSVを選択（任意）", type=["csv"]
 )
 
-# 1. ユーザーが新しくメインファイルをアップロードした場合
 if uploaded_file is not None:
   try:
     df = pd.read_csv(uploaded_file, encoding="cp932", header=None)
   except Exception:
     uploaded_file.seek(0)
     df = pd.read_csv(uploaded_file, encoding="utf-8", header=None)
-  st.sidebar.success("アップロードされたメインファイルを読み込みました")
-
-# 2. アップロードされていない場合は、GitHub内にある「YYYYMMDD.csv」形式のファイルを自動検索する
+  st.sidebar.success("アップロードされたファイルを読み込みました")
 else:
   pattern = re.compile(r"^\d{8}\.csv$")
   matched_files = [f for f in os.listdir(".") if pattern.match(f)]
-
   if matched_files:
     default_main_csv = sorted(matched_files)[-1]
     try:
@@ -216,11 +170,9 @@ else:
       )
   else:
     df = None
-    st.sidebar.info(
-        "左側のサイドバーから「指数CSVファイル」をアップロードしてください。"
-    )
+    st.sidebar.info("左側のサイドバーから指数CSVファイルをアップロードしてください。")
 
-# 外部コメントの自動読み込み処理
+ext_comment_dict = {}
 if uploaded_ext_comment is not None:
   ext_file_to_read = uploaded_ext_comment
 else:
@@ -228,31 +180,19 @@ else:
   matched_ext_files = [f for f in os.listdir(".") if ext_pattern.match(f)]
   ext_file_to_read = sorted(matched_ext_files)[-1] if matched_ext_files else None
 
-ext_comment_dict = {}
 if ext_file_to_read is not None:
   try:
     df_ext = pd.read_csv(ext_file_to_read, encoding="cp932", header=None)
     for _, row in df_ext.iterrows():
-      vals = [
-          str(v).strip() for v in row.values if pd.notna(v)
-      ]
+      vals = [str(v).strip() for v in row.values if pd.notna(v)]
       if len(vals) >= 6:
-        h_name = vals[2]
-        c_text = vals[5]
+        h_name, c_text = vals[2], vals[5]
         if h_name and c_text:
           ext_comment_dict[h_name] = c_text
-    if uploaded_ext_comment is not None:
-      st.sidebar.success(f"外部コメント読込成功（{len(ext_comment_dict)}頭分）")
-    else:
-      st.sidebar.info(
-          f"📌 自動検出コメント読込:"
-          f" {os.path.basename(str(ext_file_to_read))}（{len(ext_comment_dict)}頭分）"
-      )
-  except Exception as e:
+  except Exception:
     pass
 
 if df is not None:
-  # --- データ処理ロジック ---
   df["arms_val"] = pd.to_numeric(df.iloc[:, 7], errors="coerce").fillna(0)
   df["arms2_val"] = pd.to_numeric(df.iloc[:, 8], errors="coerce").fillna(0)
   df["tua_val"] = pd.to_numeric(df.iloc[:, 9], errors="coerce").fillna(0)
@@ -356,10 +296,9 @@ if df is not None:
       highlights.append(f"F:{f_idx}(軸)")
       score += 1
 
-    if finish_up_count < 4:
-      if finish_up >= 5 or finish_up_rank <= 3:
-        highlights.append("調教良")
-        score += 1
+    if finish_up_count < 4 and (finish_up >= 5 or finish_up_rank <= 3):
+      highlights.append("調教良")
+      score += 1
 
     course_compat_text = ""
     is_good_compatibility = False
@@ -373,41 +312,33 @@ if df is not None:
           c_target = str(t_row.get("コース", ""))
           if track_name and track_name in c_target:
             if surface in c_target and str(distance) in c_target:
-              compat = {
-                  "course": c_target,
-                  "win_rate": str(t_row.get("勝率", "0%")),
-                  "place_rate": str(t_row.get("複勝率", "0%")),
-                  "win_ret": str(t_row.get("単勝回収値", "0")),
-                  "place_ret": str(t_row.get("複勝回収値", "0")),
-              }
               try:
                 win_ret_val = float(
-                    str(compat["win_ret"]).replace("%", "").strip()
+                    str(t_row.get("単勝回収値", "0")).replace("%", "").strip()
                 )
               except ValueError:
                 win_ret_val = 0.0
               try:
                 place_rate_val = float(
-                    str(compat["place_rate"]).replace("%", "").strip()
+                    str(t_row.get("複勝率", "0%")).replace("%", "").strip()
                 )
               except ValueError:
                 place_rate_val = 0.0
 
               if win_ret_val >= 100 or place_rate_val >= 60:
                 is_triple_1st = True
-                course_compat_text = f"👑 【★トリプル１位★: {compat['course']} 複勝率{compat['place_rate']}/単回{compat['win_ret']}】"
+                course_compat_text = f"👑 【★トリプル１位★: {c_target} 複勝率{t_row.get('複勝率', '0%')}/単回{t_row.get('単勝回収値', '0')}】"
                 score += 3
               break
 
     if not is_triple_1st:
-      checks = [
+      for t, rnk in [
           ("arms", arms_rank),
           ("arms2", arms2_rank),
           ("TUA", tua_rank),
           ("S", s_rank),
           ("F", f_rank),
-      ]
-      for t, rnk in checks:
+      ]:
         if rnk <= 3:
           compat = get_course_compatibility(
               race_raw, surface, distance, t, rnk, course_stats
@@ -415,13 +346,13 @@ if df is not None:
           if compat:
             try:
               win_ret_val = float(
-                  str(compat["win_ret"]).replace("%", "").strip()
+                  compat["win_ret"].replace("%", "").strip()
               )
             except ValueError:
               win_ret_val = 0.0
             try:
               place_rate_val = float(
-                  str(compat["place_rate"]).replace("%", "").strip()
+                  compat["place_rate"].replace("%", "").strip()
               )
             except ValueError:
               place_rate_val = 0.0
@@ -516,6 +447,7 @@ if df is not None:
       ext_c = ext_comment_dict[name]
       eval_text = f"{ext_c} ▼ {eval_text}" if eval_text else ext_c
 
+
     def get_cell_html(val, rank):
       if rank == 1:
         return f'<td class="rank-1">{val}</td>'
@@ -525,6 +457,7 @@ if df is not None:
         return f'<td class="rank-3">{val}</td>'
       else:
         return f"<td>{val}</td>"
+
 
     export_data_list.append({
         "original_index": original_index,
@@ -568,17 +501,16 @@ if df is not None:
   # --- ソート＆初期化コントロール UI ---
   st.subheader("📊 出走馬・指数一覧分析")
 
-  # 📱 スマホでも縦並びまたは押しやすいようにカラムをシンプルに変更
   st.write("▼ **表示順序の切り替え**")
   col_s1, col_s2 = st.columns(2)
   with col_s1:
-    if st.button("🔥 評価点数順にソート", use_container_width=True):
+    # 互換性のために use_container_width を削除しました
+    if st.button("🔥 評価点数順にソート"):
       st.session_state.sort_mode = "スコア順"
   with col_s2:
-    if st.button("🔄 初期配列に戻す", use_container_width=True):
+    if st.button("🔄 初期配列に戻す"):
       st.session_state.sort_mode = "初期配列"
 
-  # ソート状態の適用
   if st.session_state.sort_mode == "スコア順":
     res_df = res_df.sort_values(
         by=["score", "original_index"], ascending=[False, True]
@@ -598,7 +530,6 @@ if df is not None:
 
   def render_html_table(dataframe):
     html = ['<div class="table-container"><table class="custom-horse-table">']
-
     display_columns = [
         "レース",
         "条件",
@@ -613,12 +544,10 @@ if df is not None:
         "厩舎F-UP2",
         "総合評価・コース相性判定",
     ]
-
     html.append("<thead><tr>")
     for col in display_columns:
       html.append(f"<th>{col}</th>")
     html.append("</tr></thead>")
-
     html.append("<tbody>")
     for _, row in dataframe.iterrows():
       html.append("<tr>")
@@ -635,34 +564,26 @@ if df is not None:
       html.append(str(row["厩舎F-UP2"]))
       html.append(f"<td>{row['総合評価・コース相性判定']}</td>")
       html.append("</tr>")
-    html.append("</tbody>")
-
-    html.append("</table></div>")
+    html.append("</tbody></table></div>")
     return "".join(html)
 
 
-  table_html = render_html_table(res_df)
-  st.markdown(table_html, unsafe_allow_html=True)
+  st.markdown(render_html_table(res_df), unsafe_allow_html=True)
 
-  # --- ダウンロードボタン用のDataFrameから内部管理列を削除 ---
+  # --- ダウンロードボタン ---
   download_raw_df = raw_csv_df.drop(columns=["original_index", "score"])
   download_res_df = res_df.drop(columns=["original_index", "score"])
 
-  # --- ダウンロードボタン ---
   col1, col2 = st.columns(2)
-
   with col1:
-    csv_data = download_raw_df.to_csv(
-        index=False, encoding="cp932", errors="ignore"
-    )
     st.download_button(
         label="💾 TARGET用CSVダウンロード",
-        data=csv_data,
+        data=download_raw_df.to_csv(
+            index=False, encoding="cp932", errors="ignore"
+        ),
         file_name="horse_analysis_result.csv",
         mime="text/csv",
-        use_container_width=True,
     )
-
   with col2:
     html_data = download_res_df.to_html(index=False, escape=False)
     html_full = f"""<!DOCTYPE html>
@@ -685,17 +606,12 @@ if df is not None:
         <h2>競馬指数 総合分析レポート</h2>
         {html_data}
         </body>
-        </html>
-        """
+        </html>"""
     st.download_button(
         label="🌐 HTMLレポートダウンロード",
         data=html_full,
         file_name="horse_analysis_result.html",
         mime="text/html",
-        use_container_width=True,
     )
-
 else:
-  st.info(
-      "左側のサイドバーから「指数CSVファイル」をアップロードしてください。"
-  )
+  st.info("左側のサイドバーから指数CSVファイルをアップロードしてください。")
