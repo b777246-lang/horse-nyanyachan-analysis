@@ -252,7 +252,6 @@ if df is not None:
         if push_mark.lower() == "nan":
             push_mark = ""
 
-        # 推印が "推" の場合にHTMLタグで赤字装飾を適用
         if push_mark == "推":
             push_mark_html = f'<span class="push-mark-red">{push_mark}</span>'
         else:
@@ -587,7 +586,6 @@ if df is not None:
 
     # --- ダウンロードボタン ---
     download_raw_df = raw_csv_df.drop(columns=["original_index", "score"])
-    download_html_df = raw_csv_df.drop(columns=["original_index", "score"])
 
     col1, col2 = st.columns(2)
     with col1:
@@ -599,23 +597,55 @@ if df is not None:
             mime="text/csv",
         )
     with col2:
-        html_data = download_html_df.to_html(index=False, escape=True)
+        # 画面表示用の美しいHTMLテーブル構造をそのままレポート用HTMLに出力するよう変更
+        report_html_table = render_html_table(res_df)
         html_full = f"""<!DOCTYPE html>
         <html lang="ja">
         <head>
         <meta charset="UTF-8">
         <title>競馬指数 総合分析レポート</title>
         <style>
-            body {{ font-family: Arial, sans-serif; margin: 20px; }}
-            table {{ width: 100%; border-collapse: collapse; }}
-            th, td {{ border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 13px; }}
-            th {{ background-color: #3498db; color: white; }}
-            th:last-child, td:last-child {{ text-align: left; }}
+            body {{ font-family: Arial, sans-serif; margin: 20px; background-color: #f9f9f9; }}
+            h2 {{ color: #333; }}
+            .table-container {{
+                width: 100%;
+                overflow-x: auto;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                background-color: white;
+            }}
+            .custom-horse-table {{
+                width: 100% !important;
+                border-collapse: collapse;
+                font-size: 11px;
+                background-color: white;
+                color: #31333F;
+            }}
+            .custom-horse-table th, .custom-horse-table td {{
+                border: 1px solid #e0e0e0;
+                padding: 6px 8px;
+                text-align: center;
+                white-space: nowrap;
+            }}
+            .custom-horse-table th {{
+                background-color: #f0f2f6;
+                font-weight: 600;
+            }}
+            .custom-horse-table th:last-child, 
+            .custom-horse-table td:last-child {{
+                min-width: 200px;
+                white-space: normal !important;
+                text-align: left !important;
+            }}
+            .rank-1 {{ background-color: #fff2b2 !important; font-weight: bold; }}
+            .rank-2 {{ background-color: #e6f2ff !important; }}
+            .rank-3 {{ background-color: #d4edda !important; }}
+            .push-mark-red {{ color: #ff4b4b !important; font-weight: bold; }}
         </style>
         </head>
         <body>
-        <h2>競馬指数 総合分析レポート</h2>
-        {html_data}
+        <h2>🏇 競馬指数 総合分析レポート</h2>
+        {report_html_table}
         </body>
         </html>"""
         st.download_button(
