@@ -60,6 +60,7 @@ st.markdown(
     .rank-1 { background-color: #fff2b2 !important; font-weight: bold; }
     .rank-2 { background-color: #e6f2ff !important; }
     .rank-3 { background-color: #d4edda !important; }
+    .push-mark-red { color: #ff4b4b !important; font-weight: bold; }
 
     @media screen and (max-width: 768px) {
         .custom-horse-table { font-size: 10px !important; }
@@ -189,7 +190,6 @@ if ext_file_to_read is not None:
         pass
 
 if df is not None:
-    # 列インデックスの調整（推印が列6に入ったため、各指数の列番号が+1シフト）
     df["arms_val"] = pd.to_numeric(df.iloc[:, 8], errors="coerce").fillna(0)
     df["arms2_val"] = pd.to_numeric(df.iloc[:, 9], errors="coerce").fillna(0)
     df["tua_val"] = pd.to_numeric(df.iloc[:, 10], errors="coerce").fillna(0)
@@ -247,11 +247,16 @@ if df is not None:
         )
         umaban = str(row.get(5, ""))
         
-        # 推印（列6：判定等には一切用いない）
         push_mark_raw = row.get(6, "")
         push_mark = str(push_mark_raw).strip() if pd.notna(push_mark_raw) else ""
         if push_mark.lower() == "nan":
             push_mark = ""
+
+        # 推印が "推" の場合にHTMLタグで赤字装飾を適用
+        if push_mark == "推":
+            push_mark_html = f'<span class="push-mark-red">{push_mark}</span>'
+        else:
+            push_mark_html = push_mark
 
         name = str(row.get(7, "")).strip()
 
@@ -475,7 +480,7 @@ if df is not None:
             "条件": cond_raw,
             "枠番": wakuban,
             "馬番": umaban,
-            "推印": push_mark,
+            "推印": push_mark_html,
             "馬名": name,
             "arms": get_cell_html(arms, arms_rank),
             "arms2": get_cell_html(arms2, arms2_rank),
