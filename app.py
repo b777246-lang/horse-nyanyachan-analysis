@@ -189,12 +189,13 @@ if ext_file_to_read is not None:
         pass
 
 if df is not None:
-    df["arms_val"] = pd.to_numeric(df.iloc[:, 7], errors="coerce").fillna(0)
-    df["arms2_val"] = pd.to_numeric(df.iloc[:, 8], errors="coerce").fillna(0)
-    df["tua_val"] = pd.to_numeric(df.iloc[:, 9], errors="coerce").fillna(0)
-    df["S_val"] = pd.to_numeric(df.iloc[:, 10], errors="coerce").fillna(0)
-    df["F_val"] = pd.to_numeric(df.iloc[:, 11], errors="coerce").fillna(0)
-    df["finish_up_val"] = pd.to_numeric(df.iloc[:, 12], errors="coerce").fillna(0)
+    # 列インデックスの調整（推印が列6に入ったため、各指数の列番号が+1シフト）
+    df["arms_val"] = pd.to_numeric(df.iloc[:, 8], errors="coerce").fillna(0)
+    df["arms2_val"] = pd.to_numeric(df.iloc[:, 9], errors="coerce").fillna(0)
+    df["tua_val"] = pd.to_numeric(df.iloc[:, 10], errors="coerce").fillna(0)
+    df["S_val"] = pd.to_numeric(df.iloc[:, 11], errors="coerce").fillna(0)
+    df["F_val"] = pd.to_numeric(df.iloc[:, 12], errors="coerce").fillna(0)
+    df["finish_up_val"] = pd.to_numeric(df.iloc[:, 13], errors="coerce").fillna(0)
 
     df["race_group"] = df.apply(
         lambda r: f"{r.get(0, '')}_{r.get(1, '')}_{r.get(2, '')}_{r.get(3, '')}",
@@ -245,7 +246,14 @@ if df is not None:
             else 0
         )
         umaban = str(row.get(5, ""))
-        name = str(row.get(6, "")).strip()
+        
+        # 推印（列6：判定等には一切用いない）
+        push_mark_raw = row.get(6, "")
+        push_mark = str(push_mark_raw).strip() if pd.notna(push_mark_raw) else ""
+        if push_mark.lower() == "nan":
+            push_mark = ""
+
+        name = str(row.get(7, "")).strip()
 
         arms = row["arms_val"]
         arms2 = row["arms2_val"]
@@ -467,6 +475,7 @@ if df is not None:
             "条件": cond_raw,
             "枠番": wakuban,
             "馬番": umaban,
+            "推印": push_mark,
             "馬名": name,
             "arms": get_cell_html(arms, arms_rank),
             "arms2": get_cell_html(arms2, arms2_rank),
@@ -484,6 +493,7 @@ if df is not None:
             "条件": cond_raw,
             "枠番": wakuban,
             "馬番": umaban,
+            "推印": push_mark,
             "馬名": name,
             "arms": arms,
             "arms2": arms2,
@@ -534,6 +544,7 @@ if df is not None:
             "条件",
             "枠番",
             "馬番",
+            "推印",
             "馬名",
             "arms",
             "arms2",
@@ -554,6 +565,7 @@ if df is not None:
             html.append(f"<td>{row['条件']}</td>")
             html.append(f"<td>{row['枠番']}</td>")
             html.append(f"<td>{row['馬番']}</td>")
+            html.append(f"<td>{row['推印']}</td>")
             html.append(f"<td>{row['馬名']}</td>")
             html.append(str(row["arms"]))
             html.append(str(row["arms2"]))
