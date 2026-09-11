@@ -13,11 +13,11 @@ if "sort_mode" not in st.session_state:
     st.session_state.sort_mode = "初期配列"
 
 
-# --- ターゲット（TARGET）読み込み用クレンジング関数（絵文字・スペース削除版） ---
-def clean_for_target(text):
+# --- 評価テキスト用のクレンジング関数（絵文字と余分なスペースを削除） ---
+def clean_eval_text_for_target(text):
     if not isinstance(text, str):
         text = str(text) if pd.notna(text) else ""
-    # 制御文字（改行やタブなど）の削除
+    # 制御文字の削除
     text = re.sub(r"[\x00-\x1f\x7f-\x9f]", "", text)
     # 絵文字や特殊な記号（🎯、🔥、⭐、🌟、👑など）の削除
     emoji_pattern = re.compile(
@@ -27,8 +27,16 @@ def clean_for_target(text):
     text = emoji_pattern.sub("", text)
     # カンマやダブルクォーテーションの除去
     text = text.replace(",", "").replace('"', "")
-    # すべてのスペース（半角・全角の空白）を完全に削除する場合
+    # スペースをすべて削除
     text = re.sub(r"[\s ]+", "", text)
+    return text.strip()
+
+
+# --- 通常のテキストクレンジング（カンマ・ダブルクォーテーションのみ除去、数値やスペースは残す） ---
+def clean_normal_text(text):
+    if not isinstance(text, str):
+        text = str(text) if pd.notna(text) else ""
+    text = text.replace(",", "").replace('"', "")
     return text.strip()
 
 
@@ -482,11 +490,8 @@ if df is not None:
             ext_c = ext_comment_dict[name]
             eval_text = f"{ext_c} ▼ {eval_text}" if eval_text else ext_c
 
-        # 画面表示用のHTMLにはそのまま絵文字を残す
         eval_text_html = eval_text
-
-        # TARGET用CSV出力のデータには絵文字や余分なスペースを完全にクレンジングしたものを作成
-        eval_text_csv = clean_for_target(eval_text)
+        eval_text_csv = clean_eval_text_for_target(eval_text)
 
         def get_cell_html(val, rank):
             if rank == 1:
@@ -519,12 +524,12 @@ if df is not None:
         raw_data_list.append({
             "original_index": original_index,
             "score": score,
-            "レース": clean_for_target(race_raw),
-            "条件": clean_for_target(cond_raw),
+            "レース": clean_normal_text(race_raw),
+            "条件": clean_normal_text(cond_raw),
             "枠番": wakuban,
-            "馬番": clean_for_target(umaban),
-            "推印": clean_for_target(push_mark),
-            "馬名": clean_for_target(name),
+            "馬番": clean_normal_text(umaban),
+            "推印": clean_normal_text(push_mark),
+            "馬名": clean_normal_text(name),
             "arms": arms,
             "arms2": arms2,
             "TUA": tua,
