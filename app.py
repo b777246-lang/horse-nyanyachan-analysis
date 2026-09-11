@@ -13,31 +13,35 @@ if "sort_mode" not in st.session_state:
     st.session_state.sort_mode = "初期配列"
 
 
-# --- 評価テキスト用のクレンジング関数（絵文字と余分なスペースを削除） ---
-def clean_eval_text_for_target(text):
-    if not isinstance(text, str):
-        text = str(text) if pd.notna(text) else ""
-    # 制御文字の削除
-    text = re.sub(r"[\x00-\x1f\x7f-\x9f]", "", text)
-    # 絵文字や特殊な記号（🎯、🔥、⭐、🌟、👑など）の削除
+# --- デスクトップ版を参考にした総合評価用のクレンジング関数 ---
+def clean_eval_text_for_target(val):
+    if not isinstance(val, str):
+        val = str(val) if pd.notna(val) else ""
+    
+    # 絵文字パターンの定義
     emoji_pattern = re.compile(
-        r"[\U00010000-\U0010ffff\u2600-\u27bf\u2b50\u1f300-\u1f6ff\u1f900-\u1f9ff]",
-        flags=re.UNICODE,
+        "[\U00010000-\U0010ffff\U00002600-\U000027ff]", flags=re.UNICODE
     )
-    text = emoji_pattern.sub("", text)
+    val = emoji_pattern.sub(r"", val)
+    
+    # 指定された絵文字や特殊記号、★を削除
+    val = (
+        val.replace("🔥", "")
+        .replace("🎯", "")
+        .replace("⭐", "")
+        .replace("🌟", "")
+        .replace("👑", "")
+        .replace("★", "")
+    )
+    
+    # 制御文字の削除
+    val = re.sub(r"[\x00-\x1f\x7f-\x9f]", "", val)
     # カンマやダブルクォーテーションの除去
-    text = text.replace(",", "").replace('"', "")
-    # スペースをすべて削除
-    text = re.sub(r"[\s ]+", "", text)
-    return text.strip()
-
-
-# --- 通常のテキストクレンジング（カンマ・ダブルクォーテーションのみ除去、数値やスペースは残す） ---
-def clean_normal_text(text):
-    if not isinstance(text, str):
-        text = str(text) if pd.notna(text) else ""
-    text = text.replace(",", "").replace('"', "")
-    return text.strip()
+    val = val.replace(",", "").replace('"', "")
+    # スペース（半角・全角）を完全に削除
+    val = re.sub(r"[\s ]+", "", val)
+    
+    return val.strip()
 
 
 # --- カスタムCSS ---
@@ -491,6 +495,7 @@ if df is not None:
             eval_text = f"{ext_c} ▼ {eval_text}" if eval_text else ext_c
 
         eval_text_html = eval_text
+        # デスクトップ版の定義を組み込んだクレンジング関数を適用
         eval_text_csv = clean_eval_text_for_target(eval_text)
 
         def get_cell_html(val, rank):
@@ -524,12 +529,12 @@ if df is not None:
         raw_data_list.append({
             "original_index": original_index,
             "score": score,
-            "レース": clean_normal_text(race_raw),
-            "条件": clean_normal_text(cond_raw),
+            "レース": race_raw,
+            "条件": cond_raw,
             "枠番": wakuban,
-            "馬番": clean_normal_text(umaban),
-            "推印": clean_normal_text(push_mark),
-            "馬名": clean_normal_text(name),
+            "馬番": umaban,
+            "推印": push_mark,
+            "馬名": name,
             "arms": arms,
             "arms2": arms2,
             "TUA": tua,
