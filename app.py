@@ -13,12 +13,18 @@ if "sort_mode" not in st.session_state:
     st.session_state.sort_mode = "初期配列"
 
 
-# --- ターゲット（TARGET）読み込み用クレンジング関数（スペース完全削除版） ---
+# --- ターゲット（TARGET）読み込み用クレンジング関数（絵文字・スペース削除版） ---
 def clean_for_target(text):
     if not isinstance(text, str):
         text = str(text) if pd.notna(text) else ""
     # 制御文字（改行やタブなど）の削除
     text = re.sub(r"[\x00-\x1f\x7f-\x9f]", "", text)
+    # 絵文字や特殊な記号（🎯、🔥、⭐、🌟、👑など）の削除
+    emoji_pattern = re.compile(
+        r"[\U00010000-\U0010ffff\u2600-\u27bf\u2b50\u1f300-\u1f6ff\u1f900-\u1f9ff]",
+        flags=re.UNICODE,
+    )
+    text = emoji_pattern.sub("", text)
     # カンマやダブルクォーテーションの除去
     text = text.replace(",", "").replace('"', "")
     # すべてのスペース（半角・全角の空白）を完全に削除する場合
@@ -244,9 +250,9 @@ if df is not None:
     raw_data_list = []
 
     for original_index, row in df.iterrows():
-        race_raw = clean_for_target(str(row.get(0, "")))
-        cond_name = clean_for_target(str(row.get(1, "")))
-        surface = clean_for_target(str(row.get(2, "")))
+        race_raw = str(row.get(0, ""))
+        cond_name = str(row.get(1, ""))
+        surface = str(row.get(2, ""))
         try:
             distance = int(row.get(3, 0))
         except ValueError:
@@ -259,10 +265,10 @@ if df is not None:
             if pd.notna(wakuban_raw) and str(wakuban_raw).isdigit()
             else 0
         )
-        umaban = clean_for_target(str(row.get(5, "")))
+        umaban = str(row.get(5, ""))
         
         push_mark_raw = row.get(6, "")
-        push_mark = clean_for_target(str(push_mark_raw)) if pd.notna(push_mark_raw) else ""
+        push_mark = str(push_mark_raw).strip() if pd.notna(push_mark_raw) else ""
         if push_mark.lower() == "nan":
             push_mark = ""
 
@@ -271,7 +277,7 @@ if df is not None:
         else:
             push_mark_html = push_mark
 
-        name = clean_for_target(str(row.get(7, "")))
+        name = str(row.get(7, "")).strip()
 
         arms = row["arms_val"]
         arms2 = row["arms2_val"]
@@ -473,11 +479,14 @@ if df is not None:
                 eval_text = "🎯 【注目条件】 " + eval_text
 
         if ext_comment_dict and name in ext_comment_dict:
-            ext_c = clean_for_target(ext_comment_dict[name])
+            ext_c = ext_comment_dict[name]
             eval_text = f"{ext_c} ▼ {eval_text}" if eval_text else ext_c
-        
-        # 評価文中の余計なカンマや制御文字・スペースをクレンジング
-        eval_text = clean_for_target(eval_text)
+
+        # 画面表示用のHTMLにはそのまま絵文字を残す
+        eval_text_html = eval_text
+
+        # TARGET用CSV出力のデータには絵文字や余分なスペースを完全にクレンジングしたものを作成
+        eval_text_csv = clean_for_target(eval_text)
 
         def get_cell_html(val, rank):
             if rank == 1:
@@ -504,25 +513,25 @@ if df is not None:
             "S": get_cell_html(s_idx, s_rank),
             "F": get_cell_html(f_idx, f_rank),
             "厩舎F-UP2": get_cell_html(finish_up, finish_up_rank),
-            "総合評価・コース相性判定": eval_text,
+            "総合評価・コース相性判定": eval_text_html,
         })
 
         raw_data_list.append({
             "original_index": original_index,
             "score": score,
-            "レース": race_raw,
-            "条件": cond_raw,
+            "レース": clean_for_target(race_raw),
+            "条件": clean_for_target(cond_raw),
             "枠番": wakuban,
-            "馬番": umaban,
-            "推印": push_mark,
-            "馬名": name,
+            "馬番": clean_for_target(umaban),
+            "推印": clean_for_target(push_mark),
+            "馬名": clean_for_target(name),
             "arms": arms,
             "arms2": arms2,
             "TUA": tua,
             "S": s_idx,
             "F": f_idx,
             "厩舎F-UP2": finish_up,
-            "総合評価・コース相性判定": eval_text,
+            "総合評価・コース相性判定": eval_text_csv,
         })
 
     res_df = pd.DataFrame(export_data_list)
