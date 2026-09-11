@@ -13,15 +13,16 @@ if "sort_mode" not in st.session_state:
     st.session_state.sort_mode = "初期配列"
 
 
-# --- ターゲット（TARGET）読み込み用クレンジング関数 ---
+# --- ターゲット（TARGET）読み込み用クレンジング関数（スペース完全削除版） ---
 def clean_for_target(text):
     if not isinstance(text, str):
         text = str(text) if pd.notna(text) else ""
     # 制御文字（改行やタブなど）の削除
     text = re.sub(r"[\x00-\x1f\x7f-\x9f]", "", text)
-    # ターゲットのCSVインポートを妨げるカンマやダブルクォーテーションの置換・除去
-    text = text.replace(",", " ").replace('"', "")
-    # 前後の空白をトリム
+    # カンマやダブルクォーテーションの除去
+    text = text.replace(",", "").replace('"', "")
+    # すべてのスペース（半角・全角の空白）を完全に削除する場合
+    text = re.sub(r"[\s ]+", "", text)
     return text.strip()
 
 
@@ -475,7 +476,7 @@ if df is not None:
             ext_c = clean_for_target(ext_comment_dict[name])
             eval_text = f"{ext_c} ▼ {eval_text}" if eval_text else ext_c
         
-        # 評価文中の余計なカンマや制御文字もクレンジング
+        # 評価文中の余計なカンマや制御文字・スペースをクレンジング
         eval_text = clean_for_target(eval_text)
 
         def get_cell_html(val, rank):
@@ -605,7 +606,6 @@ if df is not None:
 
     col1, col2 = st.columns(2)
     with col1:
-        # cp932（Shift_JIS系）でエンコードし、ターゲットで読み込みエラーになる文字を完全にクレンジング済みのデータを出力
         csv_data = download_raw_df.to_csv(index=False, encoding="cp932", errors="ignore")
         st.download_button(
             label="💾 TARGET用CSVダウンロード",
