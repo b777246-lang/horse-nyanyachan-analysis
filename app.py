@@ -12,6 +12,19 @@ st.set_page_config(
 if "sort_mode" not in st.session_state:
     st.session_state.sort_mode = "初期配列"
 
+
+# --- ターゲット（TARGET）読み込み用クレンジング関数 ---
+def clean_for_target(text):
+    if not isinstance(text, str):
+        text = str(text) if pd.notna(text) else ""
+    # 制御文字（改行やタブなど）の削除
+    text = re.sub(r"[\x00-\x1f\x7f-\x9f]", "", text)
+    # ターゲットのCSVインポートを妨げるカンマやダブルクォーテーションの置換・除去
+    text = text.replace(",", " ").replace('"', "")
+    # 前後の空白をトリム
+    return text.strip()
+
+
 # --- カスタムCSS ---
 st.markdown(
     """
@@ -230,9 +243,9 @@ if df is not None:
     raw_data_list = []
 
     for original_index, row in df.iterrows():
-        race_raw = str(row.get(0, ""))
-        cond_name = str(row.get(1, ""))
-        surface = str(row.get(2, ""))
+        race_raw = clean_for_target(str(row.get(0, "")))
+        cond_name = clean_for_target(str(row.get(1, "")))
+        surface = clean_for_target(str(row.get(2, "")))
         try:
             distance = int(row.get(3, 0))
         except ValueError:
@@ -245,10 +258,10 @@ if df is not None:
             if pd.notna(wakuban_raw) and str(wakuban_raw).isdigit()
             else 0
         )
-        umaban = str(row.get(5, ""))
+        umaban = clean_for_target(str(row.get(5, "")))
         
         push_mark_raw = row.get(6, "")
-        push_mark = str(push_mark_raw).strip() if pd.notna(push_mark_raw) else ""
+        push_mark = clean_for_target(str(push_mark_raw)) if pd.notna(push_mark_raw) else ""
         if push_mark.lower() == "nan":
             push_mark = ""
 
@@ -257,7 +270,7 @@ if df is not None:
         else:
             push_mark_html = push_mark
 
-        name = str(row.get(7, "")).strip()
+        name = clean_for_target(str(row.get(7, "")))
 
         arms = row["arms_val"]
         arms2 = row["arms2_val"]
@@ -459,8 +472,11 @@ if df is not None:
                 eval_text = "🎯 【注目条件】 " + eval_text
 
         if ext_comment_dict and name in ext_comment_dict:
-            ext_c = ext_comment_dict[name]
+            ext_c = clean_for_target(ext_comment_dict[name])
             eval_text = f"{ext_c} ▼ {eval_text}" if eval_text else ext_c
+        
+        # 評価文中の余計なカンマや制御文字もクレンジング
+        eval_text = clean_for_target(eval_text)
 
         def get_cell_html(val, rank):
             if rank == 1:
@@ -589,7 +605,8 @@ if df is not None:
 
     col1, col2 = st.columns(2)
     with col1:
-        csv_data = download_raw_df.to_csv(index=False, encoding="utf-8-sig")
+        # cp932（Shift_JIS系）でエンコードし、ターゲットで読み込みエラーになる文字を完全にクレンジング済みのデータを出力
+        csv_data = download_raw_df.to_csv(index=False, encoding="cp932", errors="ignore")
         st.download_button(
             label="💾 TARGET用CSVダウンロード",
             data=csv_data,
@@ -597,7 +614,6 @@ if df is not None:
             mime="text/csv",
         )
     with col2:
-        # 画面表示用の美しいHTMLテーブル構造をそのままレポート用HTMLに出力するよう変更
         report_html_table = render_html_table(res_df)
         html_full = f"""<!DOCTYPE html>
         <html lang="ja">
