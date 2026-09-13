@@ -429,6 +429,23 @@ if df is not None:
             score += 1
 
         track_name_parsed = parse_racetrack(race_raw)
+        
+        # --- 追加: 阪神芝1600特注 ---
+        hanshin_1600_text = (
+            "★阪神芝1600特注★"
+            if (
+                track_name_parsed == "阪神"
+                and surface == "芝"
+                and distance == 1600
+                and arms_rank <= 3
+                and f_idx >= 60
+                and wakuban in [2, 4, 5, 6, 7]
+            )
+            else ""
+        )
+        if hanshin_1600_text:
+            score += 1
+
         nakayama_1600_text = (
             "★中山芝1600特注★"
             if (
@@ -458,6 +475,8 @@ if df is not None:
             score += 1
 
         eval_parts = []
+        if hanshin_1600_text:
+            eval_parts.append(hanshin_1600_text)
         if nakayama_2000_text:
             eval_parts.append(nakayama_2000_text)
         if nakayama_1600_text:
@@ -485,6 +504,7 @@ if df is not None:
                 is_good_compatibility
                 or suna_食_text
                 or f72_text
+                or hanshin_1600_text
                 or nakayama_1600_text
                 or nakayama_2000_text
             ):
@@ -495,7 +515,6 @@ if df is not None:
             eval_text = f"{ext_c} ▼ {eval_text}" if eval_text else ext_c
 
         eval_text_html = eval_text
-        # デスクトップ版の定義を組み込んだクレンジング関数を適用
         eval_text_csv = clean_eval_text_for_target(eval_text)
 
         def get_cell_html(val, rank):
