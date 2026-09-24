@@ -474,7 +474,6 @@ if df is not None:
         if nakayama_2000_text:
             score += 1
 
-        # --- 追加: 東京芝2000特注（F指数70以上） ---
         tokyo_2000_text = (
             "★東京芝2000馬体重480㎏以上特注★"
             if (
@@ -488,7 +487,24 @@ if df is not None:
         if tokyo_2000_text:
             score += 1
 
+        # --- 追加: 京都芝1600特注 ---
+        kyoto_1600_text = (
+            "★京都芝1600特注★"
+            if (
+                track_name_parsed == "京都"
+                and surface == "芝"
+                and distance == 1600
+                and arms >= 100
+                and f_idx >= 65
+            )
+            else ""
+        )
+        if kyoto_1600_text:
+            score += 1
+
         eval_parts = []
+        if kyoto_1600_text:
+            eval_parts.append(kyoto_1600_text)
         if tokyo_2000_text:
             eval_parts.append(tokyo_2000_text)
         if hanshin_1600_text:
@@ -524,6 +540,7 @@ if df is not None:
                 or nakayama_1600_text
                 or nakayama_2000_text
                 or tokyo_2000_text
+                or kyoto_1600_text
             ):
                 eval_text = "🎯 【注目条件】 " + eval_text
 
