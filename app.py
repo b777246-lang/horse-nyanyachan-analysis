@@ -44,6 +44,15 @@ def clean_eval_text_for_target(val):
     return val.strip()
 
 
+# --- ★に挟まれた特注文言を赤字にするHTML変換関数 ---
+def format_special_tags_html(text):
+    if not text:
+        return ""
+    # ★〜★ のパターンを検出して赤字装飾（クラスまたはインラインスタイル）に置換
+    pattern = re.compile(r"(★[^★]+★)")
+    return pattern.sub(r'<span style="color: #ff4b4b; font-weight: bold;">\1</span>', text)
+
+
 # --- カスタムCSS ---
 st.markdown(
     """
@@ -430,7 +439,6 @@ if df is not None:
 
         track_name_parsed = parse_racetrack(race_raw)
         
-        # --- 追加: 阪神芝1600特注 ---
         hanshin_1600_text = (
             "★阪神芝1600特注★"
             if (
@@ -487,7 +495,6 @@ if df is not None:
         if tokyo_2000_text:
             score += 1
 
-        # --- 追加: 京都芝1600特注 ---
         kyoto_1600_text = (
             "★京都芝1600特注★"
             if (
@@ -504,19 +511,20 @@ if df is not None:
 
         eval_parts = []
         if kyoto_1600_text:
-            eval_parts.append(kyoto_1600_text)
+            eval_parts.append(format_special_tags_html(kyoto_1600_text))
         if tokyo_2000_text:
-            eval_parts.append(tokyo_2000_text)
+            eval_parts.append(format_special_tags_html(tokyo_2000_text))
         if hanshin_1600_text:
-            eval_parts.append(hanshin_1600_text)
+            eval_parts.append(format_special_tags_html(hanshin_1600_text))
         if nakayama_2000_text:
-            eval_parts.append(nakayama_2000_text)
+            eval_parts.append(format_special_tags_html(nakayama_2000_text))
         if nakayama_1600_text:
-            eval_parts.append(nakayama_1600_text)
+            eval_parts.append(format_special_tags_html(nakayama_1600_text))
         if suna_食_text:
-            eval_parts.append(suna_食_text)
+            eval_parts.append(format_special_tags_html(suna_食_text))
         if f72_text:
-            eval_parts.append(f72_text)
+            eval_parts.append(format_special_tags_html(f72_text))
+            
         if highlights:
             eval_parts.extend(highlights)
         if course_compat_text:
@@ -579,6 +587,7 @@ if df is not None:
             "総合評価・コース相性判定": eval_text_html,
         })
 
+        # TARGET用のCSV出力時は、タグのHTMLタグや★マークがクレンジングされるためそのままプレーンで蓄積
         raw_data_list.append({
             "original_index": original_index,
             "score": score,
