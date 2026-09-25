@@ -48,7 +48,6 @@ def clean_eval_text_for_target(val):
 def format_special_tags_html(text):
     if not text:
         return ""
-    # ★〜★ のパターンを検出して赤字装飾（クラスまたはインラインスタイル）に置換
     pattern = re.compile(r"(★[^★]+★)")
     return pattern.sub(r'<span style="color: #ff4b4b; font-weight: bold;">\1</span>', text)
 
@@ -509,37 +508,63 @@ if df is not None:
         if kyoto_1600_text:
             score += 1
 
-        eval_parts = []
+        # --- 画面表示用（HTMLタグで赤字装飾） ---
+        eval_parts_html = []
         if kyoto_1600_text:
-            eval_parts.append(format_special_tags_html(kyoto_1600_text))
+            eval_parts_html.append(format_special_tags_html(kyoto_1600_text))
         if tokyo_2000_text:
-            eval_parts.append(format_special_tags_html(tokyo_2000_text))
+            eval_parts_html.append(format_special_tags_html(tokyo_2000_text))
         if hanshin_1600_text:
-            eval_parts.append(format_special_tags_html(hanshin_1600_text))
+            eval_parts_html.append(format_special_tags_html(hanshin_1600_text))
         if nakayama_2000_text:
-            eval_parts.append(format_special_tags_html(nakayama_2000_text))
+            eval_parts_html.append(format_special_tags_html(nakayama_2000_text))
         if nakayama_1600_text:
-            eval_parts.append(format_special_tags_html(nakayama_1600_text))
+            eval_parts_html.append(format_special_tags_html(nakayama_1600_text))
         if suna_食_text:
-            eval_parts.append(format_special_tags_html(suna_食_text))
+            eval_parts_html.append(format_special_tags_html(suna_食_text))
         if f72_text:
-            eval_parts.append(format_special_tags_html(f72_text))
-            
+            eval_parts_html.append(format_special_tags_html(f72_text))
         if highlights:
-            eval_parts.extend(highlights)
+            eval_parts_html.extend(highlights)
         if course_compat_text:
-            eval_parts.append(course_compat_text)
+            eval_parts_html.append(course_compat_text)
 
-        if not eval_parts:
-            eval_text = ""
+        # --- CSV出力用（プレーンテキスト） ---
+        eval_parts_raw = []
+        if kyoto_1600_text:
+            eval_parts_raw.append(kyoto_1600_text)
+        if tokyo_2000_text:
+            eval_parts_raw.append(tokyo_2000_text)
+        if hanshin_1600_text:
+            eval_parts_raw.append(hanshin_1600_text)
+        if nakayama_2000_text:
+            eval_parts_raw.append(nakayama_2000_text)
+        if nakayama_1600_text:
+            eval_parts_raw.append(nakayama_1600_text)
+        if suna_食_text:
+            eval_parts_raw.append(suna_食_text)
+        if f72_text:
+            eval_parts_raw.append(f72_text)
+        if highlights:
+            eval_parts_raw.extend(highlights)
+        if course_compat_text:
+            eval_parts_raw.append(course_compat_text)
+
+        if not eval_parts_html:
+            eval_text_html = ""
+            eval_text_raw = ""
         else:
-            eval_text = " / ".join(eval_parts)
+            eval_text_html = " / ".join(eval_parts_html)
+            eval_text_raw = " / ".join(eval_parts_raw)
             if is_triple_1st:
-                eval_text = "🌟 【★トリプル１位★推奨】 " + eval_text
+                eval_text_html = "🌟 【★トリプル１位★推奨】 " + eval_text_html
+                eval_text_raw = "🌟 【★トリプル１位★推奨】 " + eval_text_raw
             elif score >= 4:
-                eval_text = "🔥 【軸馬推奨】 " + eval_text
+                eval_text_html = "🔥 【軸馬推奨】 " + eval_text_html
+                eval_text_raw = "🔥 【軸馬推奨】 " + eval_text_raw
             elif score >= 2:
-                eval_text = "⭐ 【有力候補】 " + eval_text
+                eval_text_html = "⭐ 【有力候補】 " + eval_text_html
+                eval_text_raw = "⭐ 【有力候補】 " + eval_text_raw
             elif (
                 is_good_compatibility
                 or suna_食_text
@@ -550,14 +575,15 @@ if df is not None:
                 or tokyo_2000_text
                 or kyoto_1600_text
             ):
-                eval_text = "🎯 【注目条件】 " + eval_text
+                eval_text_html = "🎯 【注目条件】 " + eval_text_html
+                eval_text_raw = "🎯 【注目条件】 " + eval_text_raw
 
         if ext_comment_dict and name in ext_comment_dict:
             ext_c = ext_comment_dict[name]
-            eval_text = f"{ext_c} ▼ {eval_text}" if eval_text else ext_c
+            eval_text_html = f"{ext_c} ▼ {eval_text_html}" if eval_text_html else ext_c
+            eval_text_raw = f"{ext_c} ▼ {eval_text_raw}" if eval_text_raw else ext_c
 
-        eval_text_html = eval_text
-        eval_text_csv = clean_eval_text_for_target(eval_text)
+        eval_text_csv = clean_eval_text_for_target(eval_text_raw)
 
         def get_cell_html(val, rank):
             if rank == 1:
@@ -587,7 +613,6 @@ if df is not None:
             "総合評価・コース相性判定": eval_text_html,
         })
 
-        # TARGET用のCSV出力時は、タグのHTMLタグや★マークがクレンジングされるためそのままプレーンで蓄積
         raw_data_list.append({
             "original_index": original_index,
             "score": score,
