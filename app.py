@@ -101,6 +101,17 @@ st.markdown(
     .rank-2 { background-color: #e6f2ff !important; }
     .rank-3 { background-color: #d4edda !important; }
     .push-mark-red { color: #ff4b4b !important; font-weight: bold; }
+    .race-header {
+        background: #0a1128;
+        color: #ffffff;
+        border: 1px solid #1e90c8;
+        border-radius: 6px;
+        padding: 10px 16px;
+        margin: 8px 0 12px 0;
+        font-size: 18px;
+        font-weight: 600;
+    }
+    .race-header .sub { color: #8fb8d8; font-size: 12px; font-weight: 400; margin-left: 12px; }
 
     @media screen and (max-width: 768px) {
         .custom-horse-table { font-size: 10px !important; }
@@ -188,7 +199,9 @@ uploaded_ext_comment = st.sidebar.file_uploader(
 )
 
 df = None
+source_name = ""
 if uploaded_file is not None:
+    source_name = uploaded_file.name
     try:
         df = pd.read_csv(uploaded_file, encoding="cp932", header=None)
     except Exception:
@@ -200,6 +213,7 @@ else:
     matched_files = [f for f in os.listdir(".") if pattern.match(f)]
     if matched_files:
         default_main_csv = sorted(matched_files)[-1]
+        source_name = default_main_csv
         try:
             df = pd.read_csv(default_main_csv, encoding="cp932", header=None)
             st.sidebar.info(f"📌 自動検出: {default_main_csv} を読み込んでいます")
@@ -279,6 +293,10 @@ if df is not None:
             distance = 0
 
         cond_raw = f"{cond_name} {surface}{distance}"
+        header_text = f"{cond_name} {surface}{distance}m"
+        venue_name = parse_racetrack(race_raw)
+        race_m = re.match(r"^\D+?(\d+)$", race_raw.strip())
+        race_no = int(race_m.group(1)) if race_m else 0
         wakuban_raw = row.get(4, "")
         wakuban = (
             int(wakuban_raw)
@@ -598,6 +616,9 @@ if df is not None:
         export_data_list.append({
             "original_index": original_index,
             "score": score,
+            "venue": venue_name,
+            "race_no": race_no,
+            "header": header_text,
             "レース": race_raw,
             "条件": cond_raw,
             "枠番": wakuban,
@@ -616,6 +637,9 @@ if df is not None:
         raw_data_list.append({
             "original_index": original_index,
             "score": score,
+            "venue": venue_name,
+            "race_no": race_no,
+            "header": header_text,
             "レース": race_raw,
             "条件": cond_raw,
             "枠番": wakuban,
@@ -705,10 +729,64 @@ if df is not None:
         html.append("</tbody></table></div>")
         return "".join(html)
 
-    st.markdown(render_html_table(res_df), unsafe_allow_html=True)
+    # --- 開催場・レース切り替え（TARGET風） ---
+    def pick(label, options, key, fmt=str):
+        if hasattr(st, "segmented_control"):
+            sel = st.segmented_control(
+                label,
+                options,
+                selection_mode="single",
+                default=options[0],
+                key=key,
+                format_func=fmt,
+            )
+        else:
+            sel = st.radio(
+                label, options, horizontal=True, key=key, format_func=fmt
+            )
+        return sel if sel in options else options[0]
+
+    venues = (
+        res_df.sort_values("original_index")["venue"].drop_duplicates().tolist()
+    )
+    sel_venue = pick("開催", venues, key="sel_venue")
+
+    venue_df = res_df[res_df["venue"] == sel_venue]
+    race_nos = sorted(venue_df["race_no"].unique().tolist())
+    race_options = race_nos + ["ALL"]
+    sel_race = pick(
+        "R",
+        race_options,
+        key=f"sel_race_{sel_venue}",
+        fmt=lambda x: "全R" if x == "ALL" else f"{x}R",
+    )
+
+    m_date = re.search(r"(\d{4})(\d{2})(\d{2})", source_name)
+    date_text = (
+        f"{m_date.group(1)}/{m_date.group(2)}/{m_date.group(3)}"
+        if m_date
+        else ""
+    )
+
+    if sel_race == "ALL":
+        view_df = venue_df
+        title = f"{sel_venue} 全レース"
+    else:
+        view_df = venue_df[venue_df["race_no"] == sel_race]
+        head = view_df["header"].iloc[0] if len(view_df) else ""
+        title = f"{sel_venue} {sel_race}R　{head}"
+
+    st.markdown(
+        f'<div class="race-header">{title}'
+        f'<span class="sub">{date_text}　{len(view_df)}頭</span></div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(render_html_table(view_df), unsafe_allow_html=True)
 
     # --- ダウンロードボタン ---
-    download_raw_df = raw_csv_df.drop(columns=["original_index", "score"])
+    download_raw_df = raw_csv_df.drop(
+        columns=["original_index", "score", "venue", "race_no", "header"]
+    )
 
     col1, col2 = st.columns(2)
     with col1:
