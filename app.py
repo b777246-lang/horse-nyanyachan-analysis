@@ -1020,47 +1020,53 @@ if df is not None:
 
             def add_fup_special(frame):
                 frame = frame.copy()
-                if "コメント" not in frame.columns:
-                    frame["コメント"] = ""
-                frame["コメント"] = frame["コメント"].astype("object")
+                comment_col = "総合評価・コース相性判定"
+
+                def number_from_cell(value):
+                    # HTMLセル（例 <td class="rank-1">6</td>）と通常数値の両方に対応
+                    if pd.isna(value):
+                        return None
+                    m = re.search(r"-?\d+(?:\.\d+)?", str(value))
+                    return float(m.group()) if m else None
 
                 for idx, row in frame.iterrows():
-                    venue = str(row.get("開催", "")).strip()
+                    # DataFrame内部の開催場列名は「venue」
+                    venue = str(row.get("venue", "")).strip()
 
-                    # 元CSVの2列目を使用。
-                    # 例: 「２勝ｸﾗｽ ダ1200m」「１勝ｸﾗｽ 芝1600m」
+                    # CSV 2列目「条件」
                     race_condition = str(row.get("条件", "")).strip()
-
-                    # 表記ゆれを統一して判定
                     normalized_condition = (
                         race_condition
                         .replace("１", "1")
                         .replace("２", "2")
                         .replace("３", "3")
                         .replace("ｸﾗｽ", "クラス")
-                        .replace("クラス", "クラス")
                     )
-
-                    fup = pd.to_numeric(row.get("厩舎F-UP2", ""), errors="coerce")
-                    popularity = pd.to_numeric(row.get("人気", ""), errors="coerce")
 
                     class_ok = any(
                         c in normalized_condition
                         for c in {"未勝利", "1勝クラス", "2勝クラス", "3勝クラス"}
                     )
 
+                    fup = number_from_cell(row.get("厩舎F-UP2", ""))
+                    popularity = number_from_cell(row.get("人気", ""))
+
                     if (
                         venue in target_venues
                         and class_ok
-                        and pd.notna(fup)
-                        and 6 <= float(fup) <= 7
-                        and pd.notna(popularity)
-                        and 1 <= int(popularity) <= 2
+                        and fup is not None
+                        and 6 <= fup <= 7
+                        and popularity is not None
+                        and 1 <= popularity <= 2
                     ):
-                        current = str(row.get("コメント", "") or "").strip()
                         mark = "★F-UP特注★"
+                        current = str(row.get(comment_col, "") or "")
+
                         if mark not in current:
-                            frame.at[idx, "コメント"] = f"{mark} {current}".strip()
+                            # HTML表示用DataFrameでも通常文字列でもそのまま先頭追加できる
+                            frame.at[idx, comment_col] = (
+                                f"{mark} {current}".strip()
+                            )
 
                 return frame
 
