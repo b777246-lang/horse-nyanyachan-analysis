@@ -1011,6 +1011,47 @@ if df is not None:
             raw_csv_df = apply_odds(raw_csv_df)
             view_df = apply_odds(view_df)
 
+            # --- 狙い目: ★F-UP特注★ ---
+            # 阪神/京都/中山/東京/中京
+            # 未勝利～3勝クラス
+            # 厩舎finish-UP 6～7
+            # JRA実人気 1～2人気
+            target_venues = {"阪神", "京都", "中山", "東京", "中京"}
+            target_classes = {"未勝利", "1勝クラス", "2勝クラス", "3勝クラス"}
+
+            def add_fup_special(frame):
+                frame = frame.copy()
+                if "コメント" not in frame.columns:
+                    frame["コメント"] = ""
+                frame["コメント"] = frame["コメント"].astype("object")
+
+                for idx, row in frame.iterrows():
+                    venue = str(row.get("開催", "")).strip()
+                    race_class = str(row.get("クラス", "")).strip()
+                    fup = pd.to_numeric(row.get("厩舎F-UP2", ""), errors="coerce")
+                    popularity = pd.to_numeric(row.get("人気", ""), errors="coerce")
+
+                    class_ok = any(c in race_class for c in target_classes)
+
+                    if (
+                        venue in target_venues
+                        and class_ok
+                        and pd.notna(fup)
+                        and 6 <= float(fup) <= 7
+                        and pd.notna(popularity)
+                        and 1 <= int(popularity) <= 2
+                    ):
+                        current = str(row.get("コメント", "") or "").strip()
+                        mark = "★F-UP特注★"
+                        if mark not in current:
+                            frame.at[idx, "コメント"] = f"{mark} {current}".strip()
+
+                return frame
+
+            res_df = add_fup_special(res_df)
+            raw_csv_df = add_fup_special(raw_csv_df)
+            view_df = add_fup_special(view_df)
+
     st.markdown(
         f'<div class="race-header">{title}'
         f'<span class="sub">{date_text}　{len(view_df)}頭</span></div>',
