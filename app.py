@@ -842,7 +842,18 @@ if df is not None:
             }
 
             def apply_odds(frame):
+                # pandas 3.x / Arrow string dtype では、文字列列へ float/int を
+                # .at で代入すると TypeError になるため object 型へ変換してから更新する。
                 frame = frame.copy()
+
+                if "実オッズ" not in frame.columns:
+                    frame["実オッズ"] = ""
+                if "人気" not in frame.columns:
+                    frame["人気"] = ""
+
+                frame["実オッズ"] = frame["実オッズ"].astype("object")
+                frame["人気"] = frame["人気"].astype("object")
+
                 for idx, row in frame.iterrows():
                     horse_no_text = str(row.get("馬番", "")).strip()
                     try:
@@ -852,8 +863,15 @@ if df is not None:
 
                     item = odds_by_no.get(horse_no_text)
                     if item:
-                        frame.at[idx, "実オッズ"] = item.get("jra_odds", "")
-                        frame.at[idx, "人気"] = item.get("popularity", "")
+                        odds_value = item.get("jra_odds", "")
+                        popularity_value = item.get("popularity", "")
+
+                        frame.at[idx, "実オッズ"] = (
+                            "" if odds_value is None else odds_value
+                        )
+                        frame.at[idx, "人気"] = (
+                            "" if popularity_value is None else popularity_value
+                        )
                 return frame
 
             res_df = apply_odds(res_df)
