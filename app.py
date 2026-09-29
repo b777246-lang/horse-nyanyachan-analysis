@@ -1065,9 +1065,11 @@ if df is not None:
                         current = str(row.get(comment_col, "") or "")
 
                         if mark not in current:
-                            # HTML表示用DataFrameでも通常文字列でもそのまま先頭追加できる
+                            # 既存の「★...★」赤字化関数を通してから追加。
+                            # ★F-UP特注★ も既存の特注コメントと同じ赤字・太字表示になる。
+                            marked = format_special_tags_html(mark)
                             frame.at[idx, comment_col] = (
-                                f"{mark} {current}".strip()
+                                f"{marked} {current}".strip()
                             )
 
                 return frame
