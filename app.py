@@ -1023,10 +1023,12 @@ if df is not None:
                 comment_col = "総合評価・コース相性判定"
 
                 def number_from_cell(value):
-                    # HTMLセル（例 <td class="rank-1">6</td>）と通常数値の両方に対応
+                    # HTMLセルの場合、class="rank-1" の「1」を値と誤認しないよう
+                    # タグを除去してから表示値だけを数値化する。
                     if pd.isna(value):
                         return None
-                    m = re.search(r"-?\d+(?:\.\d+)?", str(value))
+                    plain = re.sub(r"<[^>]+>", "", str(value)).strip()
+                    m = re.search(r"-?\d+(?:\.\d+)?", plain)
                     return float(m.group()) if m else None
 
                 for idx, row in frame.iterrows():
