@@ -74,6 +74,7 @@ st.markdown(
         width: 100%;
         max-height: 80vh;
         overflow-y: auto;
+        overflow-x: hidden;
         border: 1px solid #ddd;
         border-radius: 6px;
         margin-bottom: 20px;
@@ -81,16 +82,19 @@ st.markdown(
     }
     .custom-horse-table {
         width: 100% !important;
+        table-layout: fixed;
         border-collapse: collapse;
-        font-size: 11px;
+        font-size: 9.5px;
         background-color: white;
         color: #31333F;
     }
     .custom-horse-table th, .custom-horse-table td {
         border: 1px solid #e0e0e0;
-        padding: 6px 8px;
+        padding: 4px 3px;
         text-align: center;
         white-space: nowrap;
+        overflow: hidden;
+        box-sizing: border-box;
     }
     .custom-horse-table th {
         background-color: #f0f2f6;
@@ -98,12 +102,42 @@ st.markdown(
         top: 0;
         z-index: 10;
         font-weight: 600;
+        line-height: 1.15;
     }
-    .custom-horse-table th:last-child, 
-    .custom-horse-table td:last-child {
-        min-width: 200px;
+
+    /* 17列を画面幅100%に収める */
+    .custom-horse-table th:nth-child(1),  .custom-horse-table td:nth-child(1)  { width: 3.5%; }
+    .custom-horse-table th:nth-child(2),  .custom-horse-table td:nth-child(2)  { width: 6.0%; }
+    .custom-horse-table th:nth-child(3),  .custom-horse-table td:nth-child(3)  { width: 3.0%; }
+    .custom-horse-table th:nth-child(4),  .custom-horse-table td:nth-child(4)  { width: 3.0%; }
+    .custom-horse-table th:nth-child(5),  .custom-horse-table td:nth-child(5)  { width: 3.5%; }
+    .custom-horse-table th:nth-child(6),  .custom-horse-table td:nth-child(6)  { width: 10.0%; }
+    .custom-horse-table th:nth-child(7),  .custom-horse-table td:nth-child(7)  { width: 5.0%; }
+    .custom-horse-table th:nth-child(8),  .custom-horse-table td:nth-child(8)  { width: 3.5%; }
+    .custom-horse-table th:nth-child(9),  .custom-horse-table td:nth-child(9)  { width: 3.2%; }
+    .custom-horse-table th:nth-child(10), .custom-horse-table td:nth-child(10) { width: 3.4%; }
+    .custom-horse-table th:nth-child(11), .custom-horse-table td:nth-child(11) { width: 3.4%; }
+    .custom-horse-table th:nth-child(12), .custom-horse-table td:nth-child(12) { width: 2.8%; }
+    .custom-horse-table th:nth-child(13), .custom-horse-table td:nth-child(13) { width: 2.8%; }
+    .custom-horse-table th:nth-child(14), .custom-horse-table td:nth-child(14) { width: 5.5%; }
+    .custom-horse-table th:nth-child(15), .custom-horse-table td:nth-child(15) { width: 30.0%; }
+    .custom-horse-table th:nth-child(16), .custom-horse-table td:nth-child(16) { width: 5.5%; }
+    .custom-horse-table th:nth-child(17), .custom-horse-table td:nth-child(17) { width: 5.5%; }
+
+    /* 長文の総合評価だけ折り返して全内容を表示 */
+    .custom-horse-table th:nth-child(15),
+    .custom-horse-table td:nth-child(15) {
         white-space: normal !important;
+        overflow: visible !important;
+        overflow-wrap: anywhere;
         text-align: left !important;
+        line-height: 1.25;
+    }
+
+    /* KOL・オッズ差は小さくても読みやすく */
+    .custom-horse-table th:nth-child(16),
+    .custom-horse-table th:nth-child(17) {
+        white-space: normal !important;
     }
     .rank-1 { background-color: #fff2b2 !important; font-weight: bold; }
     .rank-2 { background-color: #e6f2ff !important; }
@@ -126,9 +160,20 @@ st.markdown(
     }
     .race-header .sub { color: #8fb8d8; font-size: 12px; font-weight: 400; margin-left: 12px; }
 
+    @media screen and (max-width: 1200px) {
+        .custom-horse-table { font-size: 8px !important; }
+        .custom-horse-table th, .custom-horse-table td { padding: 3px 2px !important; }
+    }
     @media screen and (max-width: 768px) {
-        .custom-horse-table { font-size: 10px !important; }
-        .custom-horse-table th, .custom-horse-table td { padding: 4px 5px !important; }
+        .main .block-container {
+            padding-left: 0.15rem !important;
+            padding-right: 0.15rem !important;
+        }
+        .custom-horse-table { font-size: 6.5px !important; }
+        .custom-horse-table th, .custom-horse-table td {
+            padding: 2px 1px !important;
+            letter-spacing: -0.15px;
+        }
     }
     </style>
     """,
@@ -1021,10 +1066,14 @@ if df is not None:
                 background-color: #f0f2f6;
                 font-weight: 600;
             }}
-            .custom-horse-table th:last-child, 
-            .custom-horse-table td:last-child {{
-                min-width: 200px;
+            .custom-horse-table {{
+                table-layout: fixed;
+            }}
+            .custom-horse-table th:nth-child(15),
+            .custom-horse-table td:nth-child(15) {{
+                width: 30%;
                 white-space: normal !important;
+                overflow-wrap: anywhere;
                 text-align: left !important;
             }}
             .rank-1 {{ background-color: #fff2b2 !important; font-weight: bold; }}
