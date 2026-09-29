@@ -736,9 +736,7 @@ if df is not None:
             "馬番",
             "推印",
             "馬名",
-            "KOLオッズ",
             "実オッズ",
-            "オッズ差",
             "人気",
             "arms",
             "arms2",
@@ -747,6 +745,8 @@ if df is not None:
             "F",
             "厩舎F-UP2",
             "総合評価・コース相性判定",
+            "KOLオッズ",
+            "オッズ差",
         ]
         html.append("<thead><tr>")
         for col in display_columns:
@@ -761,9 +761,18 @@ if df is not None:
             html.append(f"<td>{row['馬番']}</td>")
             html.append(f"<td>{row['推印']}</td>")
             html.append(f"<td>{row['馬名']}</td>")
-            html.append(f"<td>{row.get('KOLオッズ', '')}</td>")
             html.append(f"<td>{row.get('実オッズ', '')}</td>")
+            html.append(f"<td>{row.get('人気', '')}</td>")
+            html.append(str(row["arms"]))
+            html.append(str(row["arms2"]))
+            html.append(str(row["TUA"]))
+            html.append(str(row["S"]))
+            html.append(str(row["F"]))
+            html.append(str(row["厩舎F-UP2"]))
+            html.append(f"<td>{row['総合評価・コース相性判定']}</td>")
 
+            # KOLオッズとオッズ差は「総合評価・コース相性判定」の右側に表示
+            html.append(f"<td>{row.get('KOLオッズ', '')}</td>")
             diff_value = row.get("オッズ差", "")
             kol_value = pd.to_numeric(row.get("KOLオッズ", ""), errors="coerce")
             diff_num = pd.to_numeric(diff_value, errors="coerce")
@@ -774,20 +783,8 @@ if df is not None:
                 and float(diff_num) >= 20
             )
             diff_class = ' class="odds-gap-alert"' if alert else ""
-            diff_text = (
-                f"{float(diff_num):+.1f}"
-                if pd.notna(diff_num)
-                else ""
-            )
+            diff_text = f"{float(diff_num):+.1f}" if pd.notna(diff_num) else ""
             html.append(f"<td{diff_class}>{diff_text}</td>")
-            html.append(f"<td>{row.get('人気', '')}</td>")
-            html.append(str(row["arms"]))
-            html.append(str(row["arms2"]))
-            html.append(str(row["TUA"]))
-            html.append(str(row["S"]))
-            html.append(str(row["F"]))
-            html.append(str(row["厩舎F-UP2"]))
-            html.append(f"<td>{row['総合評価・コース相性判定']}</td>")
             html.append("</tr>")
         html.append("</tbody></table></div>")
         return "".join(html)
