@@ -74,7 +74,7 @@ st.markdown(
         width: 100%;
         max-height: 80vh;
         overflow-y: auto;
-        overflow-x: hidden;
+        overflow-x: auto;
         border: 1px solid #ddd;
         border-radius: 6px;
         margin-bottom: 20px;
@@ -82,6 +82,7 @@ st.markdown(
     }
     .custom-horse-table {
         width: 100% !important;
+        min-width: 1500px;
         table-layout: fixed;
         border-collapse: collapse;
         font-size: 9.5px;
@@ -120,9 +121,9 @@ st.markdown(
     .custom-horse-table th:nth-child(12), .custom-horse-table td:nth-child(12) { width: 2.8%; }
     .custom-horse-table th:nth-child(13), .custom-horse-table td:nth-child(13) { width: 2.8%; }
     .custom-horse-table th:nth-child(14), .custom-horse-table td:nth-child(14) { width: 5.5%; }
-    .custom-horse-table th:nth-child(15), .custom-horse-table td:nth-child(15) { width: 30.0%; }
-    .custom-horse-table th:nth-child(16), .custom-horse-table td:nth-child(16) { width: 5.5%; }
-    .custom-horse-table th:nth-child(17), .custom-horse-table td:nth-child(17) { width: 5.5%; }
+    .custom-horse-table th:nth-child(15), .custom-horse-table td:nth-child(15) { width: 25.0%; }
+    .custom-horse-table th:nth-child(16), .custom-horse-table td:nth-child(16) { width: 8.5%; }
+    .custom-horse-table th:nth-child(17), .custom-horse-table td:nth-child(17) { width: 8.5%; }
 
     /* 長文の総合評価だけ折り返して全内容を表示 */
     .custom-horse-table th:nth-child(15),
@@ -138,6 +139,16 @@ st.markdown(
     .custom-horse-table th:nth-child(16),
     .custom-horse-table th:nth-child(17) {
         white-space: normal !important;
+    }
+    .custom-horse-table th:nth-child(16),
+    .custom-horse-table td:nth-child(16),
+    .custom-horse-table th:nth-child(17),
+    .custom-horse-table td:nth-child(17) {
+        font-size: 11px !important;
+        font-weight: 700;
+        padding-left: 6px !important;
+        padding-right: 6px !important;
+        overflow: visible !important;
     }
     .rank-1 { background-color: #fff2b2 !important; font-weight: bold; }
     .rank-2 { background-color: #e6f2ff !important; }
@@ -173,6 +184,14 @@ st.markdown(
         .custom-horse-table th, .custom-horse-table td {
             padding: 2px 1px !important;
             letter-spacing: -0.15px;
+        }
+        .custom-horse-table th:nth-child(16),
+        .custom-horse-table td:nth-child(16),
+        .custom-horse-table th:nth-child(17),
+        .custom-horse-table td:nth-child(17) {
+            font-size: 10px !important;
+            padding-left: 5px !important;
+            padding-right: 5px !important;
         }
     }
     </style>
