@@ -109,6 +109,11 @@ st.markdown(
     .rank-2 { background-color: #e6f2ff !important; }
     .rank-3 { background-color: #d4edda !important; }
     .push-mark-red { color: #ff4b4b !important; font-weight: bold; }
+    .odds-gap-alert {
+        background-color: #ffe08a !important;
+        color: #b42318 !important;
+        font-weight: 800 !important;
+    }
     .race-header {
         background: #0a1128;
         color: #ffffff;
@@ -324,6 +329,22 @@ if df is not None:
             push_mark_html = push_mark
 
         name = str(row.get(7, "")).strip()
+
+        # ヘッダーなしCSV:
+        # 15列目 = KOLオッズ / 16列目 = TARGET 18桁レースID
+        kol_raw = row.get(14, "")
+        kol_odds = pd.to_numeric(kol_raw, errors="coerce")
+
+        race_id_raw = row.get(15, "")
+        if pd.isna(race_id_raw):
+            race_id = ""
+        else:
+            race_id = str(race_id_raw).strip()
+            # pandasで数値として読まれた場合の末尾 .0 を除去
+            if re.fullmatch(r"\d+\.0", race_id):
+                race_id = race_id[:-2]
+        if not re.fullmatch(r"\d{18}", race_id):
+            race_id = ""
 
         arms = row["arms_val"]
         arms2 = row["arms2_val"]
@@ -633,8 +654,11 @@ if df is not None:
             "馬番": umaban,
             "推印": push_mark_html,
             "馬名": name,
+            "KOLオッズ": "" if pd.isna(kol_odds) else float(kol_odds),
             "実オッズ": "",
+            "オッズ差": "",
             "人気": "",
+            "レースID": race_id,
             "arms": get_cell_html(arms, arms_rank),
             "arms2": get_cell_html(arms2, arms2_rank),
             "TUA": get_cell_html(tua, tua_rank),
@@ -656,8 +680,11 @@ if df is not None:
             "馬番": umaban,
             "推印": push_mark,
             "馬名": name,
+            "KOLオッズ": "" if pd.isna(kol_odds) else float(kol_odds),
             "実オッズ": "",
+            "オッズ差": "",
             "人気": "",
+            "レースID": race_id,
             "arms": arms,
             "arms2": arms2,
             "TUA": tua,
@@ -709,7 +736,9 @@ if df is not None:
             "馬番",
             "推印",
             "馬名",
+            "KOLオッズ",
             "実オッズ",
+            "オッズ差",
             "人気",
             "arms",
             "arms2",
@@ -732,7 +761,25 @@ if df is not None:
             html.append(f"<td>{row['馬番']}</td>")
             html.append(f"<td>{row['推印']}</td>")
             html.append(f"<td>{row['馬名']}</td>")
+            html.append(f"<td>{row.get('KOLオッズ', '')}</td>")
             html.append(f"<td>{row.get('実オッズ', '')}</td>")
+
+            diff_value = row.get("オッズ差", "")
+            kol_value = pd.to_numeric(row.get("KOLオッズ", ""), errors="coerce")
+            diff_num = pd.to_numeric(diff_value, errors="coerce")
+            alert = (
+                pd.notna(kol_value)
+                and float(kol_value) < 50
+                and pd.notna(diff_num)
+                and float(diff_num) >= 20
+            )
+            diff_class = ' class="odds-gap-alert"' if alert else ""
+            diff_text = (
+                f"{float(diff_num):+.1f}"
+                if pd.notna(diff_num)
+                else ""
+            )
+            html.append(f"<td{diff_class}>{diff_text}</td>")
             html.append(f"<td>{row.get('人気', '')}</td>")
             html.append(str(row["arms"]))
             html.append(str(row["arms2"]))
@@ -794,35 +841,70 @@ if df is not None:
 
     # --- JRA公式 単勝オッズ更新（URL入力不要） ---
     if sel_race != "ALL":
-        date_yyyymmdd = re.sub(r"\D", "", date_text)
-        odds_key = f"{date_yyyymmdd}_{sel_venue}_{sel_race}"
+        # 18桁レースIDは画面には表示せず、JRA対象レース特定に内部利用する。
+        selected_ids = [
+            str(v).strip()
+            for v in view_df.get("レースID", pd.Series(dtype="object")).tolist()
+            if re.fullmatch(r"\d{18}", str(v).strip())
+        ]
+        race_prefixes = sorted({rid[:16] for rid in selected_ids})
+
+        id_date = ""
+        id_race_no = None
+        id_place_code = ""
+        if len(race_prefixes) == 1:
+            prefix = race_prefixes[0]
+            id_date = prefix[:8]
+            id_place_code = prefix[8:10]
+            id_race_no = int(prefix[14:16])
+
+        # IDがまだない旧CSVでは従来どおりファイル名・画面選択を使用。
+        date_yyyymmdd = id_date or re.sub(r"\D", "", date_text)
+        target_race_no = id_race_no or int(sel_race)
+
+        place_code_to_name = {
+            "01": "札幌", "02": "函館", "03": "福島", "04": "新潟", "05": "東京",
+            "06": "中山", "07": "中京", "08": "京都", "09": "阪神", "10": "小倉",
+        }
+        target_venue = place_code_to_name.get(id_place_code, sel_venue)
+
+        odds_key = f"{date_yyyymmdd}_{target_venue}_{target_race_no}"
 
         with st.expander("💴 JRA単勝オッズ", expanded=False):
-            if st.button("🔄 オッズ更新", key=f"odds_update_{odds_key}"):
+            if len(race_prefixes) > 1:
+                st.error("選択レース内に複数の18桁レースIDが混在しています。CSVを確認してください。")
+            elif race_prefixes and (
+                target_venue != sel_venue or target_race_no != int(sel_race)
+            ):
+                st.error(
+                    "18桁レースIDと画面で選択した開催・Rが一致しません。"
+                    "CSVのレースIDを確認してください。"
+                )
+            elif st.button("🔄 オッズ更新", key=f"odds_update_{odds_key}"):
                 if fetch_jra_win_odds_auto is None:
                     st.error(
                         "jra_odds.py を app.py と同じフォルダに配置してください。"
                     )
                 elif not re.fullmatch(r"\d{8}", date_yyyymmdd):
                     st.error(
-                        "CSVファイル名から開催日を取得できません。"
-                        "ファイル名を YYYYMMDD.csv の形式にしてください。"
+                        "開催日を取得できません。16列目の18桁レースID、"
+                        "または YYYYMMDD.csv のファイル名を確認してください。"
                     )
                 else:
                     try:
                         with st.spinner(
-                            f"JRA公式から {sel_venue}{sel_race}R の単勝オッズを取得しています..."
+                            f"JRA公式から {target_venue}{target_race_no}R の単勝オッズを取得しています..."
                         ):
                             odds_rows, resolved_url = fetch_jra_win_odds_auto(
                                 date_yyyymmdd,
-                                sel_venue,
-                                int(sel_race),
+                                target_venue,
+                                target_race_no,
                             )
 
                         st.session_state.jra_odds_cache[odds_key] = odds_rows
                         st.session_state[f"jra_resolved_url_{odds_key}"] = resolved_url
                         st.success(
-                            f"{sel_venue}{sel_race}R：単勝オッズを"
+                            f"{target_venue}{target_race_no}R：単勝オッズを"
                             f"{len(odds_rows)}頭分取得しました。"
                         )
                     except Exception as exc:
@@ -842,17 +924,12 @@ if df is not None:
             }
 
             def apply_odds(frame):
-                # pandas 3.x / Arrow string dtype では、文字列列へ float/int を
-                # .at で代入すると TypeError になるため object 型へ変換してから更新する。
                 frame = frame.copy()
 
-                if "実オッズ" not in frame.columns:
-                    frame["実オッズ"] = ""
-                if "人気" not in frame.columns:
-                    frame["人気"] = ""
-
-                frame["実オッズ"] = frame["実オッズ"].astype("object")
-                frame["人気"] = frame["人気"].astype("object")
+                for col in ("KOLオッズ", "実オッズ", "オッズ差", "人気"):
+                    if col not in frame.columns:
+                        frame[col] = ""
+                    frame[col] = frame[col].astype("object")
 
                 for idx, row in frame.iterrows():
                     horse_no_text = str(row.get("馬番", "")).strip()
@@ -862,16 +939,30 @@ if df is not None:
                         pass
 
                     item = odds_by_no.get(horse_no_text)
-                    if item:
-                        odds_value = item.get("jra_odds", "")
-                        popularity_value = item.get("popularity", "")
+                    if not item:
+                        continue
 
-                        frame.at[idx, "実オッズ"] = (
-                            "" if odds_value is None else odds_value
+                    odds_value = item.get("jra_odds", "")
+                    popularity_value = item.get("popularity", "")
+
+                    frame.at[idx, "実オッズ"] = (
+                        "" if odds_value is None else float(odds_value)
+                    )
+                    frame.at[idx, "人気"] = (
+                        "" if popularity_value is None else popularity_value
+                    )
+
+                    kol_value = pd.to_numeric(
+                        row.get("KOLオッズ", ""), errors="coerce"
+                    )
+                    if pd.notna(kol_value) and odds_value not in ("", None):
+                        # 指定式: 実オッズ - KOLオッズ
+                        frame.at[idx, "オッズ差"] = round(
+                            float(odds_value) - float(kol_value), 1
                         )
-                        frame.at[idx, "人気"] = (
-                            "" if popularity_value is None else popularity_value
-                        )
+                    else:
+                        frame.at[idx, "オッズ差"] = ""
+
                 return frame
 
             res_df = apply_odds(res_df)
