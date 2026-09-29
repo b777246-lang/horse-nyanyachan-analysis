@@ -5,9 +5,9 @@ import pandas as pd
 import streamlit as st
 
 try:
-    from jra_odds import fetch_jra_win_odds
+    from jra_odds import fetch_jra_win_odds_auto
 except ImportError:
-    fetch_jra_win_odds = None
+    fetch_jra_win_odds_auto = None
 
 st.set_page_config(
     page_title="競馬指数 総合分析Webアプリケーション", layout="wide"
@@ -792,36 +792,47 @@ if df is not None:
         head = view_df["header"].iloc[0] if len(view_df) else ""
         title = f"{sel_venue} {sel_race}R　{head}"
 
-    # --- JRA公式 単勝オッズ更新 ---
+    # --- JRA公式 単勝オッズ更新（URL入力不要） ---
     if sel_race != "ALL":
-        odds_key = f"{date_text}_{sel_venue}_{sel_race}"
-        default_url = st.session_state.get(f"jra_url_{odds_key}", "")
+        date_yyyymmdd = re.sub(r"\D", "", date_text)
+        odds_key = f"{date_yyyymmdd}_{sel_venue}_{sel_race}"
 
         with st.expander("💴 JRA単勝オッズ", expanded=False):
-            jra_race_url = st.text_input(
-                "JRA公式のこのレースの出馬表URL",
-                value=default_url,
-                key=f"jra_url_input_{odds_key}",
-                placeholder="https://www.jra.go.jp/JRADB/...",
-            )
-
             if st.button("🔄 オッズ更新", key=f"odds_update_{odds_key}"):
-                if fetch_jra_win_odds is None:
+                if fetch_jra_win_odds_auto is None:
                     st.error(
                         "jra_odds.py を app.py と同じフォルダに配置してください。"
                     )
-                elif not jra_race_url.strip():
-                    st.warning("JRA公式の出馬表URLを入力してください。")
+                elif not re.fullmatch(r"\d{8}", date_yyyymmdd):
+                    st.error(
+                        "CSVファイル名から開催日を取得できません。"
+                        "ファイル名を YYYYMMDD.csv の形式にしてください。"
+                    )
                 else:
                     try:
-                        with st.spinner("JRA公式から単勝オッズを取得しています..."):
-                            odds_rows = fetch_jra_win_odds(jra_race_url.strip())
+                        with st.spinner(
+                            f"JRA公式から {sel_venue}{sel_race}R の単勝オッズを取得しています..."
+                        ):
+                            odds_rows, resolved_url = fetch_jra_win_odds_auto(
+                                date_yyyymmdd,
+                                sel_venue,
+                                int(sel_race),
+                            )
 
                         st.session_state.jra_odds_cache[odds_key] = odds_rows
-                        st.session_state[f"jra_url_{odds_key}"] = jra_race_url.strip()
-                        st.success(f"単勝オッズを {len(odds_rows)} 頭分取得しました。")
+                        st.session_state[f"jra_resolved_url_{odds_key}"] = resolved_url
+                        st.success(
+                            f"{sel_venue}{sel_race}R：単勝オッズを"
+                            f"{len(odds_rows)}頭分取得しました。"
+                        )
                     except Exception as exc:
                         st.error(f"オッズ取得に失敗しました: {exc}")
+
+            cached_url = st.session_state.get(
+                f"jra_resolved_url_{odds_key}", ""
+            )
+            if cached_url:
+                st.caption("JRA公式の対象レースURLを自動取得済み")
 
         cached_odds = st.session_state.jra_odds_cache.get(odds_key, [])
         if cached_odds:

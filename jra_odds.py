@@ -1,26 +1,14 @@
-"""
-JRA公式 単勝オッズ取得モジュール
-
-用途:
-- StreamlitアプリからJRA公式出馬表を取得
-- 馬番、馬名、単勝オッズ、人気を抽出
-- TARGETの18桁レースIDと馬番で照合
-
-注意:
-- JRAのページURLは呼び出し側から渡す設計です。
-- JRAページURLを固定せず、アプリ側のレース選択処理と分離しています。
-"""
-
 from __future__ import annotations
 
 import re
 from typing import Any
+from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
 
-
 JRA_HOME_URL = "https://www.jra.go.jp/"
+JRA_ACCESS_URL = "https://www.jra.go.jp/JRADB/accessD.html"
 
 HEADERS = {
     "User-Agent": (
@@ -31,187 +19,279 @@ HEADERS = {
     "Accept-Language": "ja,en-US;q=0.9,en;q=0.8",
 }
 
+PLACE_CODES = {
+    "札幌": "01", "函館": "02", "福島": "03", "新潟": "04", "東京": "05",
+    "中山": "06", "中京": "07", "京都": "08", "阪神": "09", "小倉": "10",
+}
 
-def fetch_jra_win_odds(race_url: str, timeout: int = 20) -> list[dict[str, Any]]:
-    """
-    JRA公式の出馬表URLから単勝オッズを取得する。
 
-    戻り値:
-        [
-            {
-                "horse_no": 1,
-                "horse_name": "馬名",
-                "jra_odds": 5.2,
-                "popularity": 2,
-            },
-            ...
-        ]
-    """
-    if not race_url:
-        raise ValueError("JRAレースURLが指定されていません。")
+def _decode(response: requests.Response) -> str:
+    return response.content.decode("cp932", errors="replace")
 
+
+def _doaction(anchor) -> tuple[str, str] | None:
+    onclick = anchor.get("onclick", "")
+    m = re.search(
+        r"doAction\(\s*['\"]([^'\"]+)['\"]\s*,\s*['\"]([^'\"]+)['\"]\s*\)",
+        onclick,
+    )
+    return m.groups() if m else None
+
+
+def _new_session(timeout: int) -> requests.Session:
     session = requests.Session()
     session.headers.update(HEADERS)
-
-    # JRAトップへ先にアクセスしてセッションを作る。
-    home = session.get(
-        JRA_HOME_URL,
-        timeout=timeout,
-        allow_redirects=True,
-    )
+    home = session.get(JRA_HOME_URL, timeout=timeout, allow_redirects=True)
     home.raise_for_status()
-
     session.headers.update({"Referer": home.url})
+    return session
 
-    response = session.get(
-        race_url,
+
+def _get_meeting_select(session: requests.Session, timeout: int) -> tuple[str, str]:
+    """
+    JRAトップからJRADBへ入り、開催選択ページを取得する。
+    検証済みのJRA側開催選択cnameを入口として使用する。
+    末尾は出馬表HTMLから確認したJRA自身の開催選択値。
+    """
+    # v4検証でJRA出馬表の「開催選択」doActionから確認した値
+    meeting_cname = "pw01dli00/F3"
+    session.headers.update({
+        "Referer": JRA_HOME_URL,
+        "Origin": "https://www.jra.go.jp",
+    })
+    r = session.post(
+        JRA_ACCESS_URL,
+        data={"cname": meeting_cname},
         timeout=timeout,
         allow_redirects=True,
     )
-    response.raise_for_status()
-
-    html = response.content.decode("cp932", errors="replace")
-
+    r.raise_for_status()
+    html = _decode(r)
     if "パラメータエラー" in html:
-        raise RuntimeError(
-            "JRAからパラメータエラーページが返されました。"
-            f"\n取得URL: {response.url}"
-        )
+        raise RuntimeError("JRA開催選択ページでパラメータエラーになりました。")
+    return r.url, html
 
-    if "単勝オッズ" not in html:
-        raise RuntimeError(
-            "JRAページには「単勝オッズ」が見つかりませんでした。"
-            f"\n取得URL: {response.url}"
-        )
+
+def _find_race_select_cname(
+    html: str,
+    base_url: str,
+    date_yyyymmdd: str,
+    venue_name: str,
+) -> tuple[str, str]:
+    place = PLACE_CODES.get(venue_name)
+    if not place:
+        raise ValueError(f"JRA場所コードを特定できません: {venue_name}")
 
     soup = BeautifulSoup(html, "html.parser")
+    candidates: list[tuple[str, str, str]] = []
 
-    rows: list[dict[str, Any]] = []
+    for a in soup.find_all("a"):
+        parsed = _doaction(a)
+        if not parsed:
+            continue
+        action_path, cname = parsed
+        if "pw01drl" not in cname:
+            continue
 
-    # 現在確認できているJRA公式HTML構造:
-    # <tr>
-    #   <td class="num">馬番</td>
-    #   <td class="horse">
-    #       <div class="name">馬名</div>
-    #       <div class="odds">
-    #           <span class="num"><strong>52.3</strong></span>
-    #           <span class="pop_rank">(14<span>番人気</span>)</span>
-    #       </div>
-    #   </td>
-    # </tr>
+        # 開催選択画面で実際に確認した形式:
+        # pw01drl1 006 2026 04 09 20 20260927 /FC
+        # TARGET場所06に対しJRA側は006。
+        if f"pw01drl1{int(place):03d}" not in cname:
+            continue
+        if date_yyyymmdd not in cname:
+            continue
+
+        candidates.append(
+            (urljoin(base_url, action_path), cname, a.get_text(" ", strip=True))
+        )
+
+    if not candidates:
+        raise RuntimeError(
+            f"JRA開催選択ページに {date_yyyymmdd} {venue_name} の開催が見つかりません。"
+        )
+
+    # 同日・同場は通常1候補。複数なら安全のため曖昧として止める。
+    unique = {(u, c): (u, c, t) for u, c, t in candidates}
+    candidates = list(unique.values())
+    if len(candidates) != 1:
+        texts = " / ".join(x[2] for x in candidates)
+        raise RuntimeError(
+            f"JRA開催候補を一意に決められません ({len(candidates)}件): {texts}"
+        )
+
+    return candidates[0][0], candidates[0][1]
+
+
+def _get_race_select_page(
+    session: requests.Session,
+    action_url: str,
+    cname: str,
+    referer: str,
+    timeout: int,
+) -> tuple[str, str]:
+    session.headers.update({
+        "Referer": referer,
+        "Origin": "https://www.jra.go.jp",
+    })
+    r = session.post(
+        action_url,
+        data={"cname": cname},
+        timeout=timeout,
+        allow_redirects=True,
+    )
+    r.raise_for_status()
+    html = _decode(r)
+    if "パラメータエラー" in html:
+        raise RuntimeError("JRAレース選択ページでパラメータエラーになりました。")
+    return r.url, html
+
+
+def _find_race_url(
+    html: str,
+    base_url: str,
+    date_yyyymmdd: str,
+    venue_name: str,
+    race_no: int,
+) -> str:
+    place = PLACE_CODES.get(venue_name)
+    if not place:
+        raise ValueError(f"JRA場所コードを特定できません: {venue_name}")
+
+    soup = BeautifulSoup(html, "html.parser")
+    candidates = []
+
+    # JRAの正規出馬表URLの構造を、実際に取得した12Rリンクに合わせて照合。
+    pattern = re.compile(
+        r"pw01dde1"
+        + rf"0?{re.escape(place)}"
+        + r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{8})/([0-9A-F]{2})",
+        re.I,
+    )
+
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+        absolute = urljoin(base_url, href)
+        if "accessD.html?CNAME=" not in absolute:
+            continue
+
+        m = pattern.search(absolute)
+        if not m:
+            continue
+
+        _year, _kai, _day_no, rno, date, _suffix = m.groups()
+        if date == date_yyyymmdd and int(rno) == int(race_no):
+            candidates.append(absolute)
+
+    candidates = list(dict.fromkeys(candidates))
+    if not candidates:
+        raise RuntimeError(
+            f"JRAレース選択ページに {venue_name}{race_no}R の出馬表URLが見つかりません。"
+        )
+    if len(candidates) > 1:
+        raise RuntimeError(
+            f"{venue_name}{race_no}R のJRA出馬表URLが複数見つかりました。"
+        )
+    return candidates[0]
+
+
+def _extract_win_odds(html: str) -> list[dict[str, Any]]:
+    if "パラメータエラー" in html:
+        raise RuntimeError("JRAからパラメータエラーページが返されました。")
+    if "単勝オッズ" not in html:
+        raise RuntimeError("JRAページに単勝オッズが見つかりません。")
+
+    soup = BeautifulSoup(html, "html.parser")
+    by_no: dict[int, dict[str, Any]] = {}
+
     for tr in soup.select("tr"):
         num_td = tr.select_one("td.num")
         horse_td = tr.select_one("td.horse")
-
         if not num_td or not horse_td:
             continue
 
-        num_match = re.search(
-            r"\d+",
-            num_td.get_text(" ", strip=True),
-        )
-        if not num_match:
+        m = re.search(r"\d+", num_td.get_text(" ", strip=True))
+        if not m:
             continue
-
-        horse_no = int(num_match.group())
+        horse_no = int(m.group())
         if not 1 <= horse_no <= 18:
             continue
-
-        name_tag = horse_td.select_one(".name")
-        horse_name = (
-            name_tag.get_text(" ", strip=True)
-            if name_tag
-            else ""
-        )
 
         odds_tag = horse_td.select_one(".odds strong")
         if not odds_tag:
             continue
-
-        odds_text = odds_tag.get_text(" ", strip=True)
         try:
-            jra_odds = float(odds_text)
+            jra_odds = float(odds_tag.get_text(" ", strip=True))
         except ValueError:
             continue
 
-        popularity: int | None = None
+        name_tag = horse_td.select_one(".name")
+        horse_name = name_tag.get_text(" ", strip=True) if name_tag else ""
+
+        popularity = None
         pop_tag = horse_td.select_one(".pop_rank")
         if pop_tag:
-            pop_match = re.search(
-                r"\d+",
-                pop_tag.get_text(" ", strip=True),
-            )
-            if pop_match:
-                popularity = int(pop_match.group())
+            pm = re.search(r"\d+", pop_tag.get_text(" ", strip=True))
+            if pm:
+                popularity = int(pm.group())
 
-        rows.append(
-            {
-                "horse_no": horse_no,
-                "horse_name": horse_name,
-                "jra_odds": jra_odds,
-                "popularity": popularity,
-            }
-        )
+        by_no[horse_no] = {
+            "horse_no": horse_no,
+            "horse_name": horse_name,
+            "jra_odds": jra_odds,
+            "popularity": popularity,
+        }
 
-    # 同一馬番の重複を除き、馬番順にする。
-    by_no: dict[int, dict[str, Any]] = {}
-    for row in rows:
-        by_no[row["horse_no"]] = row
+    if not by_no:
+        raise RuntimeError("JRAページから単勝オッズを1頭も抽出できませんでした。")
 
-    result = [
-        by_no[no]
-        for no in sorted(by_no)
-    ]
-
-    if not result:
-        raise RuntimeError(
-            "JRAページから単勝オッズを1頭も抽出できませんでした。"
-        )
-
-    return result
+    return [by_no[n] for n in sorted(by_no)]
 
 
-def merge_jra_odds(
-    rows: list[dict[str, Any]],
-    race_id_column: str,
-    jra_rows: list[dict[str, Any]],
-) -> list[dict[str, Any]]:
+def fetch_jra_win_odds_auto(
+    date_yyyymmdd: str,
+    venue_name: str,
+    race_no: int,
+    timeout: int = 20,
+) -> tuple[list[dict[str, Any]], str]:
     """
-    TARGET/JRAデータを18桁レースIDの末尾2桁（馬番）で結合する。
+    日付・開催場・RだけでJRA公式から単勝オッズを自動取得。
+    URL末尾 /XX は推測せず、JRAの開催選択→レース選択から取得する。
 
-    元データの各行は変更せず、以下の列を追加:
-      実オッズ
-      人気
-
-    race_id_column:
-        18桁のTARGETレースIDが入っている列名
+    return:
+        (odds_rows, resolved_race_url)
     """
-    jra_by_no = {
-        int(row["horse_no"]): row
-        for row in jra_rows
-    }
+    date_yyyymmdd = re.sub(r"\D", "", str(date_yyyymmdd))
+    if not re.fullmatch(r"\d{8}", date_yyyymmdd):
+        raise ValueError("日付はYYYYMMDDの8桁で指定してください。")
+    race_no = int(race_no)
+    if not 1 <= race_no <= 12:
+        raise ValueError("レース番号は1～12Rで指定してください。")
 
-    merged: list[dict[str, Any]] = []
+    session = _new_session(timeout)
 
-    for source_row in rows:
-        row = dict(source_row)
+    meeting_url, meeting_html = _get_meeting_select(session, timeout)
+    action_url, race_select_cname = _find_race_select_cname(
+        meeting_html, meeting_url, date_yyyymmdd, venue_name
+    )
 
-        raw_id = str(row.get(race_id_column, "")).strip()
+    race_select_url, race_select_html = _get_race_select_page(
+        session, action_url, race_select_cname, meeting_url, timeout
+    )
 
-        if re.fullmatch(r"\d{18}", raw_id):
-            horse_no = int(raw_id[-2:])
-            jra = jra_by_no.get(horse_no)
+    race_url = _find_race_url(
+        race_select_html, race_select_url, date_yyyymmdd, venue_name, race_no
+    )
 
-            if jra is not None:
-                row["実オッズ"] = jra["jra_odds"]
-                row["人気"] = jra["popularity"]
-            else:
-                row["実オッズ"] = None
-                row["人気"] = None
-        else:
-            row["実オッズ"] = None
-            row["人気"] = None
+    session.headers.update({"Referer": race_select_url})
+    r = session.get(race_url, timeout=timeout, allow_redirects=True)
+    r.raise_for_status()
+    odds_rows = _extract_win_odds(_decode(r))
+    return odds_rows, r.url
 
-        merged.append(row)
 
-    return merged
+# 既存テスト/互換用途: URLを直接渡す方式も残す。
+def fetch_jra_win_odds(race_url: str, timeout: int = 20) -> list[dict[str, Any]]:
+    session = _new_session(timeout)
+    r = session.get(race_url, timeout=timeout, allow_redirects=True)
+    r.raise_for_status()
+    return _extract_win_odds(_decode(r))
