@@ -1,0 +1,929 @@
+import glob
+import os
+import re
+import pandas as pd
+import streamlit as st
+
+try:
+    from jra_odds import fetch_jra_win_odds
+except ImportError:
+    fetch_jra_win_odds = None
+
+st.set_page_config(
+    page_title="競馬指数 総合分析Webアプリケーション", layout="wide"
+)
+
+# --- セッション状態の初期化 ---
+if "sort_mode" not in st.session_state:
+    st.session_state.sort_mode = "初期配列"
+
+if "jra_odds_cache" not in st.session_state:
+    st.session_state.jra_odds_cache = {}
+
+
+# --- デスクトップ版を参考にした総合評価用のクレンジング関数 ---
+def clean_eval_text_for_target(val):
+    if not isinstance(val, str):
+        val = str(val) if pd.notna(val) else ""
+    
+    # 絵文字パターンの定義
+    emoji_pattern = re.compile(
+        "[\U00010000-\U0010ffff\U00002600-\U000027ff]", flags=re.UNICODE
+    )
+    val = emoji_pattern.sub(r"", val)
+    
+    # 指定された絵文字や特殊記号、★を削除
+    val = (
+        val.replace("🔥", "")
+        .replace("🎯", "")
+        .replace("⭐", "")
+        .replace("🌟", "")
+        .replace("👑", "")
+        .replace("★", "")
+    )
+    
+    # 制御文字の削除
+    val = re.sub(r"[\x00-\x1f\x7f-\x9f]", "", val)
+    # カンマやダブルクォーテーションの除去
+    val = val.replace(",", "").replace('"', "")
+    # スペース（半角・全角）を完全に削除
+    val = re.sub(r"[\s ]+", "", val)
+    
+    return val.strip()
+
+
+# --- ★に挟まれた特注文言を赤字にするHTML変換関数 ---
+def format_special_tags_html(text):
+    if not text:
+        return ""
+    pattern = re.compile(r"(★[^★]+★)")
+    return pattern.sub(r'<span style="color: #ff4b4b; font-weight: bold;">\1</span>', text)
+
+
+# --- カスタムCSS ---
+st.markdown(
+    """
+    <style>
+    .main .block-container {
+        max-width: 100% !important;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        padding-top: 1rem;
+    }
+    .table-container {
+        width: 100%;
+        max-height: 80vh;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        background-color: white;
+    }
+    .custom-horse-table {
+        width: 100% !important;
+        border-collapse: collapse;
+        font-size: 11px;
+        background-color: white;
+        color: #31333F;
+    }
+    .custom-horse-table th, .custom-horse-table td {
+        border: 1px solid #e0e0e0;
+        padding: 6px 8px;
+        text-align: center;
+        white-space: nowrap;
+    }
+    .custom-horse-table th {
+        background-color: #f0f2f6;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        font-weight: 600;
+    }
+    .custom-horse-table th:last-child, 
+    .custom-horse-table td:last-child {
+        min-width: 200px;
+        white-space: normal !important;
+        text-align: left !important;
+    }
+    .rank-1 { background-color: #fff2b2 !important; font-weight: bold; }
+    .rank-2 { background-color: #e6f2ff !important; }
+    .rank-3 { background-color: #d4edda !important; }
+    .push-mark-red { color: #ff4b4b !important; font-weight: bold; }
+    .race-header {
+        background: #0a1128;
+        color: #ffffff;
+        border: 1px solid #1e90c8;
+        border-radius: 6px;
+        padding: 10px 16px;
+        margin: 8px 0 12px 0;
+        font-size: 18px;
+        font-weight: 600;
+    }
+    .race-header .sub { color: #8fb8d8; font-size: 12px; font-weight: 400; margin-left: 12px; }
+
+    @media screen and (max-width: 768px) {
+        .custom-horse-table { font-size: 10px !important; }
+        .custom-horse-table th, .custom-horse-table td { padding: 4px 5px !important; }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.title("🏇 競馬指数 総合分析Webアプリケーション")
+
+
+@st.cache_data
+def load_course_data():
+    course_stats = {}
+    try:
+        df = pd.read_csv("arms及びarms2及びTUA指数の全てが一位.csv", encoding="cp932")
+        course_stats["triple"] = df
+    except Exception:
+        pass
+
+    csv_files = glob.glob("*指数*位のコース別成績.csv")
+    for filepath in csv_files:
+        filename = os.path.basename(filepath)
+        try:
+            df = pd.read_csv(filename, encoding="cp932")
+            course_stats[filename] = df
+        except Exception:
+            pass
+    return course_stats
+
+
+course_stats = load_course_data()
+
+
+def parse_racetrack(race_str):
+    race_str = str(race_str).strip()
+    if not race_str:
+        return ""
+    char = race_str[0]
+    mapping = {
+        "東": "東京",
+        "中": "中山",
+        "福": "福島",
+        "京": "京都",
+        "阪": "阪神",
+        "新": "新潟",
+        "札": "札幌",
+        "函": "函館",
+        "小": "小倉",
+        "名": "中京",
+    }
+    return mapping.get(char, char)
+
+
+def get_course_compatibility(
+    race_col, surface, distance, index_type, rank, stats
+):
+    target_filename = f"{index_type}指数{rank}位のコース別成績.csv"
+    df = stats.get(target_filename)
+    if df is not None:
+        track_name = parse_racetrack(race_col)
+        for idx, row in df.iterrows():
+            c_target = str(row.get("コース", ""))
+            if track_name and track_name in c_target:
+                if surface in c_target and str(distance) in c_target:
+                    return {
+                        "course": c_target,
+                        "win_rate": str(row.get("勝率", "0%")),
+                        "place_rate": str(row.get("複勝率", "0%")),
+                        "win_ret": str(row.get("単勝回収値", "0")),
+                        "place_ret": str(row.get("複勝回収値", "0")),
+                    }
+    return None
+
+
+# --- サイドバー ---
+st.sidebar.header("📂 ファイル読み込み")
+uploaded_file = st.sidebar.file_uploader(
+    "メイン指数CSVファイルを選択（上書き用）", type=["csv"]
+)
+uploaded_ext_comment = st.sidebar.file_uploader(
+    "💬 外部コメントCSVを選択（任意）", type=["csv"]
+)
+
+df = None
+source_name = ""
+if uploaded_file is not None:
+    source_name = uploaded_file.name
+    try:
+        df = pd.read_csv(uploaded_file, encoding="cp932", header=None)
+    except Exception:
+        uploaded_file.seek(0)
+        df = pd.read_csv(uploaded_file, encoding="utf-8", header=None)
+    st.sidebar.success("アップロードされたファイルを読み込みました")
+else:
+    pattern = re.compile(r"^\d{8}\.csv$")
+    matched_files = [f for f in os.listdir(".") if pattern.match(f)]
+    if matched_files:
+        default_main_csv = sorted(matched_files)[-1]
+        source_name = default_main_csv
+        try:
+            df = pd.read_csv(default_main_csv, encoding="cp932", header=None)
+            st.sidebar.info(f"📌 自動検出: {default_main_csv} を読み込んでいます")
+        except Exception:
+            df = pd.read_csv(default_main_csv, encoding="utf-8", header=None)
+            st.sidebar.info(f"📌 自動検出: {default_main_csv} を読み込んでいます")
+    else:
+        st.sidebar.info("左側のサイドバーから指数CSVファイルをアップロードしてください。")
+
+ext_comment_dict = {}
+if uploaded_ext_comment is not None:
+    ext_file_to_read = uploaded_ext_comment
+else:
+    ext_pattern = re.compile(r"^\d{8}comment\.csv$")
+    matched_ext_files = [f for f in os.listdir(".") if ext_pattern.match(f)]
+    ext_file_to_read = sorted(matched_ext_files)[-1] if matched_ext_files else None
+
+if ext_file_to_read is not None:
+    try:
+        df_ext = pd.read_csv(ext_file_to_read, encoding="cp932", header=None)
+        for _, row in df_ext.iterrows():
+            vals = [str(v).strip() for v in row.values if pd.notna(v)]
+            if len(vals) >= 6:
+                h_name, c_text = vals[2], vals[5]
+                if h_name and c_text:
+                    ext_comment_dict[h_name] = c_text
+    except Exception:
+        pass
+
+if df is not None:
+    df["arms_val"] = pd.to_numeric(df.iloc[:, 8], errors="coerce").fillna(0)
+    df["arms2_val"] = pd.to_numeric(df.iloc[:, 9], errors="coerce").fillna(0)
+    df["tua_val"] = pd.to_numeric(df.iloc[:, 10], errors="coerce").fillna(0)
+    df["S_val"] = pd.to_numeric(df.iloc[:, 11], errors="coerce").fillna(0)
+    df["F_val"] = pd.to_numeric(df.iloc[:, 12], errors="coerce").fillna(0)
+    df["finish_up_val"] = pd.to_numeric(df.iloc[:, 13], errors="coerce").fillna(0)
+
+    df["race_group"] = df.apply(
+        lambda r: f"{r.get(0, '')}_{r.get(1, '')}_{r.get(2, '')}_{r.get(3, '')}",
+        axis=1,
+    )
+
+    df["arms_rank"] = df.groupby("race_group")["arms_val"].rank(
+        ascending=False, method="min"
+    )
+    df["arms2_rank"] = df.groupby("race_group")["arms2_val"].rank(
+        ascending=False, method="min"
+    )
+    df["tua_rank"] = df.groupby("race_group")["tua_val"].rank(
+        ascending=False, method="min"
+    )
+    df["S_rank"] = df.groupby("race_group")["S_val"].rank(
+        ascending=False, method="min"
+    )
+    df["F_rank"] = df.groupby("race_group")["F_val"].rank(
+        ascending=False, method="min"
+    )
+    df["finish_up_rank"] = (
+        df.groupby("race_group")["finish_up_val"]
+        .rank(ascending=False, method="min")
+        .fillna(99)
+    )
+    df["finish_up_count"] = df.groupby(["race_group", "finish_up_val"])[
+        "finish_up_val"
+    ].transform("count")
+
+    export_data_list = []
+    raw_data_list = []
+
+    for original_index, row in df.iterrows():
+        race_raw = str(row.get(0, ""))
+        cond_name = str(row.get(1, ""))
+        surface = str(row.get(2, ""))
+        try:
+            distance = int(row.get(3, 0))
+        except ValueError:
+            distance = 0
+
+        cond_raw = f"{cond_name} {surface}{distance}"
+        header_text = f"{cond_name} {surface}{distance}m"
+        venue_name = parse_racetrack(race_raw)
+        race_m = re.match(r"^\D+?(\d+)$", race_raw.strip())
+        race_no = int(race_m.group(1)) if race_m else 0
+        wakuban_raw = row.get(4, "")
+        wakuban = (
+            int(wakuban_raw)
+            if pd.notna(wakuban_raw) and str(wakuban_raw).isdigit()
+            else 0
+        )
+        umaban = str(row.get(5, ""))
+        
+        push_mark_raw = row.get(6, "")
+        push_mark = str(push_mark_raw).strip() if pd.notna(push_mark_raw) else ""
+        if push_mark.lower() == "nan":
+            push_mark = ""
+
+        if push_mark == "推":
+            push_mark_html = f'<span class="push-mark-red">{push_mark}</span>'
+        else:
+            push_mark_html = push_mark
+
+        name = str(row.get(7, "")).strip()
+
+        arms = row["arms_val"]
+        arms2 = row["arms2_val"]
+        tua = row["tua_val"]
+        s_idx = row["S_val"]
+        f_idx = row["F_val"]
+        finish_up = row["finish_up_val"]
+
+        arms_rank = int(row["arms_rank"])
+        arms2_rank = int(row["arms2_rank"])
+        tua_rank = int(row["tua_rank"])
+        s_rank = int(row["S_rank"])
+        f_rank = int(row["F_rank"])
+        finish_up_count = row["finish_up_count"]
+        finish_up_rank = int(row["finish_up_rank"])
+
+        highlights = []
+        score = 0
+
+        if arms >= 110:
+            highlights.append(f"arms:{arms}")
+            score += 1
+        if arms2 >= 120:
+            highlights.append(f"arms2:{arms2}")
+            score += 1
+        if tua >= 220:
+            highlights.append(f"TUA:{tua}(最強)")
+            score += 2
+        elif tua >= 200:
+            highlights.append(f"TUA:{tua}(有力)")
+            score += 1
+        if s_idx >= 60:
+            highlights.append(f"S:{s_idx}(最強)")
+            score += 2
+        elif s_idx >= 55:
+            highlights.append(f"S:{s_idx}(有力)")
+            score += 1
+        if f_idx >= 70:
+            highlights.append(f"F:{f_idx}(鉄板)")
+            score += 2
+        elif f_idx >= 65:
+            highlights.append(f"F:{f_idx}(軸)")
+            score += 1
+
+        if finish_up_count < 4 and (finish_up >= 5 or finish_up_rank <= 3):
+            highlights.append("調教良")
+            score += 1
+
+        course_compat_text = ""
+        is_good_compatibility = False
+        is_triple_1st = False
+
+        if arms_rank == 1 and arms2_rank == 1 and tua_rank == 1:
+            if "triple" in course_stats:
+                df_triple = course_stats["triple"]
+                track_name = parse_racetrack(race_raw)
+                for _, t_row in df_triple.iterrows():
+                    c_target = str(t_row.get("コース", ""))
+                    if track_name and track_name in c_target:
+                        if surface in c_target and str(distance) in c_target:
+                            try:
+                                win_ret_val = float(
+                                    str(t_row.get("単勝回収値", "0"))
+                                    .replace("%", "")
+                                    .strip()
+                                )
+                            except ValueError:
+                                win_ret_val = 0.0
+                            try:
+                                place_rate_val = float(
+                                    str(t_row.get("複勝率", "0%"))
+                                    .replace("%", "")
+                                    .strip()
+                                )
+                            except ValueError:
+                                place_rate_val = 0.0
+
+                            if win_ret_val >= 100 or place_rate_val >= 60:
+                                is_triple_1st = True
+                                course_compat_text = f"👑 【★トリプル１位★: {c_target} 複勝率{t_row.get('複勝率', '0%')}/単回{t_row.get('単勝回収値', '0')}】"
+                                score += 3
+                            break
+
+        if not is_triple_1st:
+            for t, rnk in [
+                ("arms", arms_rank),
+                ("arms2", arms2_rank),
+                ("TUA", tua_rank),
+                ("S", s_rank),
+                ("F", f_rank),
+            ]:
+                if rnk <= 3:
+                    compat = get_course_compatibility(
+                        race_raw, surface, distance, t, rnk, course_stats
+                    )
+                    if compat:
+                        try:
+                            win_ret_val = float(
+                                compat["win_ret"].replace("%", "").strip()
+                            )
+                        except ValueError:
+                            win_ret_val = 0.0
+                        try:
+                            place_rate_val = float(
+                                compat["place_rate"].replace("%", "").strip()
+                            )
+                        except ValueError:
+                            place_rate_val = 0.0
+
+                        if win_ret_val >= 100 or place_rate_val >= 60:
+                            is_good_compatibility = True
+                            course_compat_text = f"🎯 【{t}{rnk}位: {compat['course']} 複勝率{compat['place_rate']}/単回{compat['win_ret']}】(好相性)"
+                            score += 1
+                            break
+
+        is_dirt = surface == "ダ"
+        is_not_maishin = "未勝利" not in cond_name and "新馬" not in cond_name
+        suna_食_text = (
+            "★特注砂食★"
+            if (
+                is_dirt
+                and is_not_maishin
+                and wakuban in [6, 7, 8]
+                and s_rank == 1
+            )
+            else ""
+        )
+        if suna_食_text:
+            score += 1
+
+        f72_text = (
+            "★特注F72★"
+            if (is_dirt and wakuban == 8 and f_idx >= 72 and distance != 1200)
+            else ""
+        )
+        if f72_text:
+            score += 1
+
+        track_name_parsed = parse_racetrack(race_raw)
+        
+        hanshin_1600_text = (
+            "★阪神芝1600特注★"
+            if (
+                track_name_parsed == "阪神"
+                and surface == "芝"
+                and distance == 1600
+                and arms_rank <= 3
+                and f_idx >= 60
+                and wakuban in [2, 4, 5, 6, 7]
+            )
+            else ""
+        )
+        if hanshin_1600_text:
+            score += 1
+
+        nakayama_1600_text = (
+            "★中山芝1600特注★"
+            if (
+                track_name_parsed == "中山"
+                and surface == "芝"
+                and distance == 1600
+                and wakuban in [1, 2, 3, 4]
+                and s_rank == 1
+            )
+            else ""
+        )
+        if nakayama_1600_text:
+            score += 1
+
+        nakayama_2000_text = (
+            "★中山芝2000特注★"
+            if (
+                track_name_parsed == "中山"
+                and surface == "芝"
+                and distance == 2000
+                and wakuban in [1, 2, 3, 4, 8]
+                and f_rank == 1
+            )
+            else ""
+        )
+        if nakayama_2000_text:
+            score += 1
+
+        tokyo_2000_text = (
+            "★東京芝2000馬体重480㎏以上特注★"
+            if (
+                track_name_parsed == "東京"
+                and surface == "芝"
+                and distance == 2000
+                and f_idx >= 70
+            )
+            else ""
+        )
+        if tokyo_2000_text:
+            score += 1
+
+        kyoto_1600_text = (
+            "★京都芝1600特注★"
+            if (
+                track_name_parsed == "京都"
+                and surface == "芝"
+                and distance == 1600
+                and arms >= 100
+                and f_idx >= 65
+            )
+            else ""
+        )
+        if kyoto_1600_text:
+            score += 1
+
+        # --- 画面表示用（HTMLタグで赤字装飾） ---
+        eval_parts_html = []
+        if kyoto_1600_text:
+            eval_parts_html.append(format_special_tags_html(kyoto_1600_text))
+        if tokyo_2000_text:
+            eval_parts_html.append(format_special_tags_html(tokyo_2000_text))
+        if hanshin_1600_text:
+            eval_parts_html.append(format_special_tags_html(hanshin_1600_text))
+        if nakayama_2000_text:
+            eval_parts_html.append(format_special_tags_html(nakayama_2000_text))
+        if nakayama_1600_text:
+            eval_parts_html.append(format_special_tags_html(nakayama_1600_text))
+        if suna_食_text:
+            eval_parts_html.append(format_special_tags_html(suna_食_text))
+        if f72_text:
+            eval_parts_html.append(format_special_tags_html(f72_text))
+        if highlights:
+            eval_parts_html.extend(highlights)
+        if course_compat_text:
+            eval_parts_html.append(course_compat_text)
+
+        # --- CSV出力用（プレーンテキスト） ---
+        eval_parts_raw = []
+        if kyoto_1600_text:
+            eval_parts_raw.append(kyoto_1600_text)
+        if tokyo_2000_text:
+            eval_parts_raw.append(tokyo_2000_text)
+        if hanshin_1600_text:
+            eval_parts_raw.append(hanshin_1600_text)
+        if nakayama_2000_text:
+            eval_parts_raw.append(nakayama_2000_text)
+        if nakayama_1600_text:
+            eval_parts_raw.append(nakayama_1600_text)
+        if suna_食_text:
+            eval_parts_raw.append(suna_食_text)
+        if f72_text:
+            eval_parts_raw.append(f72_text)
+        if highlights:
+            eval_parts_raw.extend(highlights)
+        if course_compat_text:
+            eval_parts_raw.append(course_compat_text)
+
+        if not eval_parts_html:
+            eval_text_html = ""
+            eval_text_raw = ""
+        else:
+            eval_text_html = " / ".join(eval_parts_html)
+            eval_text_raw = " / ".join(eval_parts_raw)
+            if is_triple_1st:
+                eval_text_html = "🌟 【★トリプル１位★推奨】 " + eval_text_html
+                eval_text_raw = "🌟 【★トリプル１位★推奨】 " + eval_text_raw
+            elif score >= 4:
+                eval_text_html = "🔥 【軸馬推奨】 " + eval_text_html
+                eval_text_raw = "🔥 【軸馬推奨】 " + eval_text_raw
+            elif score >= 2:
+                eval_text_html = "⭐ 【有力候補】 " + eval_text_html
+                eval_text_raw = "⭐ 【有力候補】 " + eval_text_raw
+            elif (
+                is_good_compatibility
+                or suna_食_text
+                or f72_text
+                or hanshin_1600_text
+                or nakayama_1600_text
+                or nakayama_2000_text
+                or tokyo_2000_text
+                or kyoto_1600_text
+            ):
+                eval_text_html = "🎯 【注目条件】 " + eval_text_html
+                eval_text_raw = "🎯 【注目条件】 " + eval_text_raw
+
+        if ext_comment_dict and name in ext_comment_dict:
+            ext_c = ext_comment_dict[name]
+            eval_text_html = f"{ext_c} ▼ {eval_text_html}" if eval_text_html else ext_c
+            eval_text_raw = f"{ext_c} ▼ {eval_text_raw}" if eval_text_raw else ext_c
+
+        eval_text_csv = clean_eval_text_for_target(eval_text_raw)
+
+        def get_cell_html(val, rank):
+            if rank == 1:
+                return f'<td class="rank-1">{val}</td>'
+            elif rank == 2:
+                return f'<td class="rank-2">{val}</td>'
+            elif rank == 3:
+                return f'<td class="rank-3">{val}</td>'
+            else:
+                return f"<td>{val}</td>"
+
+        export_data_list.append({
+            "original_index": original_index,
+            "score": score,
+            "venue": venue_name,
+            "race_no": race_no,
+            "header": header_text,
+            "レース": race_raw,
+            "条件": cond_raw,
+            "枠番": wakuban,
+            "馬番": umaban,
+            "推印": push_mark_html,
+            "馬名": name,
+            "実オッズ": "",
+            "人気": "",
+            "arms": get_cell_html(arms, arms_rank),
+            "arms2": get_cell_html(arms2, arms2_rank),
+            "TUA": get_cell_html(tua, tua_rank),
+            "S": get_cell_html(s_idx, s_rank),
+            "F": get_cell_html(f_idx, f_rank),
+            "厩舎F-UP2": get_cell_html(finish_up, finish_up_rank),
+            "総合評価・コース相性判定": eval_text_html,
+        })
+
+        raw_data_list.append({
+            "original_index": original_index,
+            "score": score,
+            "venue": venue_name,
+            "race_no": race_no,
+            "header": header_text,
+            "レース": race_raw,
+            "条件": cond_raw,
+            "枠番": wakuban,
+            "馬番": umaban,
+            "推印": push_mark,
+            "馬名": name,
+            "実オッズ": "",
+            "人気": "",
+            "arms": arms,
+            "arms2": arms2,
+            "TUA": tua,
+            "S": s_idx,
+            "F": f_idx,
+            "厩舎F-UP2": finish_up,
+            "総合評価・コース相性判定": eval_text_csv,
+        })
+
+    res_df = pd.DataFrame(export_data_list)
+    raw_csv_df = pd.DataFrame(raw_data_list)
+
+    st.success(f"ファイルを正常に読み込みました（全 {len(res_df)} 頭）")
+
+    # --- ソート＆初期化コントロール UI ---
+    st.subheader("📊 出走馬・指数一覧分析")
+
+    st.write("▼ **表示順序の切り替え**")
+    col_s1, col_s2 = st.columns(2)
+    with col_s1:
+        if st.button("🔥 評価点数順にソート"):
+            st.session_state.sort_mode = "スコア順"
+    with col_s2:
+        if st.button("🔄 初期配列に戻す"):
+            st.session_state.sort_mode = "初期配列"
+
+    if st.session_state.sort_mode == "スコア順":
+        res_df = res_df.sort_values(
+            by=["score", "original_index"], ascending=[False, True]
+        ).reset_index(drop=True)
+        raw_csv_df = raw_csv_df.sort_values(
+            by=["score", "original_index"], ascending=[False, True]
+        ).reset_index(drop=True)
+        st.info("📌 現在の表示: 評価点数（コース相性・推奨度）の高い順")
+    else:
+        res_df = res_df.sort_values(
+            by="original_index", ascending=True
+        ).reset_index(drop=True)
+        raw_csv_df = raw_csv_df.sort_values(
+            by="original_index", ascending=True
+        ).reset_index(drop=True)
+
+    def render_html_table(dataframe):
+        html = ['<div class="table-container"><table class="custom-horse-table">']
+        display_columns = [
+            "レース",
+            "条件",
+            "枠番",
+            "馬番",
+            "推印",
+            "馬名",
+            "実オッズ",
+            "人気",
+            "arms",
+            "arms2",
+            "TUA",
+            "S",
+            "F",
+            "厩舎F-UP2",
+            "総合評価・コース相性判定",
+        ]
+        html.append("<thead><tr>")
+        for col in display_columns:
+            html.append(f"<th>{col}</th>")
+        html.append("</tr></thead>")
+        html.append("<tbody>")
+        for _, row in dataframe.iterrows():
+            html.append("<tr>")
+            html.append(f"<td>{row['レース']}</td>")
+            html.append(f"<td>{row['条件']}</td>")
+            html.append(f"<td>{row['枠番']}</td>")
+            html.append(f"<td>{row['馬番']}</td>")
+            html.append(f"<td>{row['推印']}</td>")
+            html.append(f"<td>{row['馬名']}</td>")
+            html.append(f"<td>{row.get('実オッズ', '')}</td>")
+            html.append(f"<td>{row.get('人気', '')}</td>")
+            html.append(str(row["arms"]))
+            html.append(str(row["arms2"]))
+            html.append(str(row["TUA"]))
+            html.append(str(row["S"]))
+            html.append(str(row["F"]))
+            html.append(str(row["厩舎F-UP2"]))
+            html.append(f"<td>{row['総合評価・コース相性判定']}</td>")
+            html.append("</tr>")
+        html.append("</tbody></table></div>")
+        return "".join(html)
+
+    # --- 開催場・レース切り替え（TARGET風） ---
+    def pick(label, options, key, fmt=str):
+        if hasattr(st, "segmented_control"):
+            sel = st.segmented_control(
+                label,
+                options,
+                selection_mode="single",
+                default=options[0],
+                key=key,
+                format_func=fmt,
+            )
+        else:
+            sel = st.radio(
+                label, options, horizontal=True, key=key, format_func=fmt
+            )
+        return sel if sel in options else options[0]
+
+    venues = (
+        res_df.sort_values("original_index")["venue"].drop_duplicates().tolist()
+    )
+    sel_venue = pick("開催", venues, key="sel_venue")
+
+    venue_df = res_df[res_df["venue"] == sel_venue]
+    race_nos = sorted(venue_df["race_no"].unique().tolist())
+    race_options = race_nos + ["ALL"]
+    sel_race = pick(
+        "R",
+        race_options,
+        key=f"sel_race_{sel_venue}",
+        fmt=lambda x: "全R" if x == "ALL" else f"{x}R",
+    )
+
+    m_date = re.search(r"(\d{4})(\d{2})(\d{2})", source_name)
+    date_text = (
+        f"{m_date.group(1)}/{m_date.group(2)}/{m_date.group(3)}"
+        if m_date
+        else ""
+    )
+
+    if sel_race == "ALL":
+        view_df = venue_df
+        title = f"{sel_venue} 全レース"
+    else:
+        view_df = venue_df[venue_df["race_no"] == sel_race]
+        head = view_df["header"].iloc[0] if len(view_df) else ""
+        title = f"{sel_venue} {sel_race}R　{head}"
+
+    # --- JRA公式 単勝オッズ更新 ---
+    if sel_race != "ALL":
+        odds_key = f"{date_text}_{sel_venue}_{sel_race}"
+        default_url = st.session_state.get(f"jra_url_{odds_key}", "")
+
+        with st.expander("💴 JRA単勝オッズ", expanded=False):
+            jra_race_url = st.text_input(
+                "JRA公式のこのレースの出馬表URL",
+                value=default_url,
+                key=f"jra_url_input_{odds_key}",
+                placeholder="https://www.jra.go.jp/JRADB/...",
+            )
+
+            if st.button("🔄 オッズ更新", key=f"odds_update_{odds_key}"):
+                if fetch_jra_win_odds is None:
+                    st.error(
+                        "jra_odds.py を app.py と同じフォルダに配置してください。"
+                    )
+                elif not jra_race_url.strip():
+                    st.warning("JRA公式の出馬表URLを入力してください。")
+                else:
+                    try:
+                        with st.spinner("JRA公式から単勝オッズを取得しています..."):
+                            odds_rows = fetch_jra_win_odds(jra_race_url.strip())
+
+                        st.session_state.jra_odds_cache[odds_key] = odds_rows
+                        st.session_state[f"jra_url_{odds_key}"] = jra_race_url.strip()
+                        st.success(f"単勝オッズを {len(odds_rows)} 頭分取得しました。")
+                    except Exception as exc:
+                        st.error(f"オッズ取得に失敗しました: {exc}")
+
+        cached_odds = st.session_state.jra_odds_cache.get(odds_key, [])
+        if cached_odds:
+            odds_by_no = {
+                str(int(item["horse_no"])): item
+                for item in cached_odds
+            }
+
+            def apply_odds(frame):
+                frame = frame.copy()
+                for idx, row in frame.iterrows():
+                    horse_no_text = str(row.get("馬番", "")).strip()
+                    try:
+                        horse_no_text = str(int(float(horse_no_text)))
+                    except (ValueError, TypeError):
+                        pass
+
+                    item = odds_by_no.get(horse_no_text)
+                    if item:
+                        frame.at[idx, "実オッズ"] = item.get("jra_odds", "")
+                        frame.at[idx, "人気"] = item.get("popularity", "")
+                return frame
+
+            res_df = apply_odds(res_df)
+            raw_csv_df = apply_odds(raw_csv_df)
+            view_df = apply_odds(view_df)
+
+    st.markdown(
+        f'<div class="race-header">{title}'
+        f'<span class="sub">{date_text}　{len(view_df)}頭</span></div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(render_html_table(view_df), unsafe_allow_html=True)
+
+    # --- ダウンロードボタン ---
+    download_raw_df = raw_csv_df.drop(
+        columns=["original_index", "score", "venue", "race_no", "header"]
+    )
+
+    col1, col2 = st.columns(2)
+    with col1:
+        csv_data = download_raw_df.to_csv(index=False, encoding="cp932", errors="ignore")
+        st.download_button(
+            label="💾 TARGET用CSVダウンロード",
+            data=csv_data,
+            file_name="horse_analysis_result.csv",
+            mime="text/csv",
+        )
+    with col2:
+        report_html_table = render_html_table(res_df)
+        html_full = f"""<!DOCTYPE html>
+        <html lang="ja">
+        <head>
+        <meta charset="UTF-8">
+        <title>競馬指数 総合分析レポート</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 20px; background-color: #f9f9f9; }}
+            h2 {{ color: #333; }}
+            .table-container {{
+                width: 100%;
+                overflow-x: auto;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                background-color: white;
+            }}
+            .custom-horse-table {{
+                width: 100% !important;
+                border-collapse: collapse;
+                font-size: 11px;
+                background-color: white;
+                color: #31333F;
+            }}
+            .custom-horse-table th, .custom-horse-table td {{
+                border: 1px solid #e0e0e0;
+                padding: 6px 8px;
+                text-align: center;
+                white-space: nowrap;
+            }}
+            .custom-horse-table th {{
+                background-color: #f0f2f6;
+                font-weight: 600;
+            }}
+            .custom-horse-table th:last-child, 
+            .custom-horse-table td:last-child {{
+                min-width: 200px;
+                white-space: normal !important;
+                text-align: left !important;
+            }}
+            .rank-1 {{ background-color: #fff2b2 !important; font-weight: bold; }}
+            .rank-2 {{ background-color: #e6f2ff !important; }}
+            .rank-3 {{ background-color: #d4edda !important; }}
+            .push-mark-red {{ color: #ff4b4b !important; font-weight: bold; }}
+        </style>
+        </head>
+        <body>
+        <h2>🏇 競馬指数 総合分析レポート</h2>
+        {report_html_table}
+        </body>
+        </html>"""
+        st.download_button(
+            label="🌐 HTMLレポートダウンロード",
+            data=html_full,
+            file_name="horse_analysis_result.html",
+            mime="text/html",
+        )
