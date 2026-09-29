@@ -1017,7 +1017,6 @@ if df is not None:
             # 厩舎finish-UP 6～7
             # JRA実人気 1～2人気
             target_venues = {"阪神", "京都", "中山", "東京", "中京"}
-            target_classes = {"未勝利", "1勝クラス", "2勝クラス", "3勝クラス"}
 
             def add_fup_special(frame):
                 frame = frame.copy()
@@ -1027,11 +1026,28 @@ if df is not None:
 
                 for idx, row in frame.iterrows():
                     venue = str(row.get("開催", "")).strip()
-                    race_class = str(row.get("クラス", "")).strip()
+
+                    # 元CSVの2列目を使用。
+                    # 例: 「２勝ｸﾗｽ ダ1200m」「１勝ｸﾗｽ 芝1600m」
+                    race_condition = str(row.get("条件", "")).strip()
+
+                    # 表記ゆれを統一して判定
+                    normalized_condition = (
+                        race_condition
+                        .replace("１", "1")
+                        .replace("２", "2")
+                        .replace("３", "3")
+                        .replace("ｸﾗｽ", "クラス")
+                        .replace("クラス", "クラス")
+                    )
+
                     fup = pd.to_numeric(row.get("厩舎F-UP2", ""), errors="coerce")
                     popularity = pd.to_numeric(row.get("人気", ""), errors="coerce")
 
-                    class_ok = any(c in race_class for c in target_classes)
+                    class_ok = any(
+                        c in normalized_condition
+                        for c in {"未勝利", "1勝クラス", "2勝クラス", "3勝クラス"}
+                    )
 
                     if (
                         venue in target_venues
