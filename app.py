@@ -1,6 +1,9 @@
 import glob
 import os
 import re
+import unicodedata
+from decimal import Decimal, InvalidOperation
+from html import escape
 import pandas as pd
 import streamlit as st
 
@@ -8,6 +11,62 @@ try:
     from jra_odds import fetch_jra_win_odds_auto
 except ImportError:
     fetch_jra_win_odds_auto = None
+
+
+# 添付 jockey_top3rate_over0.25.csv の3着内率0.25以上の28名。
+KOL_SELECTED_JOCKEYS = {
+    "C.ルメール", "戸崎圭太", "松山弘平", "横山武史", "坂井瑠星",
+    "川田将雅", "丹内祐次", "岩田望来", "横山和生", "高杉吏麒",
+    "北村友一", "武豊", "団野大成", "鮫島克駿", "菅原明良",
+    "荻野極", "三浦皇成", "西村淳也", "藤岡佑介", "岩田康誠",
+    "横山典弘", "D.レーン", "池添謙一", "C.デムーロ", "J.モレイラ",
+    "丸山元気", "浜中俊", "R.キング",
+}
+KOL_JOCKEY_ALIASES = {
+    "ルメール": "C.ルメール", "レーン": "D.レーン",
+    "C.デム": "C.デムーロ", "モレイラ": "J.モレイラ", "キング": "R.キング",
+}
+
+
+def normalize_jockey(value):
+    if pd.isna(value):
+        return ""
+    name = re.sub(r"\s+", "", unicodedata.normalize("NFKC", str(value)))
+    return KOL_JOCKEY_ALIASES.get(name, name)
+
+
+def decimal_value(value):
+    try:
+        number = Decimal(unicodedata.normalize("NFKC", str(value)).strip())
+        return number if number.is_finite() else None
+    except (InvalidOperation, ValueError, TypeError):
+        return None
+
+
+def kol_divergence(kol_odds, actual_odds):
+    kol, actual = decimal_value(kol_odds), decimal_value(actual_odds)
+    if kol is None or actual is None or kol <= 0 or actual <= 0:
+        return None
+    return (actual - kol) / kol * 100
+
+
+def kol_alert_matches(kol_odds, actual_odds, popularity, jockey):
+    kol, actual, rank = map(decimal_value, (kol_odds, actual_odds, popularity))
+    return (
+        kol is not None and actual is not None and rank is not None
+        and 0 < kol < 50 and actual > 0
+        # 150～450%を丸めず判定。実オッズはKOLの2.5～5.5倍。
+        and kol * 5 <= actual * 2 <= kol * 11
+        and rank >= 5 and rank == rank.to_integral_value()
+        and normalize_jockey(jockey) in KOL_SELECTED_JOCKEYS
+    )
+
+
+def jockey_from_main_row(row):
+    # ヘッダーなし元CSV: 16列目=レースID、17列目=騎手。
+    value = row.get(16, "")
+    return "" if pd.isna(value) else str(value).strip()
+
 
 st.set_page_config(
     page_title="競馬指数 総合分析Webアプリケーション", layout="wide"
@@ -134,7 +193,7 @@ st.markdown(
         line-height: 1.25;
     }
 
-    /* KOL・オッズ差は小さくても読みやすく */
+    /* KOL・乖離率は小さくても読みやすく */
     .custom-horse-table th:nth-child(16),
     .custom-horse-table th:nth-child(17) {
         white-space: normal !important;
@@ -256,15 +315,16 @@ uploaded_ext_comment = st.sidebar.file_uploader(
     "💬 外部コメントCSVを選択（任意）", type=["csv"]
 )
 
+
 df = None
 source_name = ""
 if uploaded_file is not None:
     source_name = uploaded_file.name
     try:
-        df = pd.read_csv(uploaded_file, encoding="cp932", header=None)
+        df = pd.read_csv(uploaded_file, encoding="cp932", header=None, dtype=str)
     except Exception:
         uploaded_file.seek(0)
-        df = pd.read_csv(uploaded_file, encoding="utf-8", header=None)
+        df = pd.read_csv(uploaded_file, encoding="utf-8", header=None, dtype=str)
     st.sidebar.success("アップロードされたファイルを読み込みました")
 else:
     pattern = re.compile(r"^\d{8}\.csv$")
@@ -273,10 +333,10 @@ else:
         default_main_csv = sorted(matched_files)[-1]
         source_name = default_main_csv
         try:
-            df = pd.read_csv(default_main_csv, encoding="cp932", header=None)
+            df = pd.read_csv(default_main_csv, encoding="cp932", header=None, dtype=str)
             st.sidebar.info(f"📌 自動検出: {default_main_csv} を読み込んでいます")
         except Exception:
-            df = pd.read_csv(default_main_csv, encoding="utf-8", header=None)
+            df = pd.read_csv(default_main_csv, encoding="utf-8", header=None, dtype=str)
             st.sidebar.info(f"📌 自動検出: {default_main_csv} を読み込んでいます")
     else:
         st.sidebar.info("左側のサイドバーから指数CSVファイルをアップロードしてください。")
@@ -376,7 +436,7 @@ if df is not None:
         name = str(row.get(7, "")).strip()
 
         # ヘッダーなしCSV:
-        # 15列目 = KOLオッズ / 16列目 = TARGET 18桁レースID
+        # 15列目 = KOLオッズ / 16列目 = TARGET 18桁レースID / 17列目 = 騎手
         kol_raw = row.get(14, "")
         kol_odds = pd.to_numeric(kol_raw, errors="coerce")
 
@@ -704,6 +764,8 @@ if df is not None:
             "オッズ差": "",
             "人気": "",
             "レースID": race_id,
+            "騎手": jockey_from_main_row(row),
+            "乖離率(%)": "",
             "arms": get_cell_html(arms, arms_rank),
             "arms2": get_cell_html(arms2, arms2_rank),
             "TUA": get_cell_html(tua, tua_rank),
@@ -730,6 +792,8 @@ if df is not None:
             "オッズ差": "",
             "人気": "",
             "レースID": race_id,
+            "騎手": jockey_from_main_row(row),
+            "乖離率(%)": "",
             "arms": arms,
             "arms2": arms2,
             "TUA": tua,
@@ -791,7 +855,7 @@ if df is not None:
             "厩舎F-UP2",
             "総合評価・コース相性判定",
             "KOLオッズ",
-            "オッズ差",
+            "乖離率(%)",
         ]
         html.append("<thead><tr>")
         for col in display_columns:
@@ -816,20 +880,25 @@ if df is not None:
             html.append(str(row["厩舎F-UP2"]))
             html.append(f"<td>{row['総合評価・コース相性判定']}</td>")
 
-            # KOLオッズとオッズ差は「総合評価・コース相性判定」の右側に表示
             html.append(f"<td>{row.get('KOLオッズ', '')}</td>")
-            diff_value = row.get("オッズ差", "")
-            kol_value = pd.to_numeric(row.get("KOLオッズ", ""), errors="coerce")
-            diff_num = pd.to_numeric(diff_value, errors="coerce")
-            alert = (
-                pd.notna(kol_value)
-                and float(kol_value) < 50
-                and pd.notna(diff_num)
-                and float(diff_num) >= 20
+            jockey = row.get("騎手", "")
+            divergence = kol_divergence(
+                row.get("KOLオッズ", ""), row.get("実オッズ", "")
+            )
+            alert = kol_alert_matches(
+                row.get("KOLオッズ", ""), row.get("実オッズ", ""),
+                row.get("人気", ""), jockey,
             )
             diff_class = ' class="odds-gap-alert"' if alert else ""
-            diff_text = f"{float(diff_num):+.1f}" if pd.notna(diff_num) else ""
-            html.append(f"<td{diff_class}>{diff_text}</td>")
+            diff_text = f"{divergence:+.1f}%" if divergence is not None else ""
+            status = "条件合致" if alert else (
+                "判定保留：騎手未取得" if not normalize_jockey(jockey)
+                else "判定保留：オッズ・人気未取得"
+                if divergence is None or decimal_value(row.get("人気", "")) is None
+                else "条件未合致"
+            )
+            tooltip = escape(f"騎手：{jockey or '未取得'} / {status}", quote=True)
+            html.append(f'<td{diff_class} title="{tooltip}">{diff_text}</td>')
             html.append("</tr>")
         html.append("</tbody></table></div>")
         return "".join(html)
@@ -968,7 +1037,7 @@ if df is not None:
             def apply_odds(frame):
                 frame = frame.copy()
 
-                for col in ("KOLオッズ", "実オッズ", "オッズ差", "人気"):
+                for col in ("KOLオッズ", "実オッズ", "オッズ差", "人気", "乖離率(%)"):
                     if col not in frame.columns:
                         frame[col] = ""
                     frame[col] = frame[col].astype("object")
@@ -980,6 +1049,7 @@ if df is not None:
                     except (ValueError, TypeError):
                         pass
 
+                    frame.at[idx, "乖離率(%)"] = ""
                     item = odds_by_no.get(horse_no_text)
                     if not item:
                         continue
@@ -992,6 +1062,11 @@ if df is not None:
                     )
                     frame.at[idx, "人気"] = (
                         "" if popularity_value is None else popularity_value
+                    )
+
+                    divergence = kol_divergence(row.get("KOLオッズ", ""), odds_value)
+                    frame.at[idx, "乖離率(%)"] = (
+                        "" if divergence is None else float(divergence)
                     )
 
                     kol_value = pd.to_numeric(
@@ -1083,6 +1158,13 @@ if df is not None:
         f'<span class="sub">{date_text}　{len(view_df)}頭</span></div>',
         unsafe_allow_html=True,
     )
+    st.caption(
+        "KOL判定：KOL＜50・乖離率150～450%（両端含む）・実人気5番人気以下・指定騎手28名。"
+        "レイティング条件なし。乖離率＝（実オッズ－KOL）÷KOL×100。"
+    )
+    missing_jockeys = view_df["騎手"].map(normalize_jockey).eq("").sum()
+    if missing_jockeys:
+        st.info(f"表示中の{missing_jockeys}頭は騎手データ未取得のためKOL判定保留です。元CSVのレースID列の右隣（17列目）に騎手名を追加してください。")
     st.markdown(render_html_table(view_df), unsafe_allow_html=True)
 
     # --- ダウンロードボタン ---
@@ -1146,6 +1228,11 @@ if df is not None:
             .rank-1 {{ background-color: #fff2b2 !important; font-weight: bold; }}
             .rank-2 {{ background-color: #e6f2ff !important; }}
             .rank-3 {{ background-color: #d4edda !important; }}
+            .odds-gap-alert {{
+                background-color: #ffe08a !important;
+                color: #b42318 !important;
+                font-weight: 800 !important;
+            }}
             .push-mark-red {{ color: #ff4b4b !important; font-weight: bold; }}
         </style>
         </head>
