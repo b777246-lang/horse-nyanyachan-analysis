@@ -93,10 +93,9 @@ def _find_race_select_cname(
         if "pw01drl" not in cname:
             continue
 
-        # 開催選択画面で実際に確認した形式:
-        # pw01drl1 006 2026 04 09 20 20260927 /FC
-        # TARGET場所06に対しJRA側は006。
-        if f"pw01drl1{int(place):03d}" not in cname:
+        # JRA自身が生成する開催リンクには pw01drl0 / pw01drl1 の両形式がある。
+        # TARGET場所05に対しJRA側は005。開催場を完全一致で照合する。
+        if not re.match(rf"^pw01drl[01]{int(place):03d}", cname):
             continue
         if date_yyyymmdd not in cname:
             continue
@@ -162,8 +161,8 @@ def _find_race_url(
 
     # JRAの正規出馬表URLの構造を、実際に取得した12Rリンクに合わせて照合。
     pattern = re.compile(
-        r"pw01dde1"
-        + rf"0?{re.escape(place)}"
+        r"pw01dde(?:10?|01)"
+        + re.escape(place)
         + r"(\d{4})(\d{2})(\d{2})(\d{2})(\d{8})/([0-9A-F]{2})",
         re.I,
     )
