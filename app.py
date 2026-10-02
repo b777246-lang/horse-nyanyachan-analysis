@@ -1185,68 +1185,92 @@ if df is not None:
             mime="text/csv",
         )
     with col2:
-        report_html_table = render_html_table(res_df)
-        html_full = f"""<!DOCTYPE html>
-        <html lang="ja">
-        <head>
-        <meta charset="UTF-8">
-        <title>競馬指数 総合分析レポート</title>
-        <style>
-            body {{ font-family: Arial, sans-serif; margin: 20px; background-color: #f9f9f9; }}
-            h2 {{ color: #333; }}
-            .table-container {{
-                width: 100%;
-                overflow-x: auto;
-                border: 1px solid #ddd;
-                border-radius: 6px;
-                background-color: white;
-            }}
-            .custom-horse-table {{
-                width: 100% !important;
-                border-collapse: collapse;
-                font-size: 11px;
-                background-color: white;
-                color: #31333F;
-            }}
-            .custom-horse-table th, .custom-horse-table td {{
-                border: 1px solid #e0e0e0;
-                padding: 6px 8px;
-                text-align: center;
-                white-space: nowrap;
-            }}
-            .custom-horse-table th {{
-                background-color: #f0f2f6;
-                font-weight: 600;
-            }}
-            .custom-horse-table {{
-                table-layout: fixed;
-            }}
-            .custom-horse-table th:nth-child(15),
-            .custom-horse-table td:nth-child(15) {{
-                width: 30%;
-                white-space: normal !important;
-                overflow-wrap: anywhere;
-                text-align: left !important;
-            }}
-            .rank-1 {{ background-color: #fff2b2 !important; font-weight: bold; }}
-            .rank-2 {{ background-color: #e6f2ff !important; }}
-            .rank-3 {{ background-color: #d4edda !important; }}
-            .odds-gap-alert {{
-                background-color: #ffe08a !important;
-                color: #b42318 !important;
-                font-weight: 800 !important;
-            }}
-            .push-mark-red {{ color: #ff4b4b !important; font-weight: bold; }}
-        </style>
-        </head>
-        <body>
-        <h2>🏇 競馬指数 総合分析レポート</h2>
-        {report_html_table}
-        </body>
-        </html>"""
+        def build_html_report(dataframe, report_title="競馬指数 総合分析レポート"):
+            report_html_table = render_html_table(dataframe)
+            return f"""<!DOCTYPE html>
+            <html lang="ja">
+            <head>
+            <meta charset="UTF-8">
+            <title>{escape(report_title)}</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 20px; background-color: #f9f9f9; }}
+                h2 {{ color: #333; }}
+                .table-container {{
+                    width: 100%;
+                    overflow-x: auto;
+                    border: 1px solid #ddd;
+                    border-radius: 6px;
+                    background-color: white;
+                }}
+                .custom-horse-table {{
+                    width: 100% !important;
+                    border-collapse: collapse;
+                    font-size: 11px;
+                    background-color: white;
+                    color: #31333F;
+                }}
+                .custom-horse-table th, .custom-horse-table td {{
+                    border: 1px solid #e0e0e0;
+                    padding: 6px 8px;
+                    text-align: center;
+                    white-space: nowrap;
+                }}
+                .custom-horse-table th {{
+                    background-color: #f0f2f6;
+                    font-weight: 600;
+                }}
+                .custom-horse-table {{
+                    table-layout: fixed;
+                }}
+                .custom-horse-table th:nth-child(15),
+                .custom-horse-table td:nth-child(15) {{
+                    width: 30%;
+                    white-space: normal !important;
+                    overflow-wrap: anywhere;
+                    text-align: left !important;
+                }}
+                .rank-1 {{ background-color: #fff2b2 !important; font-weight: bold; }}
+                .rank-2 {{ background-color: #e6f2ff !important; }}
+                .rank-3 {{ background-color: #d4edda !important; }}
+                .odds-gap-alert {{
+                    background-color: #ffe08a !important;
+                    color: #b42318 !important;
+                    font-weight: 800 !important;
+                }}
+                .push-mark-red {{ color: #ff4b4b !important; font-weight: bold; }}
+            </style>
+            </head>
+            <body>
+            <h2>🏇 {escape(report_title)}</h2>
+            {report_html_table}
+            </body>
+            </html>"""
+
+        html_full = build_html_report(res_df)
         st.download_button(
             label="🌐 HTMLレポートダウンロード",
             data=html_full,
             file_name="horse_analysis_result.html",
             mime="text/html",
         )
+
+    # 全CSVの更新済みデータから、画面の着色と同じKOL判定で抽出する。
+    kol_mask = res_df.apply(
+        lambda row: kol_alert_matches(
+            row.get("KOLオッズ", ""), row.get("実オッズ", ""),
+            row.get("人気", ""), row.get("騎手", ""),
+        ),
+        axis=1,
+    )
+    kol_df = res_df.loc[kol_mask].copy()
+    st.caption(
+        f"KOL判定該当馬：全開催・全レースで{len(kol_df)}頭。"
+        "オッズ更新後の取得済みデータを使います。"
+    )
+    st.download_button(
+        label="🎯 KOL判定該当馬のみHTMLダウンロード",
+        data=build_html_report(kol_df, "KOL判定該当馬レポート"),
+        file_name="horse_analysis_kol_matches.html",
+        mime="text/html",
+        disabled=kol_df.empty,
+    )
