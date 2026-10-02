@@ -27,6 +27,12 @@ KOL_JOCKEY_ALIASES = {
     "C.デム": "C.デムーロ", "モレイラ": "J.モレイラ", "キング": "R.キング",
 }
 
+# 添付 wakuban_colors.csv の枠番別背景色。
+WAKUBAN_COLORS = {
+    1: "#FEFEFE", 2: "#222222", 3: "#CA4943", 4: "#3653A3",
+    5: "#E0CB56", 6: "#6DAD57", 7: "#D28D3F", 8: "#CD687A",
+}
+
 
 def normalize_jockey(value):
     if pd.isna(value):
@@ -866,7 +872,16 @@ if df is not None:
             html.append("<tr>")
             html.append(f"<td>{row['レース']}</td>")
             html.append(f"<td>{row['条件']}</td>")
-            html.append(f"<td>{row['枠番']}</td>")
+            wakuban = decimal_value(row["枠番"])
+            background = WAKUBAN_COLORS.get(wakuban)
+            if background:
+                foreground = "#FEFEFE" if wakuban in (2, 3, 4) else "#222222"
+                html.append(
+                    f'<td style="background-color: {background}; '
+                    f'color: {foreground}; font-weight: bold;">{row["枠番"]}</td>'
+                )
+            else:
+                html.append(f"<td>{row['枠番']}</td>")
             html.append(f"<td>{row['馬番']}</td>")
             html.append(f"<td>{row['推印']}</td>")
             html.append(f"<td>{row['馬名']}</td>")
