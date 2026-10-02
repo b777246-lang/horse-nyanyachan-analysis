@@ -965,208 +965,196 @@ if df is not None:
         head = view_df["header"].iloc[0] if len(view_df) else ""
         title = f"{sel_venue} {sel_race}R　{head}"
 
-    # --- JRA公式 単勝オッズ更新（URL入力不要） ---
-    if sel_race != "ALL":
-        # 18桁レースIDは画面には表示せず、JRA対象レース特定に内部利用する。
-        selected_ids = [
-            str(v).strip()
-            for v in view_df.get("レースID", pd.Series(dtype="object")).tolist()
-            if re.fullmatch(r"\d{18}", str(v).strip())
-        ]
-        race_prefixes = sorted({rid[:16] for rid in selected_ids})
+    # --- JRA公式 全開催・全レースの単勝オッズ更新 ---
+    place_code_to_name = {
+        "01": "札幌", "02": "函館", "03": "福島", "04": "新潟", "05": "東京",
+        "06": "中山", "07": "中京", "08": "京都", "09": "阪神", "10": "小倉",
+    }
+    race_targets = []
+    for (venue, race_no), race_frame in res_df.groupby(["venue", "race_no"], sort=False):
+        ids = [str(v).strip() for v in race_frame["レースID"]
+               if re.fullmatch(r"\d{18}", str(v).strip())]
+        prefixes = sorted({rid[:16] for rid in ids})
+        target_date = re.sub(r"\D", "", date_text)
+        error = ""
+        if len(prefixes) > 1:
+            error = "複数の18桁レースIDが混在しています。CSVを確認してください。"
+        elif prefixes:
+            prefix = prefixes[0]
+            target_date = prefix[:8]
+            if (place_code_to_name.get(prefix[8:10]) != venue
+                    or int(prefix[14:16]) != int(race_no)):
+                error = "18桁レースIDと開催・Rが一致しません。CSVを確認してください。"
+        if not re.fullmatch(r"\d{8}", target_date):
+            error = "開催日を取得できません。レースIDまたはCSVファイル名を確認してください。"
+        odds_key = f"{target_date}_{venue}_{int(race_no)}"
+        race_targets.append((venue, int(race_no), target_date, odds_key, error))
 
-        id_date = ""
-        id_race_no = None
-        id_place_code = ""
-        if len(race_prefixes) == 1:
-            prefix = race_prefixes[0]
-            id_date = prefix[:8]
-            id_place_code = prefix[8:10]
-            id_race_no = int(prefix[14:16])
-
-        # IDがまだない旧CSVでは従来どおりファイル名・画面選択を使用。
-        date_yyyymmdd = id_date or re.sub(r"\D", "", date_text)
-        target_race_no = id_race_no or int(sel_race)
-
-        place_code_to_name = {
-            "01": "札幌", "02": "函館", "03": "福島", "04": "新潟", "05": "東京",
-            "06": "中山", "07": "中京", "08": "京都", "09": "阪神", "10": "小倉",
-        }
-        target_venue = place_code_to_name.get(id_place_code, sel_venue)
-
-        odds_key = f"{date_yyyymmdd}_{target_venue}_{target_race_no}"
-
-        with st.expander("💴 JRA単勝オッズ", expanded=False):
-            if len(race_prefixes) > 1:
-                st.error("選択レース内に複数の18桁レースIDが混在しています。CSVを確認してください。")
-            elif race_prefixes and (
-                target_venue != sel_venue or target_race_no != int(sel_race)
-            ):
-                st.error(
-                    "18桁レースIDと画面で選択した開催・Rが一致しません。"
-                    "CSVのレースIDを確認してください。"
-                )
-            elif st.button("🔄 オッズ更新", key=f"odds_update_{odds_key}"):
-                if fetch_jra_win_odds_auto is None:
-                    st.error(
-                        "jra_odds.py を app.py と同じフォルダに配置してください。"
-                    )
-                elif not re.fullmatch(r"\d{8}", date_yyyymmdd):
-                    st.error(
-                        "開催日を取得できません。16列目の18桁レースID、"
-                        "または YYYYMMDD.csv のファイル名を確認してください。"
-                    )
-                else:
+    with st.expander("💴 JRA単勝オッズ", expanded=False):
+        st.caption(f"CSV内の全開催・全{len(race_targets)}レースを更新します。")
+        if st.button("🔄 オッズ更新", key="odds_update_all"):
+            if fetch_jra_win_odds_auto is None:
+                st.error("jra_odds.py を app.py と同じフォルダに配置してください。")
+            else:
+                progress = st.progress(0, text="全レースのオッズ更新を開始します")
+                failures = []
+                success_count = 0
+                for position, (venue, race_no, target_date, odds_key, error) in enumerate(race_targets):
+                    label = f"{venue}{race_no}R"
+                    progress.progress(position / len(race_targets), text=f"{label}を取得中")
                     try:
-                        with st.spinner(
-                            f"JRA公式から {target_venue}{target_race_no}R の単勝オッズを取得しています..."
-                        ):
-                            odds_rows, resolved_url = fetch_jra_win_odds_auto(
-                                date_yyyymmdd,
-                                target_venue,
-                                target_race_no,
-                            )
-
+                        if error:
+                            raise ValueError(error)
+                        odds_rows, resolved_url = fetch_jra_win_odds_auto(
+                            target_date, venue, race_no,
+                        )
+                        if not odds_rows:
+                            raise RuntimeError("単勝オッズを1頭も取得できませんでした。")
                         st.session_state.jra_odds_cache[odds_key] = odds_rows
                         st.session_state[f"jra_resolved_url_{odds_key}"] = resolved_url
-                        st.success(
-                            f"{target_venue}{target_race_no}R：単勝オッズを"
-                            f"{len(odds_rows)}頭分取得しました。"
-                        )
+                        success_count += 1
                     except Exception as exc:
-                        st.error(f"オッズ取得に失敗しました: {exc}")
+                        failures.append(f"{label}：{exc}")
+                    progress.progress((position + 1) / len(race_targets),
+                                      text=f"{position + 1}/{len(race_targets)}レース完了")
+                if success_count:
+                    st.success(f"全{len(race_targets)}レース中、{success_count}レースのオッズを更新しました。")
+                if failures:
+                    st.warning("取得に失敗したレースは前回取得したオッズを保持しています。")
+                    for failure in failures:
+                        st.error(failure)
 
-            cached_url = st.session_state.get(
-                f"jra_resolved_url_{odds_key}", ""
-            )
-            if cached_url:
-                st.caption("JRA公式の対象レースURLを自動取得済み")
-
+    # 馬番だけで照合せず、開催・レースごとのキャッシュを適用する。
+    odds_by_race = {}
+    for venue, race_no, target_date, odds_key, error in race_targets:
+        if error:
+            continue
         cached_odds = st.session_state.jra_odds_cache.get(odds_key, [])
         if cached_odds:
-            odds_by_no = {
-                str(int(item["horse_no"])): item
-                for item in cached_odds
+            odds_by_race[(venue, race_no)] = {
+                str(int(item["horse_no"])): item for item in cached_odds
             }
 
-            def apply_odds(frame):
-                frame = frame.copy()
+    if odds_by_race:
+        def apply_odds(frame):
+            frame = frame.copy()
 
-                for col in ("KOLオッズ", "実オッズ", "オッズ差", "人気", "乖離率(%)"):
-                    if col not in frame.columns:
-                        frame[col] = ""
-                    frame[col] = frame[col].astype("object")
+            for col in ("KOLオッズ", "実オッズ", "オッズ差", "人気", "乖離率(%)"):
+                if col not in frame.columns:
+                    frame[col] = ""
+                frame[col] = frame[col].astype("object")
 
-                for idx, row in frame.iterrows():
-                    horse_no_text = str(row.get("馬番", "")).strip()
-                    try:
-                        horse_no_text = str(int(float(horse_no_text)))
-                    except (ValueError, TypeError):
-                        pass
+            for idx, row in frame.iterrows():
+                horse_no_text = str(row.get("馬番", "")).strip()
+                try:
+                    horse_no_text = str(int(float(horse_no_text)))
+                except (ValueError, TypeError):
+                    pass
 
-                    frame.at[idx, "乖離率(%)"] = ""
-                    item = odds_by_no.get(horse_no_text)
-                    if not item:
-                        continue
+                frame.at[idx, "乖離率(%)"] = ""
+                race_key = (str(row.get("venue", "")), int(row["race_no"]))
+                item = odds_by_race.get(race_key, {}).get(horse_no_text)
+                if not item:
+                    continue
 
-                    odds_value = item.get("jra_odds", "")
-                    popularity_value = item.get("popularity", "")
+                odds_value = item.get("jra_odds", "")
+                popularity_value = item.get("popularity", "")
 
-                    frame.at[idx, "実オッズ"] = (
-                        "" if odds_value is None else float(odds_value)
+                frame.at[idx, "実オッズ"] = (
+                    "" if odds_value is None else float(odds_value)
+                )
+                frame.at[idx, "人気"] = (
+                    "" if popularity_value is None else popularity_value
+                )
+
+                divergence = kol_divergence(row.get("KOLオッズ", ""), odds_value)
+                frame.at[idx, "乖離率(%)"] = (
+                    "" if divergence is None else float(divergence)
+                )
+
+                kol_value = pd.to_numeric(
+                    row.get("KOLオッズ", ""), errors="coerce"
+                )
+                if pd.notna(kol_value) and odds_value not in ("", None):
+                    # 指定式: 実オッズ - KOLオッズ
+                    frame.at[idx, "オッズ差"] = round(
+                        float(odds_value) - float(kol_value), 1
                     )
-                    frame.at[idx, "人気"] = (
-                        "" if popularity_value is None else popularity_value
-                    )
+                else:
+                    frame.at[idx, "オッズ差"] = ""
 
-                    divergence = kol_divergence(row.get("KOLオッズ", ""), odds_value)
-                    frame.at[idx, "乖離率(%)"] = (
-                        "" if divergence is None else float(divergence)
-                    )
+            return frame
 
-                    kol_value = pd.to_numeric(
-                        row.get("KOLオッズ", ""), errors="coerce"
-                    )
-                    if pd.notna(kol_value) and odds_value not in ("", None):
-                        # 指定式: 実オッズ - KOLオッズ
-                        frame.at[idx, "オッズ差"] = round(
-                            float(odds_value) - float(kol_value), 1
+        res_df = apply_odds(res_df)
+        raw_csv_df = apply_odds(raw_csv_df)
+        view_df = apply_odds(view_df)
+
+        # --- 狙い目: ★F-UP特注★ ---
+        # 阪神/京都/中山/東京/中京
+        # 未勝利～3勝クラス
+        # 厩舎finish-UP 6～7
+        # JRA実人気 1～2人気
+        target_venues = {"阪神", "京都", "中山", "東京", "中京"}
+
+        def add_fup_special(frame):
+            frame = frame.copy()
+            comment_col = "総合評価・コース相性判定"
+
+            def number_from_cell(value):
+                # HTMLセルの場合、class="rank-1" の「1」を値と誤認しないよう
+                # タグを除去してから表示値だけを数値化する。
+                if pd.isna(value):
+                    return None
+                plain = re.sub(r"<[^>]+>", "", str(value)).strip()
+                m = re.search(r"-?\d+(?:\.\d+)?", plain)
+                return float(m.group()) if m else None
+
+            for idx, row in frame.iterrows():
+                # DataFrame内部の開催場列名は「venue」
+                venue = str(row.get("venue", "")).strip()
+
+                # CSV 2列目「条件」
+                race_condition = str(row.get("条件", "")).strip()
+                normalized_condition = (
+                    race_condition
+                    .replace("１", "1")
+                    .replace("２", "2")
+                    .replace("３", "3")
+                    .replace("ｸﾗｽ", "クラス")
+                )
+
+                class_ok = any(
+                    c in normalized_condition
+                    for c in {"未勝利", "1勝クラス", "2勝クラス", "3勝クラス"}
+                )
+
+                fup = number_from_cell(row.get("厩舎F-UP2", ""))
+                popularity = number_from_cell(row.get("人気", ""))
+
+                if (
+                    venue in target_venues
+                    and class_ok
+                    and fup is not None
+                    and 6 <= fup <= 7
+                    and popularity is not None
+                    and 1 <= popularity <= 2
+                ):
+                    mark = "★F-UP特注★"
+                    current = str(row.get(comment_col, "") or "")
+
+                    if mark not in current:
+                        # 既存の「★...★」赤字化関数を通してから追加。
+                        # ★F-UP特注★ も既存の特注コメントと同じ赤字・太字表示になる。
+                        marked = format_special_tags_html(mark)
+                        frame.at[idx, comment_col] = (
+                            f"{marked} {current}".strip()
                         )
-                    else:
-                        frame.at[idx, "オッズ差"] = ""
 
-                return frame
+            return frame
 
-            res_df = apply_odds(res_df)
-            raw_csv_df = apply_odds(raw_csv_df)
-            view_df = apply_odds(view_df)
-
-            # --- 狙い目: ★F-UP特注★ ---
-            # 阪神/京都/中山/東京/中京
-            # 未勝利～3勝クラス
-            # 厩舎finish-UP 6～7
-            # JRA実人気 1～2人気
-            target_venues = {"阪神", "京都", "中山", "東京", "中京"}
-
-            def add_fup_special(frame):
-                frame = frame.copy()
-                comment_col = "総合評価・コース相性判定"
-
-                def number_from_cell(value):
-                    # HTMLセルの場合、class="rank-1" の「1」を値と誤認しないよう
-                    # タグを除去してから表示値だけを数値化する。
-                    if pd.isna(value):
-                        return None
-                    plain = re.sub(r"<[^>]+>", "", str(value)).strip()
-                    m = re.search(r"-?\d+(?:\.\d+)?", plain)
-                    return float(m.group()) if m else None
-
-                for idx, row in frame.iterrows():
-                    # DataFrame内部の開催場列名は「venue」
-                    venue = str(row.get("venue", "")).strip()
-
-                    # CSV 2列目「条件」
-                    race_condition = str(row.get("条件", "")).strip()
-                    normalized_condition = (
-                        race_condition
-                        .replace("１", "1")
-                        .replace("２", "2")
-                        .replace("３", "3")
-                        .replace("ｸﾗｽ", "クラス")
-                    )
-
-                    class_ok = any(
-                        c in normalized_condition
-                        for c in {"未勝利", "1勝クラス", "2勝クラス", "3勝クラス"}
-                    )
-
-                    fup = number_from_cell(row.get("厩舎F-UP2", ""))
-                    popularity = number_from_cell(row.get("人気", ""))
-
-                    if (
-                        venue in target_venues
-                        and class_ok
-                        and fup is not None
-                        and 6 <= fup <= 7
-                        and popularity is not None
-                        and 1 <= popularity <= 2
-                    ):
-                        mark = "★F-UP特注★"
-                        current = str(row.get(comment_col, "") or "")
-
-                        if mark not in current:
-                            # 既存の「★...★」赤字化関数を通してから追加。
-                            # ★F-UP特注★ も既存の特注コメントと同じ赤字・太字表示になる。
-                            marked = format_special_tags_html(mark)
-                            frame.at[idx, comment_col] = (
-                                f"{marked} {current}".strip()
-                            )
-
-                return frame
-
-            res_df = add_fup_special(res_df)
-            raw_csv_df = add_fup_special(raw_csv_df)
-            view_df = add_fup_special(view_df)
+        res_df = add_fup_special(res_df)
+        raw_csv_df = add_fup_special(raw_csv_df)
+        view_df = add_fup_special(view_df)
 
     st.markdown(
         f'<div class="race-header">{title}'
