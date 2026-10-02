@@ -1187,13 +1187,24 @@ if df is not None:
     with col2:
         def build_html_report(dataframe, report_title="競馬指数 総合分析レポート"):
             report_html_table = render_html_table(dataframe)
+            # 出力HTMLは画面幅に押し込まず、列幅を確保して横スクロールする。
+            widths = (4, 8, 3, 3, 3, 10, 5, 3, 4, 4, 4, 3, 3, 5, 26, 6, 6)
+            colgroup = "<colgroup>" + "".join(
+                f'<col style="width: {width}%;">' for width in widths
+            ) + "</colgroup>"
+            report_html_table = report_html_table.replace(
+                '<table class="custom-horse-table">',
+                '<table class="custom-horse-table">' + colgroup,
+                1,
+            )
             return f"""<!DOCTYPE html>
             <html lang="ja">
             <head>
             <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
             <title>{escape(report_title)}</title>
             <style>
-                body {{ font-family: Arial, sans-serif; margin: 20px; background-color: #f9f9f9; }}
+                body {{ font-family: Arial, sans-serif; margin: 12px; background-color: #f9f9f9; }}
                 h2 {{ color: #333; }}
                 .table-container {{
                     width: 100%;
@@ -1201,30 +1212,34 @@ if df is not None:
                     border: 1px solid #ddd;
                     border-radius: 6px;
                     background-color: white;
+                    box-sizing: border-box;
+                    -webkit-overflow-scrolling: touch;
                 }}
                 .custom-horse-table {{
                     width: 100% !important;
+                    min-width: 1280px;
+                    table-layout: fixed;
                     border-collapse: collapse;
-                    font-size: 11px;
+                    font-size: 12px;
                     background-color: white;
                     color: #31333F;
                 }}
                 .custom-horse-table th, .custom-horse-table td {{
                     border: 1px solid #e0e0e0;
-                    padding: 6px 8px;
+                    padding: 6px 4px;
                     text-align: center;
-                    white-space: nowrap;
+                    white-space: normal;
+                    overflow-wrap: anywhere;
+                    line-height: 1.5;
+                    box-sizing: border-box;
+                    vertical-align: middle;
                 }}
                 .custom-horse-table th {{
                     background-color: #f0f2f6;
                     font-weight: 600;
                 }}
-                .custom-horse-table {{
-                    table-layout: fixed;
-                }}
                 .custom-horse-table th:nth-child(15),
                 .custom-horse-table td:nth-child(15) {{
-                    width: 30%;
                     white-space: normal !important;
                     overflow-wrap: anywhere;
                     text-align: left !important;
