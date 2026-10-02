@@ -1096,7 +1096,7 @@ if df is not None:
         # JRA実人気 1～2人気
         target_venues = {"阪神", "京都", "中山", "東京", "中京"}
 
-        def add_fup_special(frame):
+        def add_fup_special(frame, *, html=True):
             frame = frame.copy()
             comment_col = "総合評価・コース相性判定"
 
@@ -1145,7 +1145,7 @@ if df is not None:
                     if mark not in current:
                         # 既存の「★...★」赤字化関数を通してから追加。
                         # ★F-UP特注★ も既存の特注コメントと同じ赤字・太字表示になる。
-                        marked = format_special_tags_html(mark)
+                        marked = format_special_tags_html(mark) if html else mark
                         frame.at[idx, comment_col] = (
                             f"{marked} {current}".strip()
                         )
@@ -1153,7 +1153,7 @@ if df is not None:
             return frame
 
         res_df = add_fup_special(res_df)
-        raw_csv_df = add_fup_special(raw_csv_df)
+        raw_csv_df = add_fup_special(raw_csv_df, html=False)
         view_df = add_fup_special(view_df)
 
     st.markdown(
