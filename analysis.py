@@ -123,7 +123,7 @@ def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS
         name = str(row.get('horse_name', "")).strip()
 
         # ヘッダーなしCSV:
-        # 15列目 = KOLオッズ / 16列目 = TARGET 18桁レースID / 17列目 = 騎手
+        # CSVの列位置はdata_loaderで正規化する。新形式はID→血統登録番号→騎手。
         kol_raw = row.get('kol_odds', "")
         kol_odds = pd.to_numeric(kol_raw, errors="coerce")
 
@@ -261,6 +261,7 @@ def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS
             "fup_rank": finish_up_rank, "fup_count": finish_up_count,
             "horse_name": name, "horse_no": umaban, "race_id": race_id,
             "jockey": jockey_from_main_row(row), "kol_odds": kol_odds,
+            "horse_id": str(row.get('horse_id', '')).strip() if pd.notna(row.get('horse_id', '')) else '',
         }
         special_matches = registry.evaluate(context, settings, stage="pre")
         special_comments = tuple(match.comment for match in special_matches if match.comment)
@@ -326,5 +327,7 @@ def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS
             "厩舎F-UP2": finish_up,
             "総合評価・コース相性判定": eval_text_csv,
         })
+        if df.attrs.get('has_horse_id'):
+            raw_data_list[-1]['血統登録番号'] = context['horse_id']
 
     return AnalysisBatch(pd.DataFrame(raw_data_list), notes)

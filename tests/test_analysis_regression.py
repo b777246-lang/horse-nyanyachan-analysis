@@ -14,6 +14,19 @@ from signals import add_live_comments, filter_kol_horses
 
 
 class AnalysisRegressionTests(unittest.TestCase):
+    def test_registration_number_reaches_analysis_without_changing_jockey_or_results(self):
+        fixture = Path(__file__).parent / 'fixtures' / 'refactor'
+        data = read_main_csv(fixture / '20261003.csv')
+        updated = data.copy()
+        updated.insert(16, 'registration', [f'{index + 1:010d}' for index in range(len(data))])
+        updated.columns = range(len(updated.columns))
+        stats = load_course_data()
+        comments = load_comments(fixture / '20261003comment.csv')
+        original = analyze_csv(data, stats, comments)
+        result = analyze_csv(updated, stats, comments)
+        self.assertEqual(result.frame['血統登録番号'].iloc[0], '0000000001')
+        self.assertTrue(result.frame.drop(columns='血統登録番号').equals(original.frame))
+
     def test_all_horses_comments_scores_and_exports_match_before_refactor(self):
         fixture = Path(__file__).parent / 'fixtures' / 'refactor'
         expected = json.loads((fixture / 'expected_outputs.json').read_text())

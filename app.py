@@ -198,7 +198,7 @@ if df is not None:
     )
     missing_jockeys = view_df["騎手"].map(normalize_jockey).eq("").sum()
     if missing_jockeys:
-        st.info(f"表示中の{missing_jockeys}頭は騎手データ未取得のためKOL判定保留です。元CSVのレースID列の右隣（17列目）に騎手名を追加してください。")
+        st.info(f"表示中の{missing_jockeys}頭は騎手データ未取得のためKOL判定保留です。新CSVは16列目=レースID、17列目=血統登録番号、18列目=騎手名です。騎手列を確認してください。")
     st.markdown(render_html_table(view_df, settings=settings), unsafe_allow_html=True)
 
     # --- ダウンロードボタン ---
