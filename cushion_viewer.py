@@ -30,6 +30,11 @@ def cached_jra_cushion(day, venue):
 cached_jra_cushion.clear = _cached_jra_cushion.clear
 
 
+def repository_snapshot(day):
+    # Resolve relative to the app modules, independent of the startup directory.
+    return Path(__file__).resolve().parent / f'cushion_history_{normalize_date(day)}.sqlite'
+
+
 def render_cushion_panel(view_df, main_frame, venue, race_no):
     with st.expander('🌱 クッション値別 過去成績', expanded=False):
         if race_no == 'ALL':
@@ -52,8 +57,8 @@ def render_cushion_panel(view_df, main_frame, venue, race_no):
         st.caption(f'{day[:4]}/{day[4:6]}/{day[6:]} {venue}{race_no}R')
         entrants = [{'horse_no': row['horse_no'], 'horse_name': row['horse_name'],
                      'horse_id': row['horse_id']} for _, row in selected.iterrows()]
-        upload = st.file_uploader('クッション値履歴の軽量DB', type=['sqlite', 'sqlite3', 'db'], key='cushion_snapshot_upload')
-        local_path = Path(f'cushion_history_{day}.sqlite')
+        upload = st.file_uploader('軽量DBの差し替え（任意）', type=['sqlite', 'sqlite3', 'db'], key='cushion_snapshot_upload')
+        local_path = repository_snapshot(day)
         mode = st.radio('クッション値の取得方法', ['JRA自動取得', '手動入力'], horizontal=True, key='cushion_input_mode')
         if st.button('🔄 クッション値を再取得', key='cushion_refresh', disabled=mode != 'JRA自動取得'):
             cached_jra_cushion.clear()
@@ -95,6 +100,7 @@ def render_cushion_panel(view_df, main_frame, venue, race_no):
                 pass
         try:
             if upload is not None:
+                st.caption(f'使用する軽量DB：アップロードされた {upload.name}')
                 if upload.size > 32 * 1024 * 1024:
                     raise ValueError('軽量DBは32MB以内で指定してください。元の巨大DBではなく、生成した軽量DBを使用してください。')
                 with tempfile.TemporaryDirectory(prefix='cushion-viewer-') as folder:
@@ -102,9 +108,10 @@ def render_cushion_panel(view_df, main_frame, venue, race_no):
                     path.write_bytes(upload.getvalue())
                     report = get_cushion_stats(path, valid_ids, day, value, official_only=official_only)
             elif local_path.is_file():
+                st.caption(f'軽量DBを自動読込：{local_path.name}（リポジトリ内）')
                 report = get_cushion_stats(local_path, valid_ids, day, value, official_only=official_only)
             else:
-                st.info('前日に生成した軽量DBを選択するか、当日用の軽量DBをアプリと同じフォルダに配置してください。')
+                st.info(f'当日用の軽量DBがありません。{local_path.name} をリポジトリのapp.pyと同じフォルダに配置すると、自動で読み込みます。アップロードでも利用できます。')
         except (ValueError, sqlite3.Error, OSError, KeyError) as exc:
             reason = '軽量DBを利用できません'
             st.warning(f'{reason}：{exc}')

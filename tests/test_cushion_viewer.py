@@ -1,13 +1,16 @@
 from pathlib import Path
 import sqlite3
 import unittest
+import os
+import tempfile
 from unittest.mock import patch
 
 from streamlit.testing.v1 import AppTest
 
 from cushion_presentation import build_viewer_records
 from data_loader import read_main_csv, normalize_main_frame
-from cushion_stats import aggregate_history
+from cushion_stats import aggregate_history, get_cushion_stats
+from cushion_viewer import repository_snapshot
 from test_cushion_stats import HORSE, run
 
 
@@ -17,6 +20,32 @@ class CushionViewerTests(unittest.TestCase):
         self.csv_patch = patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: None if comments else Path('20261010.csv'))
         self.csv_patch.start()
         self.addCleanup(self.csv_patch.stop)
+
+    def test_repository_path_does_not_depend_on_working_directory(self):
+        expected = Path(__file__).resolve().parents[1] / 'cushion_history_20261011.sqlite'
+        previous = Path.cwd()
+        try:
+            with tempfile.TemporaryDirectory() as folder:
+                os.chdir(folder)
+                self.assertEqual(repository_snapshot('20261011'), expected)
+                self.assertTrue(repository_snapshot('20261011').is_file())
+        finally:
+            os.chdir(previous)
+
+    def test_real_repository_db_loads_without_upload(self):
+        self.csv_patch.stop()
+        at = AppTest.from_file(str(Path('app.py').resolve()), default_timeout=60).run()
+        at.get('button_group')[0].set_value('東京').run()
+        at.get('button_group')[1].set_value(2).run()
+        at.radio(key='cushion_input_mode').set_value('手動入力').run()
+        at.text_input(key='cushion_value_20261011_東京').set_value('9.2').run()
+        self.assertFalse(at.exception)
+        self.assertTrue(any('軽量DBを自動読込：cushion_history_20261011.sqlite' in value.value for value in at.caption))
+        main = normalize_main_frame(read_main_csv('20261011.csv'))
+        ids = main[main['race'].eq('東2')]['horse_id'].tolist()
+        expected = get_cushion_stats(repository_snapshot('20261011'), ids, '20261011', '9.2')
+        self.assertEqual(len(at.dataframe[0].value), len(ids))
+        self.assertEqual(at.dataframe[0].value['対象走数'].sum(), sum(r['starts'] for r in expected['horses']))
 
     def test_shared_records_keep_missing_horses_and_numbers(self):
         report = {'horses': aggregate_history([run(1, finish_position=1, win_return_yen=360)], [HORSE, '0000000002'], '20260102', 9.2)}
