@@ -34,4 +34,3 @@ def build_viewer_records(entrants, report=None, unavailable_reason='軽量DB未�
                        '備考': reason})
         records.append(record)
     return sorted(records, key=lambda row: row['馬番'])
-
