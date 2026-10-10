@@ -6,7 +6,8 @@ from analysis import analyze_csv
 from values import normalize_jockey
 from signals import add_live_comments, filter_kol_horses
 from config import load_settings
-from data_loader import latest_csv, read_main_csv, load_comments, load_course_data
+from data_loader import latest_csv, read_main_csv, load_comments, load_course_data, normalize_main_frame
+from cushion_viewer import render_cushion_panel
 from formatting import SCREEN_CSS, format_analysis_frame, render_html_table
 from export import build_html_report, build_target_csv, format_target_frame
 from odds_service import build_race_targets, cached_odds_by_race, update_all_odds, apply_odds
@@ -215,6 +216,8 @@ if df is not None:
     if missing_jockeys:
         st.info(f"表示中の{missing_jockeys}頭は騎手データ未取得のためKOL判定保留です。新CSVは16列目=レースID、17列目=血統登録番号、18列目=騎手名です。騎手列を確認してください。")
     st.markdown(render_html_table(view_df, settings=settings), unsafe_allow_html=True)
+
+    render_cushion_panel(view_df, normalize_main_frame(df), sel_venue, sel_race)
 
     # --- ダウンロードボタン ---
     col1, col2 = st.columns(2)
