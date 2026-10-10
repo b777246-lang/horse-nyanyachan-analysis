@@ -157,13 +157,25 @@ if df is not None:
 
     with st.expander("💴 JRA単勝オッズ", expanded=False):
         st.caption(f"CSV内の全開催・全{len(race_targets)}レースを更新します。")
-        if st.button("🔄 オッズ更新", key="odds_update_all"):
+        update_all = st.button("🔄 全レースのオッズ更新", key="odds_update_all")
+        update_current = False
+        if sel_race != "ALL":
+            update_current = st.button(
+                f"🔄 {sel_venue}{sel_race}Rのみオッズ更新", key="odds_update_current",
+            )
+        else:
+            st.caption("個別更新はレース番号を選択すると利用できます。")
+        if update_all or update_current:
+            targets = race_targets if update_all else [
+                target for target in race_targets
+                if target[0] == sel_venue and target[1] == int(sel_race)
+            ]
             if fetch_jra_win_odds_auto is None:
                 st.error("jra_odds.py を app.py と同じフォルダに配置してください。")
             else:
-                progress = st.progress(0, text="全レースのオッズ更新を開始します")
+                progress = st.progress(0, text="オッズ更新を開始します")
                 summary = update_all_odds(
-                    race_targets, st.session_state.jra_odds_cache, fetch_jra_win_odds_auto,
+                    targets, st.session_state.jra_odds_cache, fetch_jra_win_odds_auto,
                     lambda fraction, text: progress.progress(fraction, text=text),
                 )
                 for key, url in summary.urls.items():
@@ -171,7 +183,10 @@ if df is not None:
                 success_count = summary.success_count
                 failures = summary.failures
                 if success_count:
-                    st.success(f"全{len(race_targets)}レース中、{success_count}レースのオッズを更新しました。")
+                    if update_all:
+                        st.success(f"全{len(race_targets)}レース中、{success_count}レースのオッズを更新しました。")
+                    else:
+                        st.success(f"{sel_venue}{sel_race}Rのオッズを更新しました。")
                 if failures:
                     st.warning("取得に失敗したレースは前回取得したオッズを保持しています。")
                     for failure in failures:
