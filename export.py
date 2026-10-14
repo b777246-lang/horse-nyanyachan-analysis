@@ -83,7 +83,7 @@ def build_html_report(dataframe, report_title="競馬指数 総合分析レポ�
 
 
 def build_target_csv(frame):
-    return frame.drop(columns=["original_index", "score", "venue", "race_no", "header"]).to_csv(index=False, encoding="cp932", errors="ignore")
+    return frame.drop(columns=["original_index", "score", "venue", "race_no", "header", "age"], errors="ignore").to_csv(index=False, encoding="cp932", errors="ignore")
 
 
 def clean_eval_text_for_target(val):

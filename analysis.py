@@ -327,6 +327,8 @@ def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS
             "厩舎F-UP2": finish_up,
             "総合評価・コース相性判定": eval_text_csv,
         })
+        if df.attrs.get('has_age'):
+            raw_data_list[-1]['age'] = row.get('age', '')
         if df.attrs.get('has_horse_id'):
             raw_data_list[-1]['血統登録番号'] = context['horse_id']
 

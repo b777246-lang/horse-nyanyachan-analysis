@@ -26,7 +26,7 @@ class DesktopAppTests(unittest.TestCase):
             app = self.app()
             frame = pd.read_csv(filename, encoding='cp932', header=None, converters={15: str, 16: str, 17: str})
             app.process_and_display_data(frame)
-            rows = [{k: v for k, v in row.items() if k not in {'horse_id', 'surface'}} for row in app.export_data_list]
+            rows = [{k: v for k, v in row.items() if k not in {'horse_id', 'surface', 'age'}} for row in app.export_data_list]
             self.assertEqual(hashlib.sha256(json.dumps(rows, ensure_ascii=False, sort_keys=True, default=str).encode()).hexdigest(), digest)
             if filename == '20261010.csv':
                 self.assertEqual(app.export_data_list[0]['horse_id'], str(frame.iloc[0, 16]))

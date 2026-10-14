@@ -68,6 +68,7 @@ NEW_MAIN_COLUMNS = MAIN_COLUMNS[:-1] + ('horse_id', 'jockey')
 def normalize_main_frame(frame):
     """CSVの列位置をここで一度だけ名前に変換する。追加列は保持する。"""
     columns = MAIN_COLUMNS
+    has_age = frame.attrs.get('has_age', 'age' in frame.columns or 18 in frame.columns)
     has_horse_id = frame.attrs.get('has_horse_id', 'horse_id' in frame.columns)
     if 16 in frame.columns:
         values = frame[16].fillna('').astype(str).str.strip()
@@ -80,7 +81,12 @@ def normalize_main_frame(frame):
             has_horse_id = True
         elif nonempty.str.fullmatch(r'[0-9]+').any():
             raise ValueError('血統登録番号は先頭のゼロを含む10桁の文字列で指定してください。')
-    frame = frame.rename(columns={i: name for i, name in enumerate(columns)}).copy()
+    names = {i: name for i, name in enumerate(columns)}
+    names[18] = 'age'
+    frame = frame.rename(columns=names).copy()
+    if 'age' not in frame.columns:
+        frame['age'] = ''
+    frame['age'] = frame['age'].fillna('').astype(str).str.strip()
     missing = [name for name in MAIN_COLUMNS[:14] if name not in frame.columns]
     if missing:
         raise ValueError('メインCSVの必須列が不足しています: ' + ', '.join(missing))
@@ -88,4 +94,5 @@ def normalize_main_frame(frame):
         if name not in frame.columns:
             frame[name] = ''
     frame.attrs['has_horse_id'] = has_horse_id
+    frame.attrs['has_age'] = has_age
     return frame

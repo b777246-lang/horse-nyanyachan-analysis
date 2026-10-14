@@ -34,6 +34,9 @@ class CushionViewerTests(unittest.TestCase):
 
     def test_real_repository_db_loads_without_upload(self):
         self.csv_patch.stop()
+        fixture = patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: None if comments else Path('20261011.csv'))
+        fixture.start()
+        self.addCleanup(fixture.stop)
         at = AppTest.from_file(str(Path('app.py').resolve()), default_timeout=60).run()
         at.get('button_group')[0].set_value('東京').run()
         at.get('button_group')[1].set_value(2).run()

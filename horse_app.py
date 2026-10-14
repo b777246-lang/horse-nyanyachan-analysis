@@ -555,7 +555,7 @@ class HorseApp(tk.Tk):
             return
 
         try:
-            df = pd.read_csv(file_path, encoding="cp932", header=None, converters={15: str, 16: str, 17: str})
+            df = pd.read_csv(file_path, encoding="cp932", header=None, converters={15: str, 16: str, 17: str, 18: str})
             self.file_label.config(
                 text=f"読込ファイル: {os.path.basename(file_path)} (全 {len(df)} 頭)",
                 foreground="black",
@@ -1049,6 +1049,9 @@ class HorseApp(tk.Tk):
                     "finish_up": finish_up_rank,
                 },
             })
+
+            if input_fields.attrs.get('has_age'):
+                temp_data_list[-1]['age'] = input_fields.loc[row.name, 'age']
 
         # 初期読込順を保持
         self.initial_data_list = list(temp_data_list)
