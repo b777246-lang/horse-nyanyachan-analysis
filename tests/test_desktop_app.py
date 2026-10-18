@@ -28,7 +28,7 @@ class DesktopAppTests(unittest.TestCase):
             app.process_and_display_data(frame)
             rows = [{k: v for k, v in row.items() if k not in {'horse_id', 'surface', 'age'}} for row in app.export_data_list]
             self.assertEqual(hashlib.sha256(json.dumps(rows, ensure_ascii=False, sort_keys=True, default=str).encode()).hexdigest(), digest)
-            if filename == '20261010.csv':
+            if Path(filename).name == '20261010.csv':
                 self.assertEqual(app.export_data_list[0]['horse_id'], str(frame.iloc[0, 16]))
                 self.assertEqual(app.export_data_list[0]['jockey'], str(frame.iloc[0, 17]))
 
@@ -40,7 +40,7 @@ class DesktopAppTests(unittest.TestCase):
         app.process_and_display_data = MagicMock()
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / '20261010.csv'
-            frame = pd.read_csv('20261010.csv', encoding='cp932', header=None, dtype=str).iloc[:1].copy()
+            frame = pd.read_csv('tests/fixtures/daily/20261010.csv', encoding='cp932', header=None, dtype=str).iloc[:1].copy()
             frame[16] = '0000000001'
             frame.to_csv(path, encoding='cp932', header=False, index=False)
             with patch('horse_app.filedialog.askopenfilename', return_value=str(path)):

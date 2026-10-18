@@ -90,7 +90,7 @@ class CushionStatsTests(unittest.TestCase):
         self.assertEqual(result['starts'], 0)
 
     def test_actual_csv_preserves_registration_numbers(self):
-        ids, day = read_entrants('20261010.csv')
+        ids, day = read_entrants('tests/fixtures/daily/20261010.csv')
         self.assertEqual(day, '20261010')
         self.assertEqual(len(ids), 315)
         self.assertTrue(all(len(horse) == 10 for horse in ids))

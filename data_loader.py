@@ -83,10 +83,14 @@ def normalize_main_frame(frame):
             raise ValueError('血統登録番号は先頭のゼロを含む10桁の文字列で指定してください。')
     names = {i: name for i, name in enumerate(columns)}
     names[18] = 'age'
+    names[19] = 'sire_name'
     frame = frame.rename(columns=names).copy()
     if 'age' not in frame.columns:
         frame['age'] = ''
     frame['age'] = frame['age'].fillna('').astype(str).str.strip()
+    if 'sire_name' not in frame.columns:
+        frame['sire_name'] = ''
+    frame['sire_name'] = frame['sire_name'].fillna('').astype(str).str.strip()
     missing = [name for name in MAIN_COLUMNS[:14] if name not in frame.columns]
     if missing:
         raise ValueError('メインCSVの必須列が不足しています: ' + ', '.join(missing))

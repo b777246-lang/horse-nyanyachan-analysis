@@ -23,7 +23,7 @@ class AgeInputTests(unittest.TestCase):
         self.assertFalse(normalize_main_frame(pd.DataFrame([[''] * 18])).attrs['has_age'])
 
     def test_web_age_is_retained_but_not_displayed_or_exported(self):
-        original = read_main_csv('20261010.csv').iloc[:, :18]
+        original = read_main_csv('tests/fixtures/daily/20261010.csv').iloc[:, :18]
         added = original.copy()
         added[18] = '3'
         before = analyze_csv(original, load_course_data(), {})
@@ -35,7 +35,7 @@ class AgeInputTests(unittest.TestCase):
                          build_html_report(format_analysis_frame(after.frame, after.notes)))
 
     def test_desktop_age_does_not_change_analysis_or_jockey(self):
-        original = read_main_csv('20261010.csv').iloc[:, :18]
+        original = read_main_csv('tests/fixtures/daily/20261010.csv').iloc[:, :18]
         added = original.copy()
         added[18] = '3'
         outputs = []

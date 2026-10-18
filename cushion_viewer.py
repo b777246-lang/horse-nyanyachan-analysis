@@ -14,6 +14,7 @@ from jra_cushion import fetch_jra_cushion
 from cushion_stats import BAND_LABELS, cushion_band, get_cushion_stats, normalize_date, normalize_horse_id
 
 from cushion_presentation import METRICS, build_viewer_records
+from sire_web import render_sire_tab
 
 
 @st.cache_data(ttl=120, show_spinner=False)
@@ -56,7 +57,7 @@ def render_cushion_panel(view_df, main_frame, venue, race_no):
             return
         st.caption(f'{day[:4]}/{day[4:6]}/{day[6:]} {venue}{race_no}R')
         entrants = [{'horse_no': row['horse_no'], 'horse_name': row['horse_name'],
-                     'horse_id': row['horse_id']} for _, row in selected.iterrows()]
+                     'horse_id': row['horse_id'], 'sire_name': row.get('sire_name', '')} for _, row in selected.iterrows()]
         upload = st.file_uploader('軽量DBの差し替え（任意）', type=['sqlite', 'sqlite3', 'db'], key='cushion_snapshot_upload')
         local_path = repository_snapshot(day)
         mode = st.radio('クッション値の取得方法', ['JRA自動取得', '手動入力'], horizontal=True, key='cushion_input_mode')
@@ -90,43 +91,53 @@ def render_cushion_panel(view_df, main_frame, venue, race_no):
             st.info('当日のクッション値は未取得です。公表前の値や前開催日の値では代用しません。')
         if value is not None:
             st.write(f'クッション値：{value}　適用区分：{BAND_LABELS[cushion_band(value) - 1]}')
-        report = None
-        reason = '軽量DB未読込'
-        valid_ids = []
-        for horse in entrants:
+        horse_tab, sire_tab = st.tabs(['出走馬別成績', '種牡馬別成績'])
+        with horse_tab:
+            report = None
+            reason = '軽量DB未読込'
+            valid_ids = []
+            for horse in entrants:
+                try:
+                    valid_ids.append(normalize_horse_id(horse['horse_id']))
+                except ValueError:
+                    pass
             try:
-                valid_ids.append(normalize_horse_id(horse['horse_id']))
-            except ValueError:
-                pass
-        try:
-            if upload is not None:
-                st.caption(f'使用する軽量DB：アップロードされた {upload.name}')
-                if upload.size > 32 * 1024 * 1024:
-                    raise ValueError('軽量DBは32MB以内で指定してください。元の巨大DBではなく、生成した軽量DBを使用してください。')
-                with tempfile.TemporaryDirectory(prefix='cushion-viewer-') as folder:
-                    path = Path(folder) / 'history.sqlite'
-                    path.write_bytes(upload.getvalue())
-                    report = get_cushion_stats(path, valid_ids, day, value, official_only=official_only)
-            elif local_path.is_file():
-                st.caption(f'軽量DBを自動読込：{local_path.name}（リポジトリ内）')
-                report = get_cushion_stats(local_path, valid_ids, day, value, official_only=official_only)
+                if upload is not None:
+                    st.caption(f'使用する軽量DB：アップロードされた {upload.name}')
+                    if upload.size > 32 * 1024 * 1024:
+                        raise ValueError('軽量DBは32MB以内で指定してください。元の巨大DBではなく、生成した軽量DBを使用してください。')
+                    with tempfile.TemporaryDirectory(prefix='cushion-viewer-') as folder:
+                        path = Path(folder) / 'history.sqlite'
+                        path.write_bytes(upload.getvalue())
+                        report = get_cushion_stats(path, valid_ids, day, value, official_only=official_only)
+                elif local_path.is_file():
+                    st.caption(f'軽量DBを自動読込：{local_path.name}（リポジトリ内）')
+                    report = get_cushion_stats(local_path, valid_ids, day, value, official_only=official_only)
+                else:
+                    st.info(f'当日用の軽量DBがありません。{local_path.name} をリポジトリのapp.pyと同じフォルダに配置すると、自動で読み込みます。アップロードでも利用できます。')
+            except (ValueError, sqlite3.Error, OSError, KeyError) as exc:
+                reason = '軽量DBを利用できません'
+                st.warning(f'{reason}：{exc}')
+            if report:
+                metadata = report['metadata']
+                first, last = metadata.get('source_first_date', ''), metadata.get('source_last_date', '')
+                st.caption(f'過去DB収録期間：{first}～{last} ／ 集計は{day}より前の芝・同区分のみ')
+                if last and last < day:
+                    st.caption(f'収録最終日：{last}。それ以降の未収録走は含まれません。')
+                st.caption('中止・失格は着外として集計。CSV提供値は公式照合済み値と区別して保持しています。')
+            records = build_viewer_records(entrants, report, reason)
+            frame = pd.DataFrame(records)
+            sort_by = st.selectbox('成績の表示順', ['馬番'] + list(METRICS) + ['対象走数'], key='cushion_sort')
+            frame = frame.sort_values([sort_by, '馬番'] if sort_by != '馬番' else ['馬番'],
+                                      ascending=[False, True] if sort_by != '馬番' else True, na_position='last')
+            st.dataframe(frame.style.format({label: '{:.1f}' for label in METRICS}, na_rep='—'),
+                         hide_index=True, width='stretch', key='cushion_stats_table')
+            st.caption('列見出しでも並べ替えできます。表が横幅に収まらない場合は横スクロールしてください。')
+        with sire_tab:
+            distances = pd.to_numeric(selected['distance'], errors='coerce')
+            if distances.isna().any() or not distances.gt(0).all() or not distances.mod(1).eq(0).all() or distances.nunique() != 1:
+                st.warning('レース内の距離を一意に確認できません。種牡馬成績は判定不可です。')
             else:
-                st.info(f'当日用の軽量DBがありません。{local_path.name} をリポジトリのapp.pyと同じフォルダに配置すると、自動で読み込みます。アップロードでも利用できます。')
-        except (ValueError, sqlite3.Error, OSError, KeyError) as exc:
-            reason = '軽量DBを利用できません'
-            st.warning(f'{reason}：{exc}')
-        if report:
-            metadata = report['metadata']
-            first, last = metadata.get('source_first_date', ''), metadata.get('source_last_date', '')
-            st.caption(f'過去DB収録期間：{first}～{last} ／ 集計は{day}より前の芝・同区分のみ')
-            if last and last < day:
-                st.caption(f'収録最終日：{last}。それ以降の未収録走は含まれません。')
-            st.caption('中止・失格は着外として集計。CSV提供値は公式照合済み値と区別して保持しています。')
-        records = build_viewer_records(entrants, report, reason)
-        frame = pd.DataFrame(records)
-        sort_by = st.selectbox('成績の表示順', ['馬番'] + list(METRICS) + ['対象走数'], key='cushion_sort')
-        frame = frame.sort_values([sort_by, '馬番'] if sort_by != '馬番' else ['馬番'],
-                                  ascending=[False, True] if sort_by != '馬番' else True, na_position='last')
-        st.dataframe(frame.style.format({label: '{:.1f}' for label in METRICS}, na_rep='—'),
-                     hide_index=True, width='stretch', key='cushion_stats_table')
-        st.caption('列見出しでも並べ替えできます。表が横幅に収まらない場合は横スクロールしてください。')
+                render_sire_tab(entrants, day, value, venue=venue,
+                                distance=int(distances.iloc[0]), surface='芝',
+                                official_only=official_only)

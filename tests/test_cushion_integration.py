@@ -19,12 +19,12 @@ from test_jra_cushion import html
 
 class CushionIntegrationTests(unittest.TestCase):
     def setUp(self):
-        self.csv_patch = patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: None if comments else Path('20261010.csv'))
+        self.csv_patch = patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: None if comments else Path('tests/fixtures/daily/20261010.csv'))
         self.csv_patch.start()
         self.addCleanup(self.csv_patch.stop)
 
     def test_csv_jra_snapshot_web_desktop_and_failure_no_stale_value(self):
-        main = normalize_main_frame(read_main_csv('20261010.csv'))
+        main = normalize_main_frame(read_main_csv('tests/fixtures/daily/20261010.csv'))
         entrants = [dict(horse_no=row['horse_no'], horse_name=row['horse_name'], horse_id=row['horse_id'])
                     for _, row in main[main['race'].eq('東2')].iterrows()]
         horse = entrants[0]['horse_id']
@@ -56,7 +56,7 @@ class CushionIntegrationTests(unittest.TestCase):
                  patch('cushion_viewer.cached_jra_cushion', return_value=fetched) as fetch:
                 at.get('button_group')[1].set_value(2).run()
                 self.assertFalse(at.exception)
-                frame = at.dataframe[0].value
+                frame = at.tabs[0].dataframe[0].value
                 self.assertEqual(len(frame), len(entrants))
                 for key, value in panel.records[0].items():
                     self.assertEqual(frame.iloc[0][key], value)
@@ -64,12 +64,12 @@ class CushionIntegrationTests(unittest.TestCase):
                 fetch.side_effect = ValueError('simulated retrieval failure')
                 at.button(key='cushion_refresh').click().run()
                 self.assertFalse(at.exception)
-                self.assertEqual(at.dataframe[0].value['対象走数'].sum(), 0)
+                self.assertEqual(at.tabs[0].dataframe[0].value['対象走数'].sum(), 0)
                 self.assertTrue(any('取得できません' in message.value for message in at.warning))
                 fetch.side_effect = None
                 fetch.return_value = select_current_record(extract(html(day=9, weekday='金')), '20261010', '東京', now)
                 at.run()
-                self.assertEqual(at.dataframe[0].value['対象走数'].sum(), 0)
+                self.assertEqual(at.tabs[0].dataframe[0].value['対象走数'].sum(), 0)
                 self.assertTrue(any('未公表' in message.value for message in at.info))
 
 

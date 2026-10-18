@@ -17,38 +17,38 @@ from test_cushion_stats import HORSE, run
 class CushionViewerTests(unittest.TestCase):
     def setUp(self):
         # Fix the input fixture independently of new daily CSV uploads.
-        self.csv_patch = patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: None if comments else Path('20261010.csv'))
+        self.csv_patch = patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: None if comments else Path('tests/fixtures/daily/20261010.csv'))
         self.csv_patch.start()
         self.addCleanup(self.csv_patch.stop)
 
     def test_repository_path_does_not_depend_on_working_directory(self):
-        expected = Path(__file__).resolve().parents[1] / 'cushion_history_20261011.sqlite'
+        expected = Path(__file__).resolve().parents[1] / 'cushion_history_20261018.sqlite'
         previous = Path.cwd()
         try:
             with tempfile.TemporaryDirectory() as folder:
                 os.chdir(folder)
-                self.assertEqual(repository_snapshot('20261011'), expected)
-                self.assertTrue(repository_snapshot('20261011').is_file())
+                self.assertEqual(repository_snapshot('20261018'), expected)
+                self.assertTrue(repository_snapshot('20261018').is_file())
         finally:
             os.chdir(previous)
 
     def test_real_repository_db_loads_without_upload(self):
         self.csv_patch.stop()
-        fixture = patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: None if comments else Path('20261011.csv'))
+        fixture = patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: None if comments else Path('20261018.csv'))
         fixture.start()
         self.addCleanup(fixture.stop)
         at = AppTest.from_file(str(Path('app.py').resolve()), default_timeout=60).run()
         at.get('button_group')[0].set_value('東京').run()
         at.get('button_group')[1].set_value(2).run()
         at.radio(key='cushion_input_mode').set_value('手動入力').run()
-        at.text_input(key='cushion_value_20261011_東京').set_value('9.2').run()
+        at.text_input(key='cushion_value_20261018_東京').set_value('9.2').run()
         self.assertFalse(at.exception)
-        self.assertTrue(any('軽量DBを自動読込：cushion_history_20261011.sqlite' in value.value for value in at.caption))
-        main = normalize_main_frame(read_main_csv('20261011.csv'))
+        self.assertTrue(any('軽量DBを自動読込：cushion_history_20261018.sqlite' in value.value for value in at.caption))
+        main = normalize_main_frame(read_main_csv('20261018.csv'))
         ids = main[main['race'].eq('東2')]['horse_id'].tolist()
-        expected = get_cushion_stats(repository_snapshot('20261011'), ids, '20261011', '9.2')
-        self.assertEqual(len(at.dataframe[0].value), len(ids))
-        self.assertEqual(at.dataframe[0].value['対象走数'].sum(), sum(r['starts'] for r in expected['horses']))
+        expected = get_cushion_stats(repository_snapshot('20261018'), ids, '20261018', '9.2')
+        self.assertEqual(len(at.tabs[0].dataframe[0].value), len(ids))
+        self.assertEqual(at.tabs[0].dataframe[0].value['対象走数'].sum(), sum(r['starts'] for r in expected['horses']))
 
     def test_shared_records_keep_missing_horses_and_numbers(self):
         report = {'horses': aggregate_history([run(1, finish_position=1, win_return_yen=360)], [HORSE, '0000000002'], '20260102', 9.2)}
@@ -70,9 +70,9 @@ class CushionViewerTests(unittest.TestCase):
         at.get('button_group')[1].set_value(2).run()
         self.assertFalse(at.exception)
         at.radio(key='cushion_input_mode').set_value('手動入力').run()
-        self.assertEqual(len(at.dataframe), 1)
+        self.assertEqual(len(at.dataframe), 2)
         self.assertTrue(any('未取得' in v.value for v in at.info))
-        frame = at.dataframe[0].value
+        frame = at.tabs[0].dataframe[0].value
         self.assertEqual(len(frame), 13)
         self.assertEqual(frame['対象走数'].sum(), 0)
         key = f'cushion_value_20261010_{venue}'
@@ -91,7 +91,7 @@ class CushionViewerTests(unittest.TestCase):
     def test_web_snapshot_results_and_sort_preserve_all_entrants(self):
         at = AppTest.from_file(str(Path('app.py').resolve()), default_timeout=60).run()
         venue = at.get('button_group')[0].value
-        main = normalize_main_frame(read_main_csv('20261010.csv'))
+        main = normalize_main_frame(read_main_csv('tests/fixtures/daily/20261010.csv'))
         horse_id = main[main['race'].eq('東2')].iloc[0]['horse_id']
         report = {'metadata': {'source_first_date': '20200105', 'source_last_date': '20261004'},
                   'horses': aggregate_history([run(1, horse_registration_number=horse_id, finish_position=1, win_return_yen=360)], [horse_id], '20261010', 9.2)}
@@ -100,12 +100,12 @@ class CushionViewerTests(unittest.TestCase):
             at.radio(key='cushion_input_mode').set_value('手動入力').run()
             at.text_input(key=f'cushion_value_20261010_{venue}').set_value('9.2').run()
             self.assertFalse(at.exception)
-            self.assertEqual(len(at.dataframe[0].value), 13)
+            self.assertEqual(len(at.tabs[0].dataframe[0].value), 13)
             self.assertEqual(fetch.call_args.args[2:4], ('20261010', '9.2'))
-            self.assertEqual(at.dataframe[0].value['対象走数'].sum(), 1)
-            self.assertEqual(at.dataframe[0].value.iloc[0]['単回収率(%)'], 360)
+            self.assertEqual(at.tabs[0].dataframe[0].value['対象走数'].sum(), 1)
+            self.assertEqual(at.tabs[0].dataframe[0].value.iloc[0]['単回収率(%)'], 360)
             at.selectbox(key='cushion_sort').set_value('勝率(%)').run()
-            self.assertEqual(at.dataframe[0].value.iloc[0]['単回収率(%)'], 360)
+            self.assertEqual(at.tabs[0].dataframe[0].value.iloc[0]['単回収率(%)'], 360)
             self.assertTrue(any('20261004' in v.value for v in at.caption))
             at.checkbox(key='cushion_official_only').check().run()
             self.assertTrue(fetch.call_args.kwargs['official_only'])
@@ -113,7 +113,7 @@ class CushionViewerTests(unittest.TestCase):
             at.run()
             self.assertFalse(at.exception)
             self.assertTrue(any('軽量DBを利用できません' in v.value for v in at.warning))
-            self.assertEqual(len(at.dataframe[0].value), 13)
+            self.assertEqual(len(at.tabs[0].dataframe[0].value), 13)
 
 
 if __name__ == '__main__':

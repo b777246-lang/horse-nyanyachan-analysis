@@ -26,7 +26,7 @@ class SnapshotAppTests(unittest.TestCase):
     def test_gui_creates_real_snapshot_reports_completion_and_keeps_source_unchanged(self):
         with tempfile.TemporaryDirectory() as folder:
             source, output = Path(folder) / 'source.db', Path(folder) / 'history.sqlite'
-            ids, day = read_entrants('20261010.csv')
+            ids, day = read_entrants('tests/fixtures/daily/20261010.csv')
             row = run(1, horse_registration_number=ids[0])
             with sqlite3.connect(source) as connection:
                 connection.execute('CREATE TABLE race_horses (' + ','.join(COLUMNS[:10]) + ')')
@@ -34,7 +34,7 @@ class SnapshotAppTests(unittest.TestCase):
                 connection.execute('INSERT INTO race_horses VALUES (' + ','.join('?' for _ in COLUMNS[:10]) + ')', tuple(row[k] for k in COLUMNS[:10]))
                 connection.execute('INSERT INTO races VALUES (' + ','.join('?' for _ in range(10)) + ')', (*[row[k] for k in COLUMNS[10:]], row['race_id']))
             before = hashlib.sha256(source.read_bytes()).digest()
-            app = self.creator(source, '20261010.csv', output)
+            app = self.creator(source, 'tests/fixtures/daily/20261010.csv', output)
             def thread(target, daemon):
                 result = MagicMock()
                 result.start.side_effect = target
