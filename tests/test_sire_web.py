@@ -52,13 +52,16 @@ class SireWebTests(unittest.TestCase):
         expected = build_sire_records(entrants, get_sire_stats(SNAPSHOT, entrants, '20261018', '9.2', venue='新潟', distance=1200), venue='新潟', distance=1200)
         actual = at.tabs[1].dataframe[0].value
         pd.testing.assert_frame_equal(actual, pd.DataFrame(expected))
+        self.assertEqual(list(actual.columns[:4]), ['馬番', '馬名', '種牡馬', '産駒着別度数'])
+        self.assertNotIn('コース', actual.columns)
+        self.assertNotIn('当日クッション値帯', actual.columns)
         self.assertTrue(any('種牡馬DBを自動読込' in message.value for message in at.tabs[1].caption))
         # Every turf race remains selectable, with its course and same current value.
         at.get('button_group')[0].set_value('京都').run()
         kyoto = main[main['race'].str.startswith('京') & main['surface'].eq('芝')]
         at.get('button_group')[1].set_value(int(kyoto.iloc[0]['race'][1:])).run()
         self.assertFalse(at.exception)
-        self.assertTrue(at.tabs[1].dataframe[0].value['コース'].str.startswith('京都 芝').all())
+        self.assertEqual(at.tabs[1].dataframe[0].value['馬名'].tolist(), kyoto[kyoto['race'].eq(kyoto.iloc[0]['race'])]['horse_name'].tolist())
         at.checkbox(key='cushion_official_only').check().run()
         self.assertFalse(at.exception)
 

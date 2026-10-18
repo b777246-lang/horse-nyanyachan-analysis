@@ -1,5 +1,4 @@
 """Shared Web/Desktop display records for the separate sire tab."""
-from cushion_stats import BAND_LABELS
 from cushion_presentation import METRICS
 
 REASONS = dict(sire_unknown='種牡馬不明',invalid_horse_id='血統登録番号未取得・形式不正',
@@ -10,7 +9,6 @@ REASONS = dict(sire_unknown='種牡馬不明',invalid_horse_id='血統登録番�
 
 def build_sire_records(entrants, report=None, *, venue='', distance=0, unavailable_reason='種牡馬DB未読込'):
     rows = report['horses'] if report else [dict(e,stats=None,reason=None) for e in entrants]
-    band = report['band'] if report else None
     records = []
     for row in rows:
         stats = row.get('stats')
@@ -23,8 +21,7 @@ def build_sire_records(entrants, report=None, *, venue='', distance=0, unavailab
             if stats['issues']:
                 reason += ('／' if reason else '') + f"要確認データ{len(stats['issues'])}件"
         record = {'馬番':int(row['horse_no']),'馬名':row['horse_name'],
-                  '種牡馬':row.get('sire_name') or '不明','コース':f'{venue} 芝{distance}m',
-                  '当日クッション値帯':BAND_LABELS[band-1] if band else '未取得',
+                  '種牡馬':row.get('sire_name') or '不明',
                   '産駒着別度数':stats['finish_counts'] if stats else '—'}
         record.update({label:stats[key] if stats else None for label,key in METRICS.items()})
         record.update({'対象走数':stats['starts'] if stats else None,'備考':reason})
