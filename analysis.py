@@ -1,55 +1,19 @@
 """生データから指数評価・コース相性を計算する。HTMLは生成しない。"""
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import pandas as pd
 from config import DEFAULT_SETTINGS
 from signals import DEFAULT_REGISTRY
 from data_loader import jockey_from_main_row, normalize_main_frame
+from values import parse_racetrack
+from legacy_recommendations import evaluate_legacy, get_course_compatibility
+from recommendation_composition import RecommendationParts, compose_compatible_recommendation
 
 @dataclass
 class AnalysisBatch:
     frame: pd.DataFrame
     notes: dict
-
-def parse_racetrack(race_str):
-    race_str = str(race_str).strip()
-    if not race_str:
-        return ""
-    char = race_str[0]
-    mapping = {
-        "東": "東京",
-        "中": "中山",
-        "福": "福島",
-        "京": "京都",
-        "阪": "阪神",
-        "新": "新潟",
-        "札": "札幌",
-        "函": "函館",
-        "小": "小倉",
-        "名": "中京",
-    }
-    return mapping.get(char, char)
-
-def get_course_compatibility(
-    race_col, surface, distance, index_type, rank, stats
-):
-    target_filename = f"{index_type}指数{rank}位のコース別成績.csv"
-    df = stats.get(target_filename)
-    if df is not None:
-        track_name = parse_racetrack(race_col)
-        for idx, row in df.iterrows():
-            c_target = str(row.get("コース", ""))
-            if track_name and track_name in c_target:
-                if surface in c_target and str(distance) in c_target:
-                    return {
-                        "course": c_target,
-                        "win_rate": str(row.get("勝率", "0%")),
-                        "place_rate": str(row.get("複勝率", "0%")),
-                        "win_ret": str(row.get("単勝回収値", "0")),
-                        "place_ret": str(row.get("複勝回収値", "0")),
-                    }
-    return None
-
+    recommendations: dict = field(default_factory=dict)
 
 def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS, registry=DEFAULT_REGISTRY):
     df = normalize_main_frame(df)
@@ -90,6 +54,7 @@ def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS
     ].transform("count")
 
     notes = {}
+    recommendations = {}
     raw_data_list = []
 
     for original_index, row in df.iterrows():
@@ -153,107 +118,8 @@ def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS
         finish_up_count = row["finish_up_count"]
         finish_up_rank = int(row["finish_up_rank"])
 
-        highlights = []
-        score = 0
-
-        if arms >= settings.index.arms:
-            highlights.append(f"arms:{arms}")
-            score += settings.index.standard_points
-        if arms2 >= settings.index.arms2:
-            highlights.append(f"arms2:{arms2}")
-            score += settings.index.standard_points
-        if tua >= settings.index.tua_strong:
-            highlights.append(f"TUA:{tua}(最強)")
-            score += settings.index.strong_points
-        elif tua >= settings.index.tua_candidate:
-            highlights.append(f"TUA:{tua}(有力)")
-            score += settings.index.standard_points
-        if s_idx >= settings.index.s_strong:
-            highlights.append(f"S:{s_idx}(最強)")
-            score += settings.index.strong_points
-        elif s_idx >= settings.index.s_candidate:
-            highlights.append(f"S:{s_idx}(有力)")
-            score += settings.index.standard_points
-        if f_idx >= settings.index.f_strong:
-            highlights.append(f"F:{f_idx}(鉄板)")
-            score += settings.index.strong_points
-        elif f_idx >= settings.index.f_candidate:
-            highlights.append(f"F:{f_idx}(軸)")
-            score += settings.index.standard_points
-
-        if finish_up_count < settings.index.training_count_max and (finish_up >= settings.index.training_min or finish_up_rank <= settings.index.training_rank_max):
-            highlights.append("調教良")
-            score += settings.index.standard_points
-
-        course_compat_text = ""
-        is_good_compatibility = False
-        is_triple_1st = False
-
-        if arms_rank == 1 and arms2_rank == 1 and tua_rank == 1:
-            if "triple" in course_stats:
-                df_triple = course_stats["triple"]
-                track_name = parse_racetrack(race_raw)
-                for _, t_row in df_triple.iterrows():
-                    c_target = str(t_row.get("コース", ""))
-                    if track_name and track_name in c_target:
-                        if surface in c_target and str(distance) in c_target:
-                            try:
-                                win_ret_val = float(
-                                    str(t_row.get("単勝回収値", "0"))
-                                    .replace("%", "")
-                                    .strip()
-                                )
-                            except ValueError:
-                                win_ret_val = 0.0
-                            try:
-                                place_rate_val = float(
-                                    str(t_row.get("複勝率", "0%"))
-                                    .replace("%", "")
-                                    .strip()
-                                )
-                            except ValueError:
-                                place_rate_val = 0.0
-
-                            if win_ret_val >= settings.course.win_return_min or place_rate_val >= settings.course.place_rate_min:
-                                is_triple_1st = True
-                                course_compat_text = f"👑 【★トリプル１位★: {c_target} 複勝率{t_row.get('複勝率', '0%')}/単回{t_row.get('単勝回収値', '0')}】"
-                                score += settings.course.triple_score
-                            break
-
-        if not is_triple_1st:
-            for t, rnk in [
-                ("arms", arms_rank),
-                ("arms2", arms2_rank),
-                ("TUA", tua_rank),
-                ("S", s_rank),
-                ("F", f_rank),
-            ]:
-                if rnk <= settings.course.rank_max:
-                    compat = get_course_compatibility(
-                        race_raw, surface, distance, t, rnk, course_stats
-                    )
-                    if compat:
-                        try:
-                            win_ret_val = float(
-                                compat["win_ret"].replace("%", "").strip()
-                            )
-                        except ValueError:
-                            win_ret_val = 0.0
-                        try:
-                            place_rate_val = float(
-                                compat["place_rate"].replace("%", "").strip()
-                            )
-                        except ValueError:
-                            place_rate_val = 0.0
-
-                        if win_ret_val >= settings.course.win_return_min or place_rate_val >= settings.course.place_rate_min:
-                            is_good_compatibility = True
-                            course_compat_text = f"🎯 【{t}{rnk}位: {compat['course']} 複勝率{compat['place_rate']}/単回{compat['win_ret']}】(好相性)"
-                            score += settings.course.single_score
-                            break
-
         context = {
-            "venue": venue_name, "condition": cond_name, "surface": surface,
+            "race": race_raw, "venue": venue_name, "condition": cond_name, "surface": surface,
             "distance": distance, "frame": wakuban,
             "arms": arms, "arms2": arms2, "TUA": tua, "S": s_idx, "F": f_idx,
             "arms_rank": arms_rank, "arms2_rank": arms2_rank, "TUA_rank": tua_rank,
@@ -263,27 +129,14 @@ def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS
             "jockey": jockey_from_main_row(row), "kol_odds": kol_odds,
             "horse_id": str(row.get('horse_id', '')).strip() if pd.notna(row.get('horse_id', '')) else '',
         }
+        # 両エンジンは共通入力だけを参照し、相互に呼び出さない。
+        legacy_result = evaluate_legacy(context, course_stats, settings=settings)
         special_matches = registry.evaluate(context, settings, stage="pre")
+        parts = RecommendationParts(legacy_result, special_matches)
+        recommendations[original_index] = parts
+        compatible = compose_compatible_recommendation(parts, settings=settings)
+        score, eval_text_raw = compatible.score, compatible.evaluation
         special_comments = tuple(match.comment for match in special_matches if match.comment)
-        score += sum(match.score for match in special_matches)
-        eval_parts_raw = list(special_comments)
-        if highlights:
-            eval_parts_raw.extend(highlights)
-        if course_compat_text:
-            eval_parts_raw.append(course_compat_text)
-
-        if not eval_parts_raw:
-            eval_text_raw = ""
-        else:
-            eval_text_raw = " / ".join(eval_parts_raw)
-            if is_triple_1st:
-                eval_text_raw = "🌟 【★トリプル１位★推奨】 " + eval_text_raw
-            elif score >= settings.index.axis_score:
-                eval_text_raw = "🔥 【軸馬推奨】 " + eval_text_raw
-            elif score >= settings.index.candidate_score:
-                eval_text_raw = "⭐ 【有力候補】 " + eval_text_raw
-            elif is_good_compatibility or special_matches:
-                eval_text_raw = "🎯 【注目条件】 " + eval_text_raw
 
         evaluation_before_external = eval_text_raw
         if ext_comment_dict and name in ext_comment_dict:
@@ -332,4 +185,4 @@ def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS
         if df.attrs.get('has_horse_id'):
             raw_data_list[-1]['血統登録番号'] = context['horse_id']
 
-    return AnalysisBatch(pd.DataFrame(raw_data_list), notes)
+    return AnalysisBatch(pd.DataFrame(raw_data_list), notes, recommendations)

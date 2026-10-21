@@ -12,9 +12,11 @@ python -m unittest discover -s tests -v
 | `app.py` | Streamlitの画面、セッション状態、ボタン操作 |
 | `data_loader.py` | 最新CSVの選択、読込、列名の正規化、コース成績・外部コメントの読込 |
 | `config.py` | KOL・F-UP・指数評価・コース相性・特注の設定と設定読込インターフェース |
-| `analysis.py` | レース内順位、評価点、コース相性、既存の特注を生データで判定 |
+| `analysis.py` | 共通の数値・レース内順位を準備し、旧推奨と特注を独立評価して互換合成 |
+| `legacy_recommendations.py` | 旧推奨の指数評価・調教加点・コース相性・旧ラベル |
+| `recommendation_composition.py` | 独立した旧推奨・特注結果の保持と従来スコア／コメントの互換合成 |
 | `signals.py` | 狙い目の登録・判定、KOL抽出、更新済みオッズからのコメント追加 |
-| `values.py` | 数値・騎手名の変換 |
+| `values.py` | 数値・騎手名・開催場略称の共通変換 |
 | `formatting.py` | 画面用CSS、枠色、順位色、コメントのHTML装飾 |
 | `export.py` | TARGET用コメントの整形、CSV、通常・KOL HTMLレポート |
 | `odds_service.py` | 全レース更新、失敗時の保持、レース別キャッシュの反映 |
@@ -92,3 +94,17 @@ KOL抽出と既存出力もテストする。実JRA通信は単体テストで�
 ## 内外回りの入力（将来用）
 
 出馬表CSVの21列目を `course_layout` として保持する。外回りは「外」、空欄は指定なしとして扱い、内回りとは推定しない。旧20列以下のCSVでは空文字となる。現在の判定・スコア・出馬表・TARGET用CSV・クッション値／種牡馬成績の条件には使用しない。将来のS2入力へ接続する処理は未実装。
+
+## 旧推奨と特注の分離（第1段階）
+
+`analyze_csv()` は入力正規化・出走ID整備・指数順位を共通処理として維持し、各馬につき `evaluate_legacy()` と `SignalRegistry.evaluate(stage="pre")` をそれぞれ呼ぶ。特注条件は `signals.py`／`config.py` のままで、旧推奨をimportせず、旧スコアも参照しない。旧推奨も特注の条件・登録処理を参照しない。東京芝2000特注の馬体重文言は手動確認用のまま、自動条件を追加していない。
+
+`AnalysisBatch.recommendations[original_index]` に `RecommendationParts` を保持する。`legacy` は旧推奨だけの素点・根拠・コース相性フラグを持つ `LegacyRecommendation`、`specials` は順序を保った `SignalMatch` のtuple。旧推奨へ特注の点を直接書き込まず、合成時に `legacy.score + sum(match.score)` を既存のframe.scoreへ出力する。最終ラベルは合成点と旧相性フラグに従い、従来の優先順位で `recommendation_label()` が返す。
+
+合成コメントは従来どおり、旧ラベル＋特注本文（登録順）＋指数・調教の根拠＋コース相性。外部コメントはその後に付加する。既存の `frame` の列・順序・値、`notes` のキー・値は維持し、独立結果をCSV列へ追加しない。表示・TARGET整形・HTML、liveのF-UP追加、KOL処理は既存のまま。`AnalysisBatch(frame, notes)` の2引数構築も引き続き可能。
+
+旧推奨の評価呼出しは `analysis.analyze_csv()` の1箇所、旧ラベルの呼出しは互換合成内の1箇所に限定する。従来の `analysis.parse_racetrack` と `analysis.get_course_compatibility` のimport経路も再公開により維持する。F-UPはオッズ反映後に既存のliveレジストリが評価し、事前の `recommendations` へ混ぜない。
+
+今回は停止フラグ・表示／CSVモード・S2を追加しない。将来の停止時にはオーケストレーションと互換合成の旧結果必須構造、トップレベルimportと互換再公開、コースCSV読込、score順ソートを整理する必要がある。共通順位や特注条件を旧モジュールと一緒に削除しない。
+
+追加の `tests/test_recommendation_separation.py` では7事前特注の成立／不成立、複数特注の順序と互換加点、旧閾値・コース優先、独立結果保持、F-UP追加／解除、依存方向、Streamlitのソート／リセットとCSVを検証する。既存回帰基準のハッシュは更新しない。
