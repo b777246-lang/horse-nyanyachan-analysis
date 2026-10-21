@@ -27,6 +27,15 @@ class DataLoaderTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, '混在'):
             normalize_main_frame(mixed)
 
+    def test_course_layout_preserves_outer_and_leaves_missing_unspecified(self):
+        frame = pd.DataFrame([[''] * 21 for _ in range(3)])
+        frame[20] = ['外', '', None]
+        normalized = normalize_main_frame(frame)
+        self.assertEqual(normalized['course_layout'].tolist(), ['外', '', ''])
+        pd.testing.assert_frame_equal(normalize_main_frame(normalized), normalized)
+        legacy = normalize_main_frame(frame.iloc[:, :20])
+        self.assertEqual(legacy['course_layout'].tolist(), ['', '', ''])
+
     def test_latest_csv_uses_eight_digit_dates_and_separates_comments(self):
         with tempfile.TemporaryDirectory() as temp:
             folder = Path(temp)
@@ -37,11 +46,11 @@ class DataLoaderTests(unittest.TestCase):
             self.assertEqual(latest_csv(folder, comments=True).name, '20261004comment.csv')
 
     def test_normalization_preserves_extra_columns_and_supports_old_csv(self):
-        frame = pd.DataFrame([[''] * 21])
-        frame[20] = 'future input'
+        frame = pd.DataFrame([[''] * 22])
+        frame[21] = 'future input'
         normalized = normalize_main_frame(frame)
         self.assertIn('horse_name', normalized.columns)
-        self.assertEqual(normalized.at[0, 20], 'future input')
+        self.assertEqual(normalized.at[0, 21], 'future input')
         pd.testing.assert_frame_equal(normalize_main_frame(normalized), normalized)
         old = normalize_main_frame(frame.iloc[:, :14])
         self.assertEqual(old.at[0, 'jockey'], '')

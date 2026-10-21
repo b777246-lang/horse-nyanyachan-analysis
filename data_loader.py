@@ -84,6 +84,7 @@ def normalize_main_frame(frame):
     names = {i: name for i, name in enumerate(columns)}
     names[18] = 'age'
     names[19] = 'sire_name'
+    names[20] = 'course_layout'
     frame = frame.rename(columns=names).copy()
     if 'age' not in frame.columns:
         frame['age'] = ''
@@ -91,6 +92,10 @@ def normalize_main_frame(frame):
     if 'sire_name' not in frame.columns:
         frame['sire_name'] = ''
     frame['sire_name'] = frame['sire_name'].fillna('').astype(str).str.strip()
+    # 外回りの入力値だけを保持する。空欄から内回りを推定しない。
+    if 'course_layout' not in frame.columns:
+        frame['course_layout'] = ''
+    frame['course_layout'] = frame['course_layout'].fillna('').astype(str).str.strip()
     missing = [name for name in MAIN_COLUMNS[:14] if name not in frame.columns]
     if missing:
         raise ValueError('メインCSVの必須列が不足しています: ' + ', '.join(missing))
