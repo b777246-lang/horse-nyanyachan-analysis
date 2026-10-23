@@ -1,7 +1,11 @@
 """Streamlitの画面と操作。判定・装飾・出力は各モジュールに委譲する。"""
+import io
 import re
 import streamlit as st
 
+from tua190_presentation import add_tua190_screen_comments
+from tua190_service import update_tua190_audit
+from s2_service import update_s2_audit
 from analysis import analyze_csv
 from values import normalize_jockey
 from signals import add_live_comments, filter_kol_horses
@@ -52,16 +56,19 @@ uploaded_ext_comment = st.sidebar.file_uploader(
 
 
 df = None
+main_csv_bytes = None
 source_name = ""
 if uploaded_file is not None:
     source_name = uploaded_file.name
-    df = read_main_csv(uploaded_file)
+    main_csv_bytes = uploaded_file.getvalue()
+    df = read_main_csv(io.BytesIO(main_csv_bytes))
     st.sidebar.success("アップロードされたファイルを読み込みました")
 else:
     default_main_csv = latest_csv()
     if default_main_csv is not None:
         source_name = default_main_csv.name
-        df = read_main_csv(default_main_csv)
+        main_csv_bytes = default_main_csv.read_bytes()
+        df = read_main_csv(io.BytesIO(main_csv_bytes))
         st.sidebar.info(f"📌 自動検出: {source_name} を読み込んでいます")
     else:
         st.sidebar.info("左側のサイドバーから指数CSVファイルをアップロードしてください。")
@@ -69,6 +76,10 @@ else:
 ext_comment_dict = load_comments(
     uploaded_ext_comment if uploaded_ext_comment is not None else latest_csv(comments=True)
 )
+
+# 元バイト列によるS2研究照合。結果は表示・旧評価・出力には接続しない。
+update_s2_audit(main_csv_bytes, st.session_state)
+tua190_record = update_tua190_audit(main_csv_bytes, st.session_state)
 
 if df is not None:
     batch = analyze_csv(df, course_stats, ext_comment_dict, settings=settings)
@@ -215,7 +226,7 @@ if df is not None:
     missing_jockeys = view_df["騎手"].map(normalize_jockey).eq("").sum()
     if missing_jockeys:
         st.info(f"表示中の{missing_jockeys}頭は騎手データ未取得のためKOL判定保留です。新CSVは16列目=レースID、17列目=血統登録番号、18列目=騎手名です。騎手列を確認してください。")
-    st.markdown(render_html_table(view_df, settings=settings), unsafe_allow_html=True)
+    st.markdown(render_html_table(add_tua190_screen_comments(view_df, tua190_record), settings=settings), unsafe_allow_html=True)
 
     render_cushion_panel(view_df, normalize_main_frame(df), sel_venue, sel_race)
 

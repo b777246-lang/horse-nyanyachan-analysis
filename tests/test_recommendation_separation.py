@@ -168,7 +168,7 @@ class RecommendationSeparationTests(unittest.TestCase):
         def capture(**kwargs):
             downloads[kwargs['file_name']] = kwargs['data']
             return False
-        with patch('streamlit.download_button', side_effect=capture), patch(
+        with patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: ROOT / ('20261018comment.csv' if comments else '20261018.csv')), patch('streamlit.download_button', side_effect=capture), patch(
                 'cushion_viewer.cached_jra_cushion', return_value=dict(value=None, message='テスト')):
             at = AppTest.from_file(str(ROOT / 'app.py'), default_timeout=60).run()
             self.assertFalse(at.exception)

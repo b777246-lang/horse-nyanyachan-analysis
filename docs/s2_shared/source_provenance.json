@@ -1,0 +1,21 @@
+{
+  "source_sha256": {
+    "s2_prospective_input8_20261020/input_snapshot.py": "b7b1bbe72b1aadc726568ae7184635245e6fb93f52b4ad80bbe55468f6976d71",
+    "s2_csv21_adapter_20261021/csv_adapter.py": "27666d10f121dd5156eb183512a3e7f19788a6bb41938cf17b4de36fd9542fe5",
+    "s2_csv21_adapter_20261021/course_registry.py": "c90227ba64069edbfb5ae9d7b57f3f82b7d2a5f5194e4a82150b12bb90b4eb70",
+    "s2_csv21_adapter_20261021/test_adapter.py": "ae81f9c99064c4f9d90adf9dd5504a5838e8e6e0d1b8f940b18b8700d570cc0e",
+    "s2_fixed8_detector_20261021/detector.py": "9f02f8431a5294f8501d21086b9cd65c8ca2ce5ea9150385b8943290922c2f2b",
+    "s2_fixed8_detector_20261021/test_detector.py": "48815f45f3acada5405481674989f79ea204d2ddf22f87a8ff9a0aea003bdcee",
+    "s2_fixed8_detector_20261021/independent_audit.py": "27be54da65c6a4aa1bc89ff56bd1ca0f5597ac3ca85485d956e34e3bba76e11f",
+    "s2_0_six_pairs_20261019/worker.py": "c49010e40341e6331ec57029eb0f3c4b946510a9b5a7640a7b1b3677e2d195a8",
+    "s1_remaining_plan_20261019/prepare_plan.py": "1d688a69630cfc493c947aadf30c3f54bd584deb90371becdb94355078d89691",
+    "abc_cutoff_pilot_20261019/common.py": "aa186d8738878769e7f9dcd6e3224e676ff8c81c1938ebd30ce5ac2233e1ee4a"
+  },
+  "adaptations": [
+    "Package relative imports and manifest paths",
+    "Detector calculation functions copied verbatim by AST source extraction",
+    "Storage/registry/SQL audit copied byte-for-byte",
+    "Existing 45+39 assertions unchanged; tests use local artificial snapshot and temporary output folders"
+  ],
+  "original_code_not_modified": true
+}

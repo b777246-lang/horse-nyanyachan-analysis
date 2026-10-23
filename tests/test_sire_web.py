@@ -22,6 +22,9 @@ SNAPSHOT = ROOT / 'sire_history_20261018.sqlite'
 
 class SireWebTests(unittest.TestCase):
     def setUp(self):
+        source = patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: ROOT / ('20261018comment.csv' if comments else '20261018.csv'))
+        source.start()
+        self.addCleanup(source.stop)
         self.pending = patch('cushion_viewer.cached_jra_cushion', return_value={'value': None, 'message': '当日未公表（テスト）'})
         self.fetch = self.pending.start()
         self.addCleanup(self.pending.stop)

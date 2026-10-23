@@ -1,0 +1,2143 @@
+{
+  "status": "DRAFT_AWAITING_USER_APPROVAL_NO_PAIR_EVALUATIONS",
+  "database_sha256": "2bb4cbb3760254e7f0ec44263ced9fb910c58281fdf399d928f1c3e65cf1df26",
+  "source_hashes": {
+    "C:\\work\\s2_stage1_selection_20261020\\prepare_selection.py": "b3c172fabe97765098a837d0046f898a3770c443dfa669bc977bd1c10ac897a8",
+    "C:\\work\\s1_remaining_plan_20261019\\予定全体.json": "e8cacdf41937efda1f258a6f914612988a14e9c62bc58036f492546eb0470cbb",
+    "C:\\work\\all_course_s1_complete_20261019\\integration\\conditions_1794.csv": "595e825f1099520bc86c71ef3654f965ddb7a6a77b4a5b607ddffe276e55eada",
+    "C:\\work\\all_course_s1_complete_20261019\\integration\\period_metrics_5382.csv": "73e8f7ee120eb1edfa28357a3f80c4fdb8fe43c456f18aee44dfbc99e9950ca6",
+    "C:\\work\\all_course_s1_complete_20261019\\integration\\yearly_12510.csv": "c1947f65af327a41f642ffe84b3e540bfbdd7d40944a2d2d1da1efc45a43df65",
+    "C:\\work\\abc_cutoff_pilot_20261019\\p1_v1\\policy.json": "22972b05017d87af2a1d72772ab7ad327515ec9c84a5a8ed5194d8a6d1b7836d",
+    "C:\\work\\abc_cutoff_pilot_20261019\\p1_v1\\protection.json": "08e38cd79b65fc535a45662ad4af3422db77a460967bac989485ebcf6557ee7a",
+    "C:\\work\\abc_cutoff_pilot_20261019\\p1_v1\\counts.csv": "38448e9421fe1eaf5416de9cd8e28ab508364119b217128e6d866c17a5bb5416",
+    "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\manifest.json": "bc838bf4ed045cbd5d52b87253d8e7b3dd4fd8c825398da679dfbec12647a796",
+    "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\summary.json": "e3619ca9061b9ffedf5ea22d5dba55f62c6d502f0026f6fe446321cf402f3299",
+    "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\period_metrics.csv": "0b10c2526bdc827d6b3a33ab2b9b9cff166e2ed4906ef2702157f611d24324f1",
+    "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\yearly.csv": "f6dff9bb6dc64b38c7e36afa1ca363435cfc5dc2938b627ae6632bce0d2c625a",
+    "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\coverage.csv": "46b15bcf98c8b12e27f688adec71230f7c6a5b771af1b2856fc7129378020b8c",
+    "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\master_ids.csv.gz": "acffa1f79fa0a5daa5e25fb0d6b6f77bec5d425951149c1e0b9b1f6bb72285b5",
+    "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\selection_masks.jsonl.gz": "1246ca98ea0c40eb1a6217d7a65f38c059d9a1cb34630720c5ffdbe49d5f746b",
+    "C:\\work\\s2_block1_validation_20261020\\baseline_2\\manifest.json": "8f8ba1c949960911aa08b2bfc8fb0ded5e0c434cc41b776c5027e30fc85eee87",
+    "C:\\work\\s2_block1_validation_20261020\\baseline_2\\summary.json": "b49a345fad7bfba1180b757baf1243503cdf829f63624e0b1e56aa854478a818",
+    "C:\\work\\s2_block1_validation_20261020\\baseline_2\\period_metrics.csv": "211a7fe0a6d07e341d7ecf8021b9233e96e204a334c2b4cdc8b57b73b8afe0c3",
+    "C:\\work\\s2_block1_validation_20261020\\baseline_2\\yearly.csv": "0b161ceb76e710aa4f837f457e62d22001d39da33567903cc9a1edf2544ec33f",
+    "C:\\work\\s2_block1_validation_20261020\\baseline_2\\coverage.csv": "abed31e7f8df662b000c8fdd751d0943da96bc9f062216837879e921121f8f1b",
+    "C:\\work\\s2_block1_validation_20261020\\baseline_2\\master_ids.csv.gz": "db595b808464d7b30d1451174c0ba9bf71181cd0596fd3258594a69f1a94e995",
+    "C:\\work\\s2_block1_validation_20261020\\baseline_2\\selection_masks.jsonl.gz": "bbb081400d9d8ac218fc8f206ccf5ae74ac499bf1590414d918d547d8afa7ac4",
+    "C:\\work\\s2_block2_validation_20261020\\baseline_2\\manifest.json": "4b11e177fbb388e5fe9fb85baab62f18fd08d2e1c51bc2da282868215cd7a181",
+    "C:\\work\\s2_block2_validation_20261020\\baseline_2\\summary.json": "efeada80a7e6f5873c729f9816bdb229714f1e274b3fcf426e9c8bfc82149897",
+    "C:\\work\\s2_block2_validation_20261020\\baseline_2\\period_metrics.csv": "2c6cb798f3d19831b8473252ac8b26cf43c0c2c2ba6edc44c4efc610c4f8b068",
+    "C:\\work\\s2_block2_validation_20261020\\baseline_2\\yearly.csv": "fcc2167f03a59ea4dc15b03acb5495e0a71a041417c2acd3212cfbd26ca8c493",
+    "C:\\work\\s2_block2_validation_20261020\\baseline_2\\coverage.csv": "239f6247c4546e4355d2f9b30edb67b751a33111706d0eaa9b9b6d3f921cb271",
+    "C:\\work\\s2_block2_validation_20261020\\baseline_2\\master_ids.csv.gz": "49f8b132e2b07fd90f8225de0f22e76832ad2e8422d8fd8377a2990fe084dcc3",
+    "C:\\work\\s2_block2_validation_20261020\\baseline_2\\selection_masks.jsonl.gz": "21f044626f18667f749eab29a2905493b5e377a61614f5217701e97e341d5e16",
+    "C:\\work\\s2_block3_validation_20261020\\baseline_2\\manifest.json": "118d535b72a63ed0c516ab9592c300f24025d0ac1c2872ed34dc46a936d1cb0b",
+    "C:\\work\\s2_block3_validation_20261020\\baseline_2\\summary.json": "2a0a29776489d30bf985aae6ca9e60b734822f472bcb663cefa4fb360e7fe156",
+    "C:\\work\\s2_block3_validation_20261020\\baseline_2\\period_metrics.csv": "bb50e9777de6136d3c1658110ebff75d2c89f7633f60ec2e24a0f0c2a1d12f76",
+    "C:\\work\\s2_block3_validation_20261020\\baseline_2\\yearly.csv": "3a0de1eaaa750f9da83b52600bc223c8f5714dc31a5ed6f7d9b566ce7c1bf143",
+    "C:\\work\\s2_block3_validation_20261020\\baseline_2\\coverage.csv": "f83b86e9ea1e81b84bac8092b9232cfd493c22d94a35f56389b289f413c2c80b",
+    "C:\\work\\s2_block3_validation_20261020\\baseline_2\\master_ids.csv.gz": "07f218da68bed0a96f3f4ef0fab53b80ed747bad230e0a69b776be40b6ccfb9b",
+    "C:\\work\\s2_block3_validation_20261020\\baseline_2\\selection_masks.jsonl.gz": "85787f851be477e2ad4f4e5bfc9af1cb41064b22859848f63a542c362782f9fb",
+    "C:\\work\\all_course_s1_batch1_20261019\\run_v1\\master_ids.csv.gz": "26c90a4f4fcb3068540f920f8b8eb861002735c5e8fe9c8430cfe86e79993ab5",
+    "C:\\work\\all_course_s1_batch1_20261019\\run_v1\\selection_masks.jsonl.gz": "3a1caf0e1b5cdbd4e8799ef4c362036da204935df36e02bdfe107a3c5325eb10",
+    "C:\\work\\all_course_s1_batch2_20261019\\run_v1\\master_ids.csv.gz": "fcbd71552ee8a9d68231b8f18612c2fccbb6db037e81843b8f06aeeea8643662",
+    "C:\\work\\all_course_s1_batch2_20261019\\run_v1\\selection_masks.jsonl.gz": "c580824a2d49aaba98c7806f8eca7003236d3d4487fef98b4a807d791b0dccb9",
+    "C:\\work\\all_course_s1_complete_20261019\\batch3_v1\\master_ids.csv.gz": "ea872a2b15281e80383758018761c82b5b2cbb172a01aac9c6338e184e764b02",
+    "C:\\work\\all_course_s1_complete_20261019\\batch3_v1\\selection_masks.jsonl.gz": "50f11623161e7287735d4269cbc4a9cb63abab2fb679f36cfb81e690bbc334d8",
+    "C:\\work\\all_course_s1_complete_20261019\\batch4_v1\\master_ids.csv.gz": "60df19f57b72a3c2d6ce18e9a0b1b0645bc7a7573f9c8f6ad8cbcb1f818d1364",
+    "C:\\work\\all_course_s1_complete_20261019\\batch4_v1\\selection_masks.jsonl.gz": "0fd8508aaccaf8192cd0f568aed7de8e43d48edee595242b1255186f206a4a59",
+    "C:\\work\\all_course_s1_complete_20261019\\batch5_v1\\master_ids.csv.gz": "fb10d066d302d7d587687c07754e881af11582c7f585d9f926a1219a07d471fe",
+    "C:\\work\\all_course_s1_complete_20261019\\batch5_v1\\selection_masks.jsonl.gz": "9c9f9577d4370786e7592fb86b170b408dc6ae23a984717f6f16f5ad34f6deab",
+    "C:\\work\\all_course_s1_complete_20261019\\batch6_v1\\master_ids.csv.gz": "40f11126f9f70f253c01e7bc53cadb59a43c8c9fcb7997107dd109a92e55423f",
+    "C:\\work\\all_course_s1_complete_20261019\\batch6_v1\\selection_masks.jsonl.gz": "ef222b7bdeb77ae63ccb7caa0cd861ff3da0ce4571fdd66cf0a6565053f5ac18",
+    "C:\\work\\all_course_s1_complete_20261019\\batch7_v1\\master_ids.csv.gz": "86610f427e64522b6f5b7e87b4b451be62a3f684a72a99d0ec6e4ac24f9b12f7",
+    "C:\\work\\all_course_s1_complete_20261019\\batch7_v1\\selection_masks.jsonl.gz": "cc68fe8cbf6a7fb095278e917dfea8b46239bf391adaa97b6451d8570a7bf7b3",
+    "C:\\work\\all_course_s1_complete_20261019\\batch8_v1\\master_ids.csv.gz": "6c6fd5eb456ef907fd9a12c85d72cdb7b206735c1341ebbe365f654bed125b4e",
+    "C:\\work\\all_course_s1_complete_20261019\\batch8_v1\\selection_masks.jsonl.gz": "730aab5934218718cb67da9bc5ac36876751ffaa7c61a71add238fc3098d7695",
+    "C:\\work\\phase4_all_courses_20261018\\db_inventory_v1\\baseline_matched.csv": "8a94b890a30a9db15976941bc577f03722a1d3f56086dc0d5d9eef26aa5a8713"
+  },
+  "selection_policy": {
+    "priority": "discovery top3 only primary; no check/stress metrics passed to select24",
+    "strong_quota": 12,
+    "interaction_quota": 6,
+    "control_quota": 6,
+    "strong_minimum_each_parent": 300,
+    "strong_course_venues": 10,
+    "strong_surface_slots": [
+      "芝",
+      "ダ"
+    ],
+    "strong_max_each_code": 6,
+    "strong_max_each_code_pair": 2,
+    "score_order": [
+      "min parent top3",
+      "mean parent top3",
+      "min discovery annual top3",
+      "min races",
+      "min heads",
+      "canonical key"
+    ],
+    "no_roi_gate": true,
+    "outlier_threshold": null,
+    "all_1794_retained": true,
+    "controls": "six original S2-0 definitions; performance not used",
+    "interaction": "six predefined definition combinations, no standalone performance gate",
+    "new_pair_AND_calculations": false
+  },
+  "selection_freeze_sha256": "09e3e382174031cf9e02355aa29642fa7af31cc0e4de490ae659b4f12aef03d9",
+  "pairs": [
+    {
+      "lane": "有力親",
+      "a": {
+        "code": "s",
+        "scope": [
+          "valid",
+          "course",
+          "東京",
+          "芝",
+          2000,
+          "UNKNOWN"
+        ],
+        "model": "C",
+        "threshold": 35.0,
+        "threshold_registered": 1994,
+        "threshold_races": 172,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "469ccfb8d93fe77869f4"
+      },
+      "b": {
+        "code": "f",
+        "scope": [
+          "valid",
+          "course",
+          "東京",
+          "芝",
+          2000,
+          "UNKNOWN"
+        ],
+        "model": "A",
+        "threshold": null,
+        "threshold_registered": 1994,
+        "threshold_races": 172,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "ec01b3256d36a4d64500"
+      },
+      "scope": [
+        "valid",
+        "course",
+        "東京",
+        "芝",
+        2000,
+        "UNKNOWN"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "88bca2d5e1bc6f7169849645",
+      "canonical_sha256": "88bca2d5e1bc6f7169849645bb002ff0e2dd95157bacbd23d7f1ec39a0202085",
+      "selection_reason": "探索期の親3着内率の低い側→平均→年度最小3着内率→独立レース数→頭走数で優先。10場に各1コースを配分。両親各300頭走以上。ROIは足切りに使わない。",
+      "parent_priority_score": [
+        46.22641509433962,
+        48.38996031469749,
+        41.732283464566926,
+        172,
+        530
+      ],
+      "discovery_parent_signature": "ed51be9e2a88bcfc51832a3426ef303de47f5ac9ae9459b0457af1534bb83007",
+      "sequence": 1,
+      "existing_result_sources": [],
+      "execution_action": "新規評価案"
+    },
+    {
+      "lane": "有力親",
+      "a": {
+        "code": "s",
+        "scope": [
+          "valid",
+          "course",
+          "中山",
+          "芝",
+          1800,
+          "UNKNOWN"
+        ],
+        "model": "C",
+        "threshold": 34.0,
+        "threshold_registered": 1891,
+        "threshold_races": 142,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "c323c8a4a693900831fe"
+      },
+      "b": {
+        "code": "f",
+        "scope": [
+          "valid",
+          "course",
+          "中山",
+          "芝",
+          1800,
+          "UNKNOWN"
+        ],
+        "model": "A",
+        "threshold": null,
+        "threshold_registered": 1891,
+        "threshold_races": 142,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "67291138fbc40fd82ae6"
+      },
+      "scope": [
+        "valid",
+        "course",
+        "中山",
+        "芝",
+        1800,
+        "UNKNOWN"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "331ea7abc54935dc28c58093",
+      "canonical_sha256": "331ea7abc54935dc28c580931d86fbfe5afa877f6ebb0b4f3c53c41e9b72a8e4",
+      "selection_reason": "探索期の親3着内率の低い側→平均→年度最小3着内率→独立レース数→頭走数で優先。10場に各1コースを配分。両親各300頭走以上。ROIは足切りに使わない。",
+      "parent_priority_score": [
+        45.4337899543379,
+        45.43404419765893,
+        37.27272727272727,
+        142,
+        438
+      ],
+      "discovery_parent_signature": "7ad27cba12782752f6143f3903fb3fe3f55f91d251d801293013771524dffaeb",
+      "sequence": 2,
+      "existing_result_sources": [],
+      "execution_action": "新規評価案"
+    },
+    {
+      "lane": "有力親",
+      "a": {
+        "code": "f",
+        "scope": [
+          "valid",
+          "course",
+          "阪神",
+          "芝",
+          2000,
+          "内"
+        ],
+        "model": "B",
+        "threshold": 42.144874715261956,
+        "threshold_registered": 2195,
+        "threshold_races": 191,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "e16eb14d67d0a20a4fa5"
+      },
+      "b": {
+        "code": "tua",
+        "scope": [
+          "valid",
+          "course",
+          "阪神",
+          "芝",
+          2000,
+          "内"
+        ],
+        "model": "C",
+        "threshold": 152.0,
+        "threshold_registered": 2195,
+        "threshold_races": 191,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "46a4c76e197da857b576"
+      },
+      "scope": [
+        "valid",
+        "course",
+        "阪神",
+        "芝",
+        2000,
+        "内"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "537a963375f9289265bf1150",
+      "canonical_sha256": "537a963375f9289265bf1150a04363f3d34286b10c37484fa0b74e7397cfc212",
+      "selection_reason": "探索期の親3着内率の低い側→平均→年度最小3着内率→独立レース数→頭走数で優先。10場に各1コースを配分。両親各300頭走以上。ROIは足切りに使わない。",
+      "parent_priority_score": [
+        43.350604490500864,
+        45.62166239850714,
+        40.714285714285715,
+        171,
+        522
+      ],
+      "discovery_parent_signature": "710f1f357df5641d9284589f526cd20e4310870454d4891610663affc747501b",
+      "sequence": 3,
+      "existing_result_sources": [],
+      "execution_action": "新規評価案"
+    },
+    {
+      "lane": "有力親",
+      "a": {
+        "code": "f",
+        "scope": [
+          "valid",
+          "course",
+          "中京",
+          "芝",
+          2000,
+          "UNKNOWN"
+        ],
+        "model": "C",
+        "threshold": 40.0,
+        "threshold_registered": 2832,
+        "threshold_races": 231,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "da13bca015dea41e7072"
+      },
+      "b": {
+        "code": "arms2",
+        "scope": [
+          "valid",
+          "course",
+          "中京",
+          "芝",
+          2000,
+          "UNKNOWN"
+        ],
+        "model": "B",
+        "threshold": 93.34957627118644,
+        "threshold_registered": 2832,
+        "threshold_races": 231,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "3b76eba8540049c0af7e"
+      },
+      "scope": [
+        "valid",
+        "course",
+        "中京",
+        "芝",
+        2000,
+        "UNKNOWN"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "c0932240a30abde95c55f3cc",
+      "canonical_sha256": "c0932240a30abde95c55f3ccfb3459ab74df3cda24f9f95bbbfa3a8bcc86a717",
+      "selection_reason": "探索期の親3着内率の低い側→平均→年度最小3着内率→独立レース数→頭走数で優先。10場に各1コースを配分。両親各300頭走以上。ROIは足切りに使わない。",
+      "parent_priority_score": [
+        42.39316239316239,
+        45.35042735042735,
+        38.70967741935484,
+        201,
+        585
+      ],
+      "discovery_parent_signature": "0f8aba6ce587342632c0f83402a057290d5b14294482936fcac72964f7f6d62c",
+      "sequence": 4,
+      "existing_result_sources": [],
+      "execution_action": "新規評価案"
+    },
+    {
+      "lane": "有力親",
+      "a": {
+        "code": "f",
+        "scope": [
+          "valid",
+          "course",
+          "函館",
+          "ダ",
+          1700,
+          "UNKNOWN"
+        ],
+        "model": "A",
+        "threshold": null,
+        "threshold_registered": 1912,
+        "threshold_races": 151,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "03e4c248158b56efd5e9"
+      },
+      "b": {
+        "code": "tua",
+        "scope": [
+          "valid",
+          "course",
+          "函館",
+          "ダ",
+          1700,
+          "UNKNOWN"
+        ],
+        "model": "A",
+        "threshold": null,
+        "threshold_registered": 1912,
+        "threshold_races": 151,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "f916e9aba9a7e374884c"
+      },
+      "scope": [
+        "valid",
+        "course",
+        "函館",
+        "ダ",
+        1700,
+        "UNKNOWN"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "dcfba3b3607a6358a18165e5",
+      "canonical_sha256": "dcfba3b3607a6358a18165e5c3da77da8fd8557aa4562bfd045e9e2f12a712a1",
+      "selection_reason": "探索期の親3着内率の低い側→平均→年度最小3着内率→独立レース数→頭走数で優先。10場に各1コースを配分。両親各300頭走以上。ROIは足切りに使わない。",
+      "parent_priority_score": [
+        40.085287846481876,
+        41.8150728072672,
+        29.166666666666668,
+        151,
+        457
+      ],
+      "discovery_parent_signature": "280abf1fd6859c6a206d71f4c6e2f67ba96293946c8ee40c47e1ab9126e177f9",
+      "sequence": 5,
+      "existing_result_sources": [],
+      "execution_action": "新規評価案"
+    },
+    {
+      "lane": "有力親",
+      "a": {
+        "code": "s",
+        "scope": [
+          "valid",
+          "course",
+          "新潟",
+          "ダ",
+          1800,
+          "UNKNOWN"
+        ],
+        "model": "C",
+        "threshold": 32.0,
+        "threshold_registered": 4409,
+        "threshold_races": 318,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "142817e39555e8d20919"
+      },
+      "b": {
+        "code": "tua",
+        "scope": [
+          "valid",
+          "course",
+          "新潟",
+          "ダ",
+          1800,
+          "UNKNOWN"
+        ],
+        "model": "C",
+        "threshold": 143.0,
+        "threshold_registered": 4409,
+        "threshold_races": 318,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "bf4bd305f82f4dcc12b8"
+      },
+      "scope": [
+        "valid",
+        "course",
+        "新潟",
+        "ダ",
+        1800,
+        "UNKNOWN"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "961dc3ea93dcced274d69c16",
+      "canonical_sha256": "961dc3ea93dcced274d69c166ed28f006bb7e8dbc585aff52b270374f75e4947",
+      "selection_reason": "探索期の親3着内率の低い側→平均→年度最小3着内率→独立レース数→頭走数で優先。10場に各1コースを配分。両親各300頭走以上。ROIは足切りに使わない。",
+      "parent_priority_score": [
+        39.664218258132216,
+        40.18386792303596,
+        32.87671232876713,
+        318,
+        953
+      ],
+      "discovery_parent_signature": "99ffa00c1a59b69de444940b89fb4a1a9e0d88e82d0b8167284bee59e32c3c2f",
+      "sequence": 6,
+      "existing_result_sources": [],
+      "execution_action": "新規評価案"
+    },
+    {
+      "lane": "有力親",
+      "a": {
+        "code": "tua",
+        "scope": [
+          "valid",
+          "course",
+          "福島",
+          "ダ",
+          1700,
+          "UNKNOWN"
+        ],
+        "model": "A",
+        "threshold": null,
+        "threshold_registered": 3003,
+        "threshold_races": 207,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "9cf8834c1b04a0e11c58"
+      },
+      "b": {
+        "code": "arms",
+        "scope": [
+          "valid",
+          "course",
+          "福島",
+          "ダ",
+          1700,
+          "UNKNOWN"
+        ],
+        "model": "C",
+        "threshold": 76.0,
+        "threshold_registered": 3003,
+        "threshold_races": 207,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "8a017277e1c62b6437e1"
+      },
+      "scope": [
+        "valid",
+        "course",
+        "福島",
+        "ダ",
+        1700,
+        "UNKNOWN"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "b5d3849e81a111c8624b193b",
+      "canonical_sha256": "b5d3849e81a111c8624b193bfccfb4932b0774658b9f6208ceba44e33df8cb51",
+      "selection_reason": "探索期の親3着内率の低い側→平均→年度最小3着内率→独立レース数→頭走数で優先。10場に各1コースを配分。両親各300頭走以上。ROIは足切りに使わない。",
+      "parent_priority_score": [
+        38.32528180354267,
+        39.01910023191488,
+        36.74698795180723,
+        205,
+        621
+      ],
+      "discovery_parent_signature": "40f4cb73a5ab1dbc59819561d31ae794291dc33286a969f517b3ca0ff290fe34",
+      "sequence": 7,
+      "existing_result_sources": [],
+      "execution_action": "新規評価案"
+    },
+    {
+      "lane": "有力親",
+      "a": {
+        "code": "f",
+        "scope": [
+          "valid",
+          "course",
+          "小倉",
+          "芝",
+          1800,
+          "UNKNOWN"
+        ],
+        "model": "B",
+        "threshold": 38.072053311120364,
+        "threshold_registered": 2401,
+        "threshold_races": 180,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "e74095f633bc26d4738c"
+      },
+      "b": {
+        "code": "arms",
+        "scope": [
+          "valid",
+          "course",
+          "小倉",
+          "芝",
+          1800,
+          "UNKNOWN"
+        ],
+        "model": "B",
+        "threshold": 76.98792169929196,
+        "threshold_registered": 2401,
+        "threshold_races": 180,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "b5ecc86e3c9fde141bbc"
+      },
+      "scope": [
+        "valid",
+        "course",
+        "小倉",
+        "芝",
+        1800,
+        "UNKNOWN"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "abbc09dfcbc626ac5c745f3b",
+      "canonical_sha256": "abbc09dfcbc626ac5c745f3bc5f86bbb552f9b473493c281b1da03eaedf1df8b",
+      "selection_reason": "探索期の親3着内率の低い側→平均→年度最小3着内率→独立レース数→頭走数で優先。10場に各1コースを配分。両親各300頭走以上。ROIは足切りに使わない。",
+      "parent_priority_score": [
+        38.17097415506958,
+        41.12747181035922,
+        29.906542056074766,
+        169,
+        503
+      ],
+      "discovery_parent_signature": "7999fa7594dfce19cdfa9784527712047bcdab7ca7d821c14a548240cde8742c",
+      "sequence": 8,
+      "existing_result_sources": [],
+      "execution_action": "新規評価案"
+    },
+    {
+      "lane": "有力親",
+      "a": {
+        "code": "s",
+        "scope": [
+          "valid",
+          "course",
+          "札幌",
+          "ダ",
+          1700,
+          "UNKNOWN"
+        ],
+        "model": "C",
+        "threshold": 33.0,
+        "threshold_registered": 2574,
+        "threshold_races": 195,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "3d28192f927487c60156"
+      },
+      "b": {
+        "code": "tua",
+        "scope": [
+          "valid",
+          "course",
+          "札幌",
+          "ダ",
+          1700,
+          "UNKNOWN"
+        ],
+        "model": "A",
+        "threshold": null,
+        "threshold_registered": 2574,
+        "threshold_races": 195,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "c79bdccd348653f563d6"
+      },
+      "scope": [
+        "valid",
+        "course",
+        "札幌",
+        "ダ",
+        1700,
+        "UNKNOWN"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "2747b1ef29d5f802db6b7cbc",
+      "canonical_sha256": "2747b1ef29d5f802db6b7cbc2b9fc403ec2f775cd4cab78ca57377003127db26",
+      "selection_reason": "探索期の親3着内率の低い側→平均→年度最小3着内率→独立レース数→頭走数で優先。10場に各1コースを配分。両親各300頭走以上。ROIは足切りに使わない。",
+      "parent_priority_score": [
+        38.06343906510851,
+        38.636332382636624,
+        35.526315789473685,
+        195,
+        599
+      ],
+      "discovery_parent_signature": "afd2201a18e0dc02d4c3f3b65cec280fc936ea024cc88e32f305e6091ff37ac8",
+      "sequence": 9,
+      "existing_result_sources": [],
+      "execution_action": "新規評価案"
+    },
+    {
+      "lane": "有力親",
+      "a": {
+        "code": "tua",
+        "scope": [
+          "valid",
+          "course",
+          "京都",
+          "ダ",
+          1800,
+          "UNKNOWN"
+        ],
+        "model": "A",
+        "threshold": null,
+        "threshold_registered": 2222,
+        "threshold_races": 167,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "6d822eb7de5fdf8093a7"
+      },
+      "b": {
+        "code": "arms",
+        "scope": [
+          "valid",
+          "course",
+          "京都",
+          "ダ",
+          1800,
+          "UNKNOWN"
+        ],
+        "model": "B",
+        "threshold": 78.03960396039604,
+        "threshold_registered": 2222,
+        "threshold_races": 167,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "12ef16f42db56cf7a2df"
+      },
+      "scope": [
+        "valid",
+        "course",
+        "京都",
+        "ダ",
+        1800,
+        "UNKNOWN"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "072aa14f59617aca5d1acabd",
+      "canonical_sha256": "072aa14f59617aca5d1acabd2a846448d6b5ccb335e9fb0ba2ef47ee1b612c81",
+      "selection_reason": "探索期の親3着内率の低い側→平均→年度最小3着内率→独立レース数→頭走数で優先。10場に各1コースを配分。両親各300頭走以上。ROIは足切りに使わない。",
+      "parent_priority_score": [
+        37.95454545454545,
+        37.96335622627869,
+        36.206896551724135,
+        153,
+        440
+      ],
+      "discovery_parent_signature": "ddd8a33cf99f0d35420d1b82fbf4b6aa49cb5b134aa7bf2f64940b9c7745acf9",
+      "sequence": 10,
+      "existing_result_sources": [],
+      "execution_action": "新規評価案"
+    },
+    {
+      "lane": "有力親",
+      "a": {
+        "code": "s",
+        "scope": [
+          "valid",
+          "surface",
+          "芝"
+        ],
+        "model": "A",
+        "threshold": null,
+        "threshold_registered": 89450,
+        "threshold_races": 6600,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "cf3215476c11a4c871d2"
+      },
+      "b": {
+        "code": "arms",
+        "scope": [
+          "valid",
+          "surface",
+          "芝"
+        ],
+        "model": "C",
+        "threshold": 75.0,
+        "threshold_registered": 89450,
+        "threshold_races": 6600,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "ea63924a853dfc60cc35"
+      },
+      "scope": [
+        "valid",
+        "surface",
+        "芝"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "5acc8be9483106d21828a26a",
+      "canonical_sha256": "5acc8be9483106d21828a26af49d26acadedfbfb60a64a02a4eb397c47a3b49c",
+      "selection_reason": "同じ探索期の親3着内率優先基準。コース条件への偏りを抑える芝/ダの広域枠。両親各300頭走以上、ROI足切りなし。",
+      "parent_priority_score": [
+        36.29249865083648,
+        37.97278836628117,
+        31.62311653633416,
+        6152,
+        18530
+      ],
+      "discovery_parent_signature": "187157d06091778544a594ae84790a2db24a2d2f096942b83eade3f728eca521",
+      "sequence": 11,
+      "existing_result_sources": [],
+      "execution_action": "新規評価案"
+    },
+    {
+      "lane": "有力親",
+      "a": {
+        "code": "s",
+        "scope": [
+          "valid",
+          "surface",
+          "ダ"
+        ],
+        "model": "A",
+        "threshold": null,
+        "threshold_registered": 95616,
+        "threshold_races": 6720,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "f13067547843e07a5191"
+      },
+      "b": {
+        "code": "arms",
+        "scope": [
+          "valid",
+          "surface",
+          "ダ"
+        ],
+        "model": "B",
+        "threshold": 74.75759287148594,
+        "threshold_registered": 95616,
+        "threshold_races": 6720,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "185ac5d8f0d5937ebb91"
+      },
+      "scope": [
+        "valid",
+        "surface",
+        "ダ"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "70138be3695f15ac0f033b72",
+      "canonical_sha256": "70138be3695f15ac0f033b726823ac7b5fbbc61059e4aee15b5a6bf9c08ddf2c",
+      "selection_reason": "同じ探索期の親3着内率優先基準。コース条件への偏りを抑える芝/ダの広域枠。両親各300頭走以上、ROI足切りなし。",
+      "parent_priority_score": [
+        36.79065699439214,
+        38.020495195614814,
+        31.949184679560105,
+        6489,
+        19437
+      ],
+      "discovery_parent_signature": "3ed94c36d8ad4e0c32af77f0733cf6ac673db63bc5eb2909932788d652907f78",
+      "sequence": 12,
+      "existing_result_sources": [],
+      "execution_action": "新規評価案"
+    },
+    {
+      "lane": "相互作用",
+      "a": {
+        "code": "hill_pedigree",
+        "scope": [
+          "valid",
+          "all"
+        ],
+        "model": "C",
+        "threshold": 71.0,
+        "threshold_registered": 185066,
+        "threshold_races": 13320,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "947fa77a3f5ef8544288"
+      },
+      "b": {
+        "code": "pedigree_link",
+        "scope": [
+          "valid",
+          "all"
+        ],
+        "model": "A",
+        "threshold": null,
+        "threshold_registered": 185066,
+        "threshold_races": 13320,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "886ab526ccae5990342e"
+      },
+      "scope": [
+        "valid",
+        "all"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "4ad12d9ed172fa7960cd5a26",
+      "canonical_sha256": "4ad12d9ed172fa7960cd5a26990cdf22c1a4bece3d6fa9921c6667d97d353cba",
+      "selection_reason": "単独の3着内率・ROIで足切りしない定義ベースの相互作用枠。異なる情報群、障害分離、F-UP最近期の芝/ダ比較を確保。",
+      "parent_priority_score": null,
+      "discovery_parent_signature": "5b6aff028442560cc4b082343bd8cf8b7ef5868330aaa8c4c41e6bbc3a390da6",
+      "sequence": 13,
+      "existing_result_sources": [],
+      "execution_action": "新規評価案"
+    },
+    {
+      "lane": "相互作用",
+      "a": {
+        "code": "time_pedigree",
+        "scope": [
+          "valid",
+          "all"
+        ],
+        "model": "A",
+        "threshold": null,
+        "threshold_registered": 185066,
+        "threshold_races": 13320,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "43d61bb2aa7897d77aa5"
+      },
+      "b": {
+        "code": "balance",
+        "scope": [
+          "valid",
+          "all"
+        ],
+        "model": "C",
+        "threshold": 43.0,
+        "threshold_registered": 185066,
+        "threshold_races": 13320,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "9f613bb05c81539dc1fa"
+      },
+      "scope": [
+        "valid",
+        "all"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "00d6aaba9bd8265a49d7281f",
+      "canonical_sha256": "00d6aaba9bd8265a49d7281f4285695e4dcf8c1b56c7bcd1f5311d1e50c214e7",
+      "selection_reason": "単独の3着内率・ROIで足切りしない定義ベースの相互作用枠。異なる情報群、障害分離、F-UP最近期の芝/ダ比較を確保。",
+      "parent_priority_score": null,
+      "discovery_parent_signature": "5c42048bf7cda9b6184cbb0acc781cb5407f132f896cae0e7dfb16a998bc9aa3",
+      "sequence": 14,
+      "existing_result_sources": [],
+      "execution_action": "新規評価案"
+    },
+    {
+      "lane": "相互作用",
+      "a": {
+        "code": "course_link",
+        "scope": [
+          "valid",
+          "surface",
+          "芝"
+        ],
+        "model": "C",
+        "threshold": 80.0,
+        "threshold_registered": 89450,
+        "threshold_races": 6600,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "803b05d79dbc562241a3"
+      },
+      "b": {
+        "code": "arms2",
+        "scope": [
+          "valid",
+          "surface",
+          "芝"
+        ],
+        "model": "A",
+        "threshold": null,
+        "threshold_registered": 89450,
+        "threshold_races": 6600,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "417c94dc63e604fe9bf2"
+      },
+      "scope": [
+        "valid",
+        "surface",
+        "芝"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "6d10ca64b1659f93efff1f9b",
+      "canonical_sha256": "6d10ca64b1659f93efff1f9be8d53eb006047ec8d194f6083ba8f5ef808993b8",
+      "selection_reason": "単独の3着内率・ROIで足切りしない定義ベースの相互作用枠。異なる情報群、障害分離、F-UP最近期の芝/ダ比較を確保。",
+      "parent_priority_score": null,
+      "discovery_parent_signature": "e09cf9a43104f8442001807a95152dbf1f813a2afcfcf812d93815c07109060c",
+      "sequence": 15,
+      "existing_result_sources": [],
+      "execution_action": "新規評価案"
+    },
+    {
+      "lane": "相互作用",
+      "a": {
+        "code": "hill_training",
+        "scope": [
+          "unavailable_jump",
+          "all"
+        ],
+        "model": "C",
+        "threshold": 77.0,
+        "threshold_registered": 5929,
+        "threshold_races": 504,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "485f56192af4f2083346"
+      },
+      "b": {
+        "code": "tua",
+        "scope": [
+          "unavailable_jump",
+          "all"
+        ],
+        "model": "A",
+        "threshold": null,
+        "threshold_registered": 5929,
+        "threshold_races": 504,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "c92050dbca2b16da9a48"
+      },
+      "scope": [
+        "unavailable_jump",
+        "all"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "6b4554e72deeefd20182430d",
+      "canonical_sha256": "6b4554e72deeefd20182430dbca0f9d6c98cdca2e6593bd5ae4209578d7c2518",
+      "selection_reason": "単独の3着内率・ROIで足切りしない定義ベースの相互作用枠。異なる情報群、障害分離、F-UP最近期の芝/ダ比較を確保。",
+      "parent_priority_score": null,
+      "discovery_parent_signature": "e0b66ab1933bb3b970680ebf41cbf02007a0a6a20c96da0159e963d6c6e3783a",
+      "sequence": 16,
+      "existing_result_sources": [],
+      "execution_action": "新規評価案"
+    },
+    {
+      "lane": "相互作用",
+      "a": {
+        "code": "stable_finish_up",
+        "scope": [
+          "valid",
+          "surface",
+          "芝"
+        ],
+        "model": "A",
+        "threshold": null,
+        "threshold_registered": 1234,
+        "threshold_races": 85,
+        "threshold_period": [
+          "20240101",
+          "20241231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "8fcaeab745cc29852846"
+      },
+      "b": {
+        "code": "s",
+        "scope": [
+          "valid",
+          "surface",
+          "芝"
+        ],
+        "model": "C",
+        "threshold": 33.0,
+        "threshold_registered": 89450,
+        "threshold_races": 6600,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "7305dd0e27ae2d545cae"
+      },
+      "scope": [
+        "valid",
+        "surface",
+        "芝"
+      ],
+      "period_family": "finish_up_recent",
+      "periods": {
+        "discovery": [
+          "20240101",
+          "20241231"
+        ],
+        "check": [
+          "20250101",
+          "20251231"
+        ],
+        "stress": [
+          "20260101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "e7c3cc5a9c1059dfd6cc0796",
+      "canonical_sha256": "e7c3cc5a9c1059dfd6cc0796d4ba0198d3072f9ab838d7ad4da47627e01f7a9f",
+      "selection_reason": "単独の3着内率・ROIで足切りしない定義ベースの相互作用枠。異なる情報群、障害分離、F-UP最近期の芝/ダ比較を確保。",
+      "parent_priority_score": null,
+      "discovery_parent_signature": "962f849c1f7832ec012ae061f44beb1b823fa61cd8a45a36e0e3df80263dd0fa",
+      "sequence": 17,
+      "existing_result_sources": [],
+      "execution_action": "新規評価案"
+    },
+    {
+      "lane": "相互作用",
+      "a": {
+        "code": "stable_finish_up",
+        "scope": [
+          "valid",
+          "surface",
+          "ダ"
+        ],
+        "model": "C",
+        "threshold": 2.0,
+        "threshold_registered": 1499,
+        "threshold_races": 101,
+        "threshold_period": [
+          "20240101",
+          "20241231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "66161d00eb4311495c2c"
+      },
+      "b": {
+        "code": "f",
+        "scope": [
+          "valid",
+          "surface",
+          "ダ"
+        ],
+        "model": "A",
+        "threshold": null,
+        "threshold_registered": 95616,
+        "threshold_races": 6720,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "8628d32f2c126b4bc874"
+      },
+      "scope": [
+        "valid",
+        "surface",
+        "ダ"
+      ],
+      "period_family": "finish_up_recent",
+      "periods": {
+        "discovery": [
+          "20240101",
+          "20241231"
+        ],
+        "check": [
+          "20250101",
+          "20251231"
+        ],
+        "stress": [
+          "20260101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "f568849591937ae77d5fd2c4",
+      "canonical_sha256": "f568849591937ae77d5fd2c47931f93879175837457392ff058c8f40dcda2859",
+      "selection_reason": "単独の3着内率・ROIで足切りしない定義ベースの相互作用枠。異なる情報群、障害分離、F-UP最近期の芝/ダ比較を確保。",
+      "parent_priority_score": null,
+      "discovery_parent_signature": "210cfdd40d151a49a6c883db374bdf356f3d84c262904df7fb61168684edc5d5",
+      "sequence": 18,
+      "existing_result_sources": [],
+      "execution_action": "新規評価案"
+    },
+    {
+      "lane": "対照・網羅",
+      "a": {
+        "code": "hill_training",
+        "scope": [
+          "valid",
+          "all"
+        ],
+        "model": "C",
+        "threshold": 82.0,
+        "threshold_registered": 185066,
+        "threshold_races": 13320,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "7ad97180f5db44c54d00"
+      },
+      "b": {
+        "code": "stable_finish_up",
+        "scope": [
+          "valid",
+          "all"
+        ],
+        "model": "B",
+        "threshold": 2.4394438346139773,
+        "threshold_registered": 2733,
+        "threshold_races": 186,
+        "threshold_period": [
+          "20240101",
+          "20241231"
+        ],
+        "ordinal_sensitivity": true,
+        "candidate_id": "2ecf3d8c6f895d8e1bfc"
+      },
+      "scope": [
+        "valid",
+        "all"
+      ],
+      "period_family": "finish_up_recent",
+      "periods": {
+        "discovery": [
+          "20240101",
+          "20241231"
+        ],
+        "check": [
+          "20250101",
+          "20251231"
+        ],
+        "stress": [
+          "20260101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "571b1f40d144e8ce67f8268d",
+      "canonical_sha256": "571b1f40d144e8ce67f8268d75b3c1616fb50d528e006a252faec306325df97b",
+      "selection_reason": "元S2-0の12指数網羅6組を固定対照として再掲。成績を理由に選定せず、既存結果を再利用する。",
+      "parent_priority_score": null,
+      "discovery_parent_signature": "21c795fbb637c88399264859e8a8ebe7d34040e945f33c9f97c6e9443681facb",
+      "sequence": 19,
+      "existing_result_sources": [
+        {
+          "run": "C:\\work\\s2_0_six_pairs_20261019\\run_v1",
+          "pair_id": "f6110accc4a623665679",
+          "manifest_sha256": "bc838bf4ed045cbd5d52b87253d8e7b3dd4fd8c825398da679dfbec12647a796",
+          "period_metrics": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\period_metrics.csv",
+          "yearly": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\yearly.csv",
+          "coverage": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\coverage.csv",
+          "selection_masks": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\selection_masks.jsonl.gz"
+        },
+        {
+          "run": "C:\\work\\s2_block1_validation_20261020\\baseline_2",
+          "pair_id": "df806e6edbba0f0f4998bf6b",
+          "manifest_sha256": "8f8ba1c949960911aa08b2bfc8fb0ded5e0c434cc41b776c5027e30fc85eee87",
+          "period_metrics": "C:\\work\\s2_block1_validation_20261020\\baseline_2\\period_metrics.csv",
+          "yearly": "C:\\work\\s2_block1_validation_20261020\\baseline_2\\yearly.csv",
+          "coverage": "C:\\work\\s2_block1_validation_20261020\\baseline_2\\coverage.csv",
+          "selection_masks": "C:\\work\\s2_block1_validation_20261020\\baseline_2\\selection_masks.jsonl.gz"
+        }
+      ],
+      "execution_action": "既存結果再利用"
+    },
+    {
+      "lane": "対照・網羅",
+      "a": {
+        "code": "hill_pedigree",
+        "scope": [
+          "valid",
+          "all"
+        ],
+        "model": "A",
+        "threshold": null,
+        "threshold_registered": 185066,
+        "threshold_races": 13320,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "fdfea9578040630b0602"
+      },
+      "b": {
+        "code": "time_pedigree",
+        "scope": [
+          "valid",
+          "all"
+        ],
+        "model": "C",
+        "threshold": 58.0,
+        "threshold_registered": 185066,
+        "threshold_races": 13320,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "41fa6c4de72bc3d529b6"
+      },
+      "scope": [
+        "valid",
+        "all"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "c94562f01ce559094d2b8fa4",
+      "canonical_sha256": "c94562f01ce559094d2b8fa4a229bde6710259d6741b11945fd106ee0fd2ee7a",
+      "selection_reason": "元S2-0の12指数網羅6組を固定対照として再掲。成績を理由に選定せず、既存結果を再利用する。",
+      "parent_priority_score": null,
+      "discovery_parent_signature": "994a5ba246e4e968bd242d5f2b02dc709231ca64a2758d77246b7b08df1a3322",
+      "sequence": 20,
+      "existing_result_sources": [
+        {
+          "run": "C:\\work\\s2_0_six_pairs_20261019\\run_v1",
+          "pair_id": "907b5db0d1c73c1ae092",
+          "manifest_sha256": "bc838bf4ed045cbd5d52b87253d8e7b3dd4fd8c825398da679dfbec12647a796",
+          "period_metrics": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\period_metrics.csv",
+          "yearly": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\yearly.csv",
+          "coverage": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\coverage.csv",
+          "selection_masks": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\selection_masks.jsonl.gz"
+        },
+        {
+          "run": "C:\\work\\s2_block2_validation_20261020\\baseline_2",
+          "pair_id": "9ca4deb9cc46b04be12beaa4",
+          "manifest_sha256": "4b11e177fbb388e5fe9fb85baab62f18fd08d2e1c51bc2da282868215cd7a181",
+          "period_metrics": "C:\\work\\s2_block2_validation_20261020\\baseline_2\\period_metrics.csv",
+          "yearly": "C:\\work\\s2_block2_validation_20261020\\baseline_2\\yearly.csv",
+          "coverage": "C:\\work\\s2_block2_validation_20261020\\baseline_2\\coverage.csv",
+          "selection_masks": "C:\\work\\s2_block2_validation_20261020\\baseline_2\\selection_masks.jsonl.gz"
+        }
+      ],
+      "execution_action": "既存結果再利用"
+    },
+    {
+      "lane": "対照・網羅",
+      "a": {
+        "code": "course_link",
+        "scope": [
+          "valid",
+          "surface",
+          "芝"
+        ],
+        "model": "B",
+        "threshold": 78.009111235327,
+        "threshold_registered": 89450,
+        "threshold_races": 6600,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "6fb63805bd480a70ddf2"
+      },
+      "b": {
+        "code": "pedigree_link",
+        "scope": [
+          "valid",
+          "surface",
+          "芝"
+        ],
+        "model": "C",
+        "threshold": 32.0,
+        "threshold_registered": 89450,
+        "threshold_races": 6600,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "cbbf7091f15f47213e73"
+      },
+      "scope": [
+        "valid",
+        "surface",
+        "芝"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "dc69da0759967279608c43db",
+      "canonical_sha256": "dc69da0759967279608c43dbb235a060f224d8cd0a079454b695d34df672173d",
+      "selection_reason": "元S2-0の12指数網羅6組を固定対照として再掲。成績を理由に選定せず、既存結果を再利用する。",
+      "parent_priority_score": null,
+      "discovery_parent_signature": "c08b35629cf0a6aace812fcbbbbacc16c25c50c2c6b9da92f98c8e6b2cea8a97",
+      "sequence": 21,
+      "existing_result_sources": [
+        {
+          "run": "C:\\work\\s2_0_six_pairs_20261019\\run_v1",
+          "pair_id": "efb913c0fb04d63c417e",
+          "manifest_sha256": "bc838bf4ed045cbd5d52b87253d8e7b3dd4fd8c825398da679dfbec12647a796",
+          "period_metrics": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\period_metrics.csv",
+          "yearly": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\yearly.csv",
+          "coverage": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\coverage.csv",
+          "selection_masks": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\selection_masks.jsonl.gz"
+        },
+        {
+          "run": "C:\\work\\s2_block3_validation_20261020\\baseline_2",
+          "pair_id": "bff4aa001ca41bf8aa3ec5e8",
+          "manifest_sha256": "118d535b72a63ed0c516ab9592c300f24025d0ac1c2872ed34dc46a936d1cb0b",
+          "period_metrics": "C:\\work\\s2_block3_validation_20261020\\baseline_2\\period_metrics.csv",
+          "yearly": "C:\\work\\s2_block3_validation_20261020\\baseline_2\\yearly.csv",
+          "coverage": "C:\\work\\s2_block3_validation_20261020\\baseline_2\\coverage.csv",
+          "selection_masks": "C:\\work\\s2_block3_validation_20261020\\baseline_2\\selection_masks.jsonl.gz"
+        }
+      ],
+      "execution_action": "既存結果再利用"
+    },
+    {
+      "lane": "対照・網羅",
+      "a": {
+        "code": "s",
+        "scope": [
+          "valid",
+          "surface",
+          "ダ"
+        ],
+        "model": "A",
+        "threshold": null,
+        "threshold_registered": 95616,
+        "threshold_races": 6720,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "f13067547843e07a5191"
+      },
+      "b": {
+        "code": "f",
+        "scope": [
+          "valid",
+          "surface",
+          "ダ"
+        ],
+        "model": "B",
+        "threshold": 37.206754099732265,
+        "threshold_registered": 95616,
+        "threshold_races": 6720,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "83d0ac22994dcc292fc3"
+      },
+      "scope": [
+        "valid",
+        "surface",
+        "ダ"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "557ed4539696a0e3334c906f",
+      "canonical_sha256": "557ed4539696a0e3334c906ff3fb1ec3132098018e4ce6db39408292e206d55e",
+      "selection_reason": "元S2-0の12指数網羅6組を固定対照として再掲。成績を理由に選定せず、既存結果を再利用する。",
+      "parent_priority_score": null,
+      "discovery_parent_signature": "96fb49cf9aec7076ad608da97076d9407abca5cea1b93928cf150b527ba1ead1",
+      "sequence": 22,
+      "existing_result_sources": [
+        {
+          "run": "C:\\work\\s2_0_six_pairs_20261019\\run_v1",
+          "pair_id": "9c98e31af5e80657c44b",
+          "manifest_sha256": "bc838bf4ed045cbd5d52b87253d8e7b3dd4fd8c825398da679dfbec12647a796",
+          "period_metrics": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\period_metrics.csv",
+          "yearly": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\yearly.csv",
+          "coverage": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\coverage.csv",
+          "selection_masks": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\selection_masks.jsonl.gz"
+        }
+      ],
+      "execution_action": "既存結果再利用"
+    },
+    {
+      "lane": "対照・網羅",
+      "a": {
+        "code": "tua",
+        "scope": [
+          "valid",
+          "course",
+          "中山",
+          "ダ",
+          1800,
+          "UNKNOWN"
+        ],
+        "model": "A",
+        "threshold": null,
+        "threshold_registered": 8138,
+        "threshold_races": 559,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "f9da8ba57598ee80efe3"
+      },
+      "b": {
+        "code": "arms",
+        "scope": [
+          "valid",
+          "course",
+          "中山",
+          "ダ",
+          1800,
+          "UNKNOWN"
+        ],
+        "model": "A",
+        "threshold": null,
+        "threshold_registered": 8138,
+        "threshold_races": 559,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "7422b20786c69f337d5a"
+      },
+      "scope": [
+        "valid",
+        "course",
+        "中山",
+        "ダ",
+        1800,
+        "UNKNOWN"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "9ab00a36e3ebeb248c1a5fe3",
+      "canonical_sha256": "9ab00a36e3ebeb248c1a5fe3bd45b5d18af737e88bfe664e5d0dc897e6c6ec9b",
+      "selection_reason": "元S2-0の12指数網羅6組を固定対照として再掲。成績を理由に選定せず、既存結果を再利用する。",
+      "parent_priority_score": null,
+      "discovery_parent_signature": "7434a48edd9efa359969a0ae1fdb10285c1b247a7d3bb36cf818130d53983a61",
+      "sequence": 23,
+      "existing_result_sources": [
+        {
+          "run": "C:\\work\\s2_0_six_pairs_20261019\\run_v1",
+          "pair_id": "5b9e2707134600761388",
+          "manifest_sha256": "bc838bf4ed045cbd5d52b87253d8e7b3dd4fd8c825398da679dfbec12647a796",
+          "period_metrics": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\period_metrics.csv",
+          "yearly": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\yearly.csv",
+          "coverage": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\coverage.csv",
+          "selection_masks": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\selection_masks.jsonl.gz"
+        }
+      ],
+      "execution_action": "既存結果再利用"
+    },
+    {
+      "lane": "対照・網羅",
+      "a": {
+        "code": "balance",
+        "scope": [
+          "valid",
+          "course",
+          "阪神",
+          "ダ",
+          1800,
+          "UNKNOWN"
+        ],
+        "model": "B",
+        "threshold": 43.57874465049929,
+        "threshold_registered": 7010,
+        "threshold_races": 552,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "f9f807369215cadd97fd"
+      },
+      "b": {
+        "code": "arms2",
+        "scope": [
+          "valid",
+          "course",
+          "阪神",
+          "ダ",
+          1800,
+          "UNKNOWN"
+        ],
+        "model": "C",
+        "threshold": 90.0,
+        "threshold_registered": 7010,
+        "threshold_races": 552,
+        "threshold_period": [
+          "20200105",
+          "20231231"
+        ],
+        "ordinal_sensitivity": false,
+        "candidate_id": "4b505133412e66846d2c"
+      },
+      "scope": [
+        "valid",
+        "course",
+        "阪神",
+        "ダ",
+        1800,
+        "UNKNOWN"
+      ],
+      "period_family": "longterm",
+      "periods": {
+        "discovery": [
+          "20200105",
+          "20231231"
+        ],
+        "check": [
+          "20240101",
+          "20241231"
+        ],
+        "stress": [
+          "20250101",
+          "20261012"
+        ]
+      },
+      "fixed_id": "6f2589abbe2f83832baa0f2b",
+      "canonical_sha256": "6f2589abbe2f83832baa0f2b814df3bf9d6809c1819daf9ed65ca7463cf37df9",
+      "selection_reason": "元S2-0の12指数網羅6組を固定対照として再掲。成績を理由に選定せず、既存結果を再利用する。",
+      "parent_priority_score": null,
+      "discovery_parent_signature": "c29acacf43b995baf14bbe6a793dceb4c94976d2835a79649e185c276a995c5d",
+      "sequence": 24,
+      "existing_result_sources": [
+        {
+          "run": "C:\\work\\s2_0_six_pairs_20261019\\run_v1",
+          "pair_id": "fc087c618e2bbee60453",
+          "manifest_sha256": "bc838bf4ed045cbd5d52b87253d8e7b3dd4fd8c825398da679dfbec12647a796",
+          "period_metrics": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\period_metrics.csv",
+          "yearly": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\yearly.csv",
+          "coverage": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\coverage.csv",
+          "selection_masks": "C:\\work\\s2_0_six_pairs_20261019\\run_v1\\selection_masks.jsonl.gz"
+        }
+      ],
+      "execution_action": "既存結果再利用"
+    }
+  ],
+  "batches": [
+    {
+      "batch_no": 1,
+      "route": "baseline",
+      "family": "course",
+      "pair_ids": [
+        "88bca2d5e1bc6f7169849645",
+        "331ea7abc54935dc28c58093",
+        "537a963375f9289265bf1150"
+      ],
+      "pair_sequences": [
+        1,
+        2,
+        3
+      ],
+      "pairs": 3,
+      "reference_seconds": 150,
+      "planning_seconds": 225.0,
+      "not_measured": true,
+      "limits": {
+        "seconds": 600,
+        "combined_peak_mib": 512,
+        "output_mib": 20
+      }
+    },
+    {
+      "batch_no": 2,
+      "route": "baseline",
+      "family": "course",
+      "pair_ids": [
+        "c0932240a30abde95c55f3cc",
+        "dcfba3b3607a6358a18165e5",
+        "961dc3ea93dcced274d69c16"
+      ],
+      "pair_sequences": [
+        4,
+        5,
+        6
+      ],
+      "pairs": 3,
+      "reference_seconds": 150,
+      "planning_seconds": 225.0,
+      "not_measured": true,
+      "limits": {
+        "seconds": 600,
+        "combined_peak_mib": 512,
+        "output_mib": 20
+      }
+    },
+    {
+      "batch_no": 3,
+      "route": "baseline",
+      "family": "course",
+      "pair_ids": [
+        "b5d3849e81a111c8624b193b",
+        "abbc09dfcbc626ac5c745f3b",
+        "2747b1ef29d5f802db6b7cbc"
+      ],
+      "pair_sequences": [
+        7,
+        8,
+        9
+      ],
+      "pairs": 3,
+      "reference_seconds": 150,
+      "planning_seconds": 225.0,
+      "not_measured": true,
+      "limits": {
+        "seconds": 600,
+        "combined_peak_mib": 512,
+        "output_mib": 20
+      }
+    },
+    {
+      "batch_no": 4,
+      "route": "baseline",
+      "family": "surface",
+      "pair_ids": [
+        "072aa14f59617aca5d1acabd",
+        "5acc8be9483106d21828a26a",
+        "70138be3695f15ac0f033b72"
+      ],
+      "pair_sequences": [
+        10,
+        11,
+        12
+      ],
+      "pairs": 3,
+      "reference_seconds": 195,
+      "planning_seconds": 292.5,
+      "not_measured": true,
+      "limits": {
+        "seconds": 600,
+        "combined_peak_mib": 512,
+        "output_mib": 20
+      }
+    },
+    {
+      "batch_no": 5,
+      "route": "baseline",
+      "family": "all",
+      "pair_ids": [
+        "4ad12d9ed172fa7960cd5a26",
+        "00d6aaba9bd8265a49d7281f",
+        "6d10ca64b1659f93efff1f9b"
+      ],
+      "pair_sequences": [
+        13,
+        14,
+        15
+      ],
+      "pairs": 3,
+      "reference_seconds": 225,
+      "planning_seconds": 337.5,
+      "not_measured": true,
+      "limits": {
+        "seconds": 600,
+        "combined_peak_mib": 512,
+        "output_mib": 20
+      }
+    },
+    {
+      "batch_no": 6,
+      "route": "baseline",
+      "family": "jump",
+      "pair_ids": [
+        "6b4554e72deeefd20182430d"
+      ],
+      "pair_sequences": [
+        16
+      ],
+      "pairs": 1,
+      "reference_seconds": 90,
+      "planning_seconds": 135.0,
+      "not_measured": true,
+      "limits": {
+        "seconds": 600,
+        "combined_peak_mib": 512,
+        "output_mib": 20
+      }
+    },
+    {
+      "batch_no": 7,
+      "route": "baseline",
+      "family": "FUP",
+      "pair_ids": [
+        "e7c3cc5a9c1059dfd6cc0796",
+        "f568849591937ae77d5fd2c4"
+      ],
+      "pair_sequences": [
+        17,
+        18
+      ],
+      "pairs": 2,
+      "reference_seconds": 145,
+      "planning_seconds": 217.5,
+      "not_measured": true,
+      "limits": {
+        "seconds": 600,
+        "combined_peak_mib": 512,
+        "output_mib": 20
+      }
+    }
+  ],
+  "standard_route": "baseline",
+  "R1_used": false,
+  "R2_implemented": false,
+  "new_pair_count": 18,
+  "existing_reuse_count": 6,
+  "explored_scope": "stage 1 only 24; optional additional <=48 is not selected or authorized",
+  "outlier_threshold": null,
+  "current_comparison_status": "deferred",
+  "all_historical_periods_already_viewed": true,
+  "rank_policy": "all registered, before eligibility/common filtering",
+  "missing_not_neither": true,
+  "groups": [
+    "all",
+    "a",
+    "b",
+    "both",
+    "a_only",
+    "b_only",
+    "neither"
+  ],
+  "evaluation_priority": [
+    "top3",
+    "temporal stability",
+    "sample/races",
+    "matched current baseline",
+    "heads per race and coverage",
+    "ROI reference"
+  ],
+  "no_production_adoption": true
+}
