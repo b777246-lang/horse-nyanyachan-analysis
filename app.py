@@ -5,6 +5,7 @@ import streamlit as st
 
 from tua190_presentation import add_tua190_screen_comments
 from tua190_service import update_tua190_audit
+from s2_presentation import add_s2_screen_comments
 from s2_service import update_s2_audit
 from analysis import analyze_csv
 from values import normalize_jockey
@@ -78,7 +79,7 @@ ext_comment_dict = load_comments(
 )
 
 # 元バイト列によるS2研究照合。結果は表示・旧評価・出力には接続しない。
-update_s2_audit(main_csv_bytes, st.session_state)
+s2_record = update_s2_audit(main_csv_bytes, st.session_state)
 tua190_record = update_tua190_audit(main_csv_bytes, st.session_state)
 
 if df is not None:
@@ -226,7 +227,9 @@ if df is not None:
     missing_jockeys = view_df["騎手"].map(normalize_jockey).eq("").sum()
     if missing_jockeys:
         st.info(f"表示中の{missing_jockeys}頭は騎手データ未取得のためKOL判定保留です。新CSVは16列目=レースID、17列目=血統登録番号、18列目=騎手名です。騎手列を確認してください。")
-    st.markdown(render_html_table(add_tua190_screen_comments(view_df, tua190_record), settings=settings), unsafe_allow_html=True)
+    screen_df = add_tua190_screen_comments(view_df, tua190_record)
+    screen_df = add_s2_screen_comments(screen_df, s2_record)
+    st.markdown(render_html_table(screen_df, settings=settings), unsafe_allow_html=True)
 
     render_cushion_panel(view_df, normalize_main_frame(df), sel_venue, sel_race)
 

@@ -1,6 +1,6 @@
-# S2非表示の内部接続
+# S2の内部接続とWeb条件番号表示
 
-S2共通パッケージ1.0.0を、研究照合専用としてWebへ接続する。S2画面、コメント、CSV／HTML列、表示・出力モード、旧推奨停止は追加しない。`research_only=true`、`prospective_ready=false`、`prospective_verified=false` を維持する。
+S2共通パッケージ1.0.0を、研究照合専用としてWebへ接続する。Web出馬表の「総合評価・コース相性判定」に限り、MATCHの条件番号をNo.22／No.18等の紫太字で表示する。CSV／ダウンロードHTML列、表示・出力モード、旧推奨停止は追加しない。`research_only=true`、`prospective_ready=false`、`prospective_verified=false` を維持する。
 
 ## 入力と依存関係
 
@@ -17,7 +17,7 @@ S2共通パッケージ1.0.0を、研究照合専用としてWebへ接続する�
 
 ## 保持とキャッシュ
 
-`_s2_internal_audit` はユーザーセッション内の最新入力1件だけを保持する。画面には出さず、ディスクやDBにも保存しない。
+`_s2_internal_audit` はユーザーセッション内の最新入力1件だけを保持する。監査内容そのものを画面へ公開せず、ディスクやDBにも保存しない。承認された条件番号ラベルだけを表示用コピーへ付ける。
 
 - `input_sha256`：元CSV全バイトのハッシュ
 - `package_sha256`：実行コード7ファイル＋同梱data3ファイル、接続版のハッシュ
@@ -48,4 +48,8 @@ S2共通パッケージ1.0.0を、研究照合専用としてWebへ接続する�
 - 元パッケージ105テストも、同梱した実行コードをimportした状態で実行済み。研究保存テストだけは、許可範囲であるパッケージ配下の専用TemporaryDirectoryを使用し、試験後に除去する。原コード・正本・テストの内容は改変していない。
 - 元CSVの研究結果と共通API出力を照合し、既存CSV／HTMLとユーザーに見えるStreamlit値も変更前後で比較する。
 
-前向きの全頭性・取得時刻・発走前データの証明は未完了。内部接続が成功してもprospectiveフラグをtrueにしない。将来のS2表示・CSV追加・旧推奨停止は別の仕様確定と承認を要する。
+前向きの全頭性・取得時刻・発走前データの証明は未完了。内部接続が成功してもprospectiveフラグをtrueにしない。CSV追加・旧推奨停止は別の仕様確定と承認を要する。
+
+## 条件番号の表示
+
+`s2_presentation.add_s2_screen_comments()` は検証済みMATCHかつand_passed=trueの出走IDだけを照合し、固定定義順22→18→17→1→2→3→4→8で番号を並べる。複数該当は「【No.22 / No.18】」の形式。TUA190のラベルと同じ紫（#7c3aed）で表示し、元のスコア・コメント・CSV／HTML用フレームは変更しない。INVALID_INPUT／UNCONFIRMED／OUT_OF_SCOPE／NO_MATCHには番号を付けない。prospectiveフラグはfalseのまま。

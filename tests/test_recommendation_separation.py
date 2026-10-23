@@ -9,6 +9,8 @@ from unittest.mock import patch
 import pandas as pd
 from streamlit.testing.v1 import AppTest
 
+from s2_presentation import add_s2_screen_comments
+from s2_service import STATE_KEY as S2_KEY
 from analysis import analyze_csv
 from config import DEFAULT_SETTINGS
 from data_loader import load_comments, load_course_data, read_main_csv
@@ -182,7 +184,7 @@ class RecommendationSeparationTests(unittest.TestCase):
             csv = pd.read_csv(io.StringIO(downloads['horse_analysis_result.csv']), dtype=str)
             self.assertEqual(csv['レースID'].tolist(), ordered['レースID'].tolist())
             display = format_analysis_frame(ordered, batch.notes)
-            expected = render_html_table(display[display['venue'].eq(at.get('button_group')[0].value)])
+            expected = render_html_table(add_s2_screen_comments(display[display['venue'].eq(at.get('button_group')[0].value)], at.session_state[S2_KEY]))
             self.assertIn(expected, [element.value for element in at.markdown])
             next(button for button in at.button if button.label == '🔄 初期配列に戻す').click().run()
             self.assertFalse(at.exception)
