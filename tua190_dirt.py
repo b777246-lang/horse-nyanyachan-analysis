@@ -11,7 +11,7 @@ from s2_shared.adapter import convert_bytes
 
 
 CONDITION_ID = 'TUA190_DIRT'
-VERSION = 'tua190-dirt-1.0.0'
+VERSION = 'tua190-dirt-1.0.1'
 RESEARCH_ONLY = True
 PROSPECTIVE_READY = False
 PROSPECTIVE_VERIFIED = False
@@ -170,9 +170,10 @@ def evaluate_csv_bytes(raw, history_db_path):
         else:
             target_dt = datetime.strptime(earliest, '%Y%m%d')
             gap = (target_dt - datetime.strptime(latest_prior, '%Y%m%d')).days
-            # A Sunday/holiday-Monday input must contain the immediately preceding
-            # meeting day; a Saturday input normally follows the prior Sunday.
-            allowed_gap = 1 if target_dt.weekday() in (0, 6) else MAX_HISTORY_GAP_DAYS
+            # Prospective audits freeze the exact DB identity used for judgment.
+            # Do not require results held after the operator's chosen history cutoff;
+            # accept the normal interval between JRA meeting weekends uniformly.
+            allowed_gap = MAX_HISTORY_GAP_DAYS
             freshness = {'state': 'CURRENT' if gap <= allowed_gap else 'STALE',
                          'reason': None if gap <= allowed_gap else 'history_db_stale',
                          'latest_prior_race_date': latest_prior, 'gap_days': gap,

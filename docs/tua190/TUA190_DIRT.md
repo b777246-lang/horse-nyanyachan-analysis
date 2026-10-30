@@ -31,6 +31,8 @@
 
 監査JSONの `additional_condition_report` に全馬のMATCH・NO_MATCH・OUT_OF_SCOPE・UNCONFIRMED、原値、順位、年齢、前走、キャリア、理由を保存します。metadataには履歴DBのパス・形式・SHA-256・サイズ・mtime、鮮度を保存します。
 
+履歴鮮度は対象日より前の最終収録日が7日以内なら利用可能です。土曜・日曜で同じ基準を使い、前向き判定時に選択したDBのSHA-256と最終収録日を監査記録へ固定します。8日以上古いDBは `STALE` とし、誤抽出を避けるためMATCHにしません。
+
 ## Web版用軽量DB
 
 PC側で対象21列CSVに限定した日付時点軽量DBを作成します。既存ファイルは上書きしません。

@@ -194,6 +194,30 @@ class Tua190Tests(unittest.TestCase):
         self.assertEqual(output.read_bytes(), b'existing user file')
         self.assertEqual(list(self.root.glob('.tua190-*')), [])
 
+    def test_uniform_seven_day_freshness_in_shared_engine_and_web_guard(self):
+        # Saturday, Sunday and Monday all accept day-7 and reject day-8.
+        from datetime import datetime, timedelta
+        for target in ('20261024', '20261025', '20261026'):
+            for gap in (7, 8):
+                with self.subTest(target=target, gap=gap):
+                    folder = self.root / (target + str(gap)); folder.mkdir()
+                    latest = (datetime.strptime(target, '%Y%m%d') - timedelta(days=gap)).strftime('%Y%m%d')
+                    source = folder/'source.sqlite'; source_db(source, latest)
+                    raw = csv21(target)
+                    common = evaluate_csv_bytes(raw, source)
+                    self.assertEqual(common['freshness']['maximum_gap_days'], 7)
+                    self.assertEqual(common['freshness']['state'], 'CURRENT' if gap == 7 else 'STALE')
+                    csv_path = folder/'input.csv'; csv_path.write_bytes(raw)
+                    snapshot = folder/'history.sqlite'; create_snapshot(source, csv_path, snapshot)
+                    result = update_tua190_audit(raw, {}, snapshot_path=snapshot)
+                    self.assertEqual(result['status'], 'EVALUATED' if gap == 7 else 'UNCONFIRMED')
+                    if gap == 7:
+                        self.assertEqual(result['report']['summary']['MATCH'], 1)
+                    else:
+                        self.assertFalse(any(r['state'] == 'MATCH' for r in result['report']['audit']))
+                    self.assertIs(result['prospective_ready'], False)
+                    self.assertIs(result['prospective_verified'], False)
+
     def test_age_and_history_limits_and_cancelled_starts(self):
         with sqlite3.connect(self.db) as db:
             db.execute("INSERT INTO races VALUES ('2026101905010101','20261019','ダ')")

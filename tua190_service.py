@@ -54,7 +54,7 @@ def _validate_snapshot(path, raw, document):
             raise ValueError('history_freshness_unknown')
         target = datetime.strptime(day, '%Y%m%d')
         gap = (target - datetime.strptime(latest, '%Y%m%d')).days
-        allowed = 1 if target.weekday() in (0, 6) else 7
+        allowed = 7
         if not 0 < gap <= allowed:
             raise ValueError('history_db_stale')
     return hashlib.sha256(path.read_bytes()).hexdigest()
