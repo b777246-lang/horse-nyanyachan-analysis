@@ -14,15 +14,21 @@ from cushion_viewer import repository_snapshot
 from test_cushion_stats import HORSE, run
 
 
+FIXTURE = Path(__file__).resolve().parent / 'fixtures/operational'
+
+
 class CushionViewerTests(unittest.TestCase):
     def setUp(self):
+        location = patch('cushion_viewer.__file__', str(FIXTURE / 'cushion_viewer.py'))
+        location.start()
+        self.addCleanup(location.stop)
         # Fix the input fixture independently of new daily CSV uploads.
         self.csv_patch = patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: None if comments else Path('tests/fixtures/daily/20261010.csv'))
         self.csv_patch.start()
         self.addCleanup(self.csv_patch.stop)
 
     def test_repository_path_does_not_depend_on_working_directory(self):
-        expected = Path(__file__).resolve().parents[1] / 'cushion_history_20261018.sqlite'
+        expected = FIXTURE / 'cushion_history_20261018.sqlite'
         previous = Path.cwd()
         try:
             with tempfile.TemporaryDirectory() as folder:
@@ -34,7 +40,7 @@ class CushionViewerTests(unittest.TestCase):
 
     def test_real_repository_db_loads_without_upload(self):
         self.csv_patch.stop()
-        fixture = patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: None if comments else Path('20261018.csv'))
+        fixture = patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: None if comments else FIXTURE / '20261018.csv')
         fixture.start()
         self.addCleanup(fixture.stop)
         at = AppTest.from_file(str(Path('app.py').resolve()), default_timeout=60).run()
@@ -44,7 +50,7 @@ class CushionViewerTests(unittest.TestCase):
         at.text_input(key='cushion_value_20261018_東京').set_value('9.2').run()
         self.assertFalse(at.exception)
         self.assertTrue(any('軽量DBを自動読込：cushion_history_20261018.sqlite' in value.value for value in at.caption))
-        main = normalize_main_frame(read_main_csv('20261018.csv'))
+        main = normalize_main_frame(read_main_csv(FIXTURE / '20261018.csv'))
         ids = main[main['race'].eq('東2')]['horse_id'].tolist()
         expected = get_cushion_stats(repository_snapshot('20261018'), ids, '20261018', '9.2')
         self.assertEqual(len(at.tabs[0].dataframe[0].value), len(ids))

@@ -17,12 +17,19 @@ from sire_stats import get_sire_stats
 from sire_presentation import build_sire_records
 
 ROOT = Path(__file__).resolve().parents[1]
-SNAPSHOT = ROOT / 'sire_history_20261018.sqlite'
+FIXTURE = ROOT / 'tests/fixtures/operational'
+SNAPSHOT = FIXTURE / 'sire_history_20261018.sqlite'
 
 
 class SireWebTests(unittest.TestCase):
     def setUp(self):
-        source = patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: ROOT / ('20261018comment.csv' if comments else '20261018.csv'))
+        location = patch('sire_web.__file__', str(FIXTURE / 'sire_web.py'))
+        location.start()
+        self.addCleanup(location.stop)
+        location = patch('cushion_viewer.__file__', str(FIXTURE / 'cushion_viewer.py'))
+        location.start()
+        self.addCleanup(location.stop)
+        source = patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: FIXTURE / ('20261018comment.csv' if comments else '20261018.csv'))
         source.start()
         self.addCleanup(source.stop)
         self.pending = patch('cushion_viewer.cached_jra_cushion', return_value={'value': None, 'message': '当日未公表（テスト）'})
@@ -30,7 +37,7 @@ class SireWebTests(unittest.TestCase):
         self.addCleanup(self.pending.stop)
 
     def test_column20_and_legacy_csv_do_not_change_existing_exports(self):
-        full = read_main_csv('20261018.csv')
+        full = read_main_csv(FIXTURE / '20261018.csv')
         named = normalize_main_frame(full)
         self.assertEqual(named.iloc[0]['sire_name'], 'シルバーステート')
         pd.testing.assert_frame_equal(normalize_main_frame(named), named)
@@ -49,7 +56,7 @@ class SireWebTests(unittest.TestCase):
         self.assertFalse(at.exception)
         self.fetch.assert_called_once()
         self.assertEqual([tab.label for tab in at.tabs], ['出走馬別成績', '種牡馬別成績'])
-        main = normalize_main_frame(read_main_csv('20261018.csv'))
+        main = normalize_main_frame(read_main_csv(FIXTURE / '20261018.csv'))
         entrants = [dict(horse_no=r['horse_no'], horse_name=r['horse_name'], horse_id=r['horse_id'], sire_name=r['sire_name'])
                     for _, r in main[main['race'].eq('新1')].iterrows()]
         expected = build_sire_records(entrants, get_sire_stats(SNAPSHOT, entrants, '20261018', '9.2', venue='新潟', distance=1200), venue='新潟', distance=1200)
@@ -101,7 +108,7 @@ class SireWebTests(unittest.TestCase):
         self.assertEqual(len(at.tabs), 0)
 
     def test_wrong_day_sire_name_and_scope_are_not_zero_starts(self):
-        entrants, day, _ = read_sire_entrants('20261018.csv')
+        entrants, day, _ = read_sire_entrants(FIXTURE / '20261018.csv')
         first = next(e for e in entrants if e['surface'] == '芝')
         with self.assertRaises(ValueError):
             get_sire_stats(SNAPSHOT, [first], '20261017', '9.2', venue=first['venue'], distance=first['distance'])
@@ -114,7 +121,7 @@ class SireWebTests(unittest.TestCase):
         self.assertEqual(report['horses'][0]['reason'], 'course_not_in_snapshot')
 
     def test_unknown_sire_and_genuine_zero_have_distinct_displays(self):
-        entrants, day, _ = read_sire_entrants('20261018.csv')
+        entrants, day, _ = read_sire_entrants(FIXTURE / '20261018.csv')
         first = next(e for e in entrants if e['surface'] == '芝')
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / 'copy.sqlite'
@@ -139,7 +146,7 @@ class SireWebTests(unittest.TestCase):
                 destination.close()
 
     def test_all_3472_results_match_independent_sql_using_original_values(self):
-        entrants, day, _ = read_sire_entrants('20261018.csv')
+        entrants, day, _ = read_sire_entrants(FIXTURE / '20261018.csv')
         groups = {}
         for horse in entrants:
             if horse['surface'] == '芝':

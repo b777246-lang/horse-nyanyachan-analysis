@@ -1,3 +1,5 @@
 # Pinned S2 release files must retain their original bytes for SHA-256 verification.
 s2_shared/** -text
 docs/s2_shared/** -text
+# Regression CSVs must keep the bytes recorded in their paired snapshot metadata.
+tests/fixtures/operational/** -text

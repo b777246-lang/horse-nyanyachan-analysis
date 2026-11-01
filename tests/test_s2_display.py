@@ -16,14 +16,18 @@ from tua190_service import update_tua190_audit
 from tua190_presentation import add_tua190_screen_comments, LABEL
 
 ROOT = Path(__file__).resolve().parents[1]
+FIXTURE = ROOT / 'tests/fixtures/operational'
 
 
 class S2DisplayTests(unittest.TestCase):
     def setUp(self):
-        raw = (ROOT / '20261024.csv').read_bytes()
+        location = patch('tua190_service.__file__', str(FIXTURE / 'tua190_service.py'))
+        location.start()
+        self.addCleanup(location.stop)
+        raw = (FIXTURE / '20261024.csv').read_bytes()
         self.record = update_s2_audit(raw, {})
         self.tua = update_tua190_audit(raw, {})
-        self.batch = analyze_csv(read_main_csv('20261024.csv'), load_course_data(), load_comments('20261024comment.csv'))
+        self.batch = analyze_csv(read_main_csv(FIXTURE / '20261024.csv'), load_course_data(), load_comments(FIXTURE / '20261024comment.csv'))
         self.base = format_analysis_frame(self.batch.frame, self.batch.notes)
 
     def test_all_real_matches_have_exact_numbers_in_purple_and_keep_original_data(self):
@@ -67,7 +71,7 @@ class S2DisplayTests(unittest.TestCase):
             downloads[kwargs['file_name']] = kwargs['data']; return False
         target = next(x for x in self.record['report']['condition_audit'] if x['state'] == 'MATCH')
         horse = self.batch.frame[self.batch.frame['レースID'].eq(target['entry_id'])].iloc[0]
-        with patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: ROOT / ('20261024comment.csv' if comments else '20261024.csv')), patch('streamlit.download_button', side_effect=capture), patch('cushion_viewer.cached_jra_cushion', return_value={'value': None, 'message': 'テスト'}):
+        with patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: FIXTURE / ('20261024comment.csv' if comments else '20261024.csv')), patch('streamlit.download_button', side_effect=capture), patch('cushion_viewer.cached_jra_cushion', return_value={'value': None, 'message': 'テスト'}):
             at = AppTest.from_file(str(ROOT / 'app.py'), default_timeout=60).run()
             at.get('button_group')[0].set_value(horse['venue']).run()
             at.get('button_group')[1].set_value(int(horse['race_no'])).run()

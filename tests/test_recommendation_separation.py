@@ -22,6 +22,7 @@ from recommendation_composition import RecommendationParts, compose_compatible_r
 from signals import DEFAULT_REGISTRY, SignalMatch, add_live_comments, fup_matches
 
 ROOT = Path(__file__).resolve().parents[1]
+FIXTURE = ROOT / 'tests/fixtures/operational'
 
 
 def context(**updates):
@@ -118,7 +119,7 @@ class RecommendationSeparationTests(unittest.TestCase):
         self.assertIn('arms1位:', single.course_comment)
 
     def test_batch_keeps_independent_results_without_changing_frame_or_notes_schema(self):
-        batch = analyze_csv(read_main_csv('20261018.csv'), load_course_data(), load_comments('20261018comment.csv'))
+        batch = analyze_csv(read_main_csv(FIXTURE / '20261018.csv'), load_course_data(), load_comments(FIXTURE / '20261018comment.csv'))
         self.assertEqual(len(batch.recommendations), 450)
         for _, row in batch.frame.iterrows():
             idx = row['original_index']
@@ -133,7 +134,7 @@ class RecommendationSeparationTests(unittest.TestCase):
         self.assertNotIn('specials', batch.frame.columns)
 
     def test_live_fup_is_added_removed_and_readded_from_fresh_base_without_score_changes(self):
-        batch = analyze_csv(read_main_csv('20261018.csv'), load_course_data(), {})
+        batch = analyze_csv(read_main_csv(FIXTURE / '20261018.csv'), load_course_data(), {})
         eligible = batch.frame.apply(lambda row: fup_matches(dict(row, 人気=1)), axis=1)
         self.assertTrue(eligible.any())
         original = batch.frame.loc[[eligible[eligible].index[0]]].copy()
@@ -170,7 +171,7 @@ class RecommendationSeparationTests(unittest.TestCase):
         def capture(**kwargs):
             downloads[kwargs['file_name']] = kwargs['data']
             return False
-        with patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: ROOT / ('20261018comment.csv' if comments else '20261018.csv')), patch('streamlit.download_button', side_effect=capture), patch(
+        with patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: FIXTURE / ('20261018comment.csv' if comments else '20261018.csv')), patch('streamlit.download_button', side_effect=capture), patch(
                 'cushion_viewer.cached_jra_cushion', return_value=dict(value=None, message='テスト')):
             at = AppTest.from_file(str(ROOT / 'app.py'), default_timeout=60).run()
             self.assertFalse(at.exception)
@@ -179,7 +180,7 @@ class RecommendationSeparationTests(unittest.TestCase):
             next(button for button in at.button if button.label == '🔥 評価点数順にソート').click().run()
             self.assertFalse(at.exception)
             self.assertEqual(at.session_state['sort_mode'], 'スコア順')
-            batch = analyze_csv(read_main_csv('20261018.csv'), load_course_data(), load_comments('20261018comment.csv'))
+            batch = analyze_csv(read_main_csv(FIXTURE / '20261018.csv'), load_course_data(), load_comments(FIXTURE / '20261018comment.csv'))
             ordered = batch.frame.sort_values(['score', 'original_index'], ascending=[False, True]).reset_index(drop=True)
             csv = pd.read_csv(io.StringIO(downloads['horse_analysis_result.csv']), dtype=str)
             self.assertEqual(csv['レースID'].tolist(), ordered['レースID'].tolist())

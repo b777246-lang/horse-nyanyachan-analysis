@@ -13,14 +13,18 @@ from tua190_service import update_tua190_audit
 from tua190_presentation import LABEL, add_tua190_screen_comments
 
 ROOT = Path(__file__).resolve().parents[1]
+FIXTURE = ROOT / 'tests/fixtures/operational'
 
 
 class Tua190DisplayTests(unittest.TestCase):
     def setUp(self):
-        self.raw = (ROOT / '20261024.csv').read_bytes()
+        location = patch('tua190_service.__file__', str(FIXTURE / 'tua190_service.py'))
+        location.start()
+        self.addCleanup(location.stop)
+        self.raw = (FIXTURE / '20261024.csv').read_bytes()
         self.record = update_tua190_audit(self.raw, {})
         self.assertEqual(self.record['status'], 'EVALUATED')
-        self.batch = analyze_csv(read_main_csv('20261024.csv'), load_course_data(), load_comments('20261024comment.csv'))
+        self.batch = analyze_csv(read_main_csv(FIXTURE / '20261024.csv'), load_course_data(), load_comments(FIXTURE / '20261024comment.csv'))
         self.base = format_analysis_frame(self.batch.frame, self.batch.notes)
 
     def test_real_snapshot_marks_exactly_thirteen_entries_without_modifying_sources(self):
@@ -46,7 +50,7 @@ class Tua190DisplayTests(unittest.TestCase):
             downloads[kwargs['file_name']] = kwargs['data']
             return False
         target = next(r for r in self.record['report']['audit'] if r['state'] == 'MATCH')
-        with patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: ROOT / ('20261024comment.csv' if comments else '20261024.csv')), patch('streamlit.download_button', side_effect=capture), patch('cushion_viewer.cached_jra_cushion', return_value={'value': None, 'message': 'テスト'}):
+        with patch('data_loader.latest_csv', side_effect=lambda directory='.', comments=False: FIXTURE / ('20261024comment.csv' if comments else '20261024.csv')), patch('streamlit.download_button', side_effect=capture), patch('cushion_viewer.cached_jra_cushion', return_value={'value': None, 'message': 'テスト'}):
             at = AppTest.from_file(str(ROOT / 'app.py'), default_timeout=60).run()
             at.get('button_group')[0].set_value(target['venue']).run()
             at.get('button_group')[1].set_value(target['race_no']).run()
