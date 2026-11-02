@@ -119,6 +119,9 @@ DEFAULT_SPECIAL_RULES = (
         frame=("in", (6, 7, 8)), S_rank=("eq", 1))),
     SpecialRule("f72", "★特注F72★", _conditions(
         surface=("eq", "ダ"), frame=("eq", 8), F=("ge", 72), distance=("ne", 1200))),
+    SpecialRule("fukushima_dirt_1150", "★福島ダ1150特注★", _conditions(
+        venue=("eq", "福島"), surface=("eq", "ダ"), distance=("eq", 1150),
+        S=("ge", 55), S_rank=("in", (1, 2)))),
 )
 
 
