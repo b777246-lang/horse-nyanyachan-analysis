@@ -134,6 +134,12 @@ DEFAULT_SPECIAL_RULES = (
     SpecialRule('fukushima_d1700_arms2', '★福島ダ1700湿馬場arms2特注★', _conditions(
         venue=('eq','福島'), surface=('eq','ダ'), distance=('eq',1700),
         arms2_rank=('eq',1), track_condition=('in',('稍重','重','不良'))), score=0),
+    SpecialRule('fukushima_t1800_win', '★福島芝1800単勝特注★', _conditions(
+        venue=('eq','福島'), surface=('eq','芝'), distance=('eq',1800),
+        frame=('in',(1,2,3,4)), arms_rank=('eq',1)), score=0),
+    SpecialRule('fukushima_t2000', '★福島芝2000特注★', _conditions(
+        venue=('eq','福島'), surface=('eq','芝'), distance=('eq',2000),
+        arms=('ge',90), arms_rank=('eq',1)), score=0),
 )
 
 
