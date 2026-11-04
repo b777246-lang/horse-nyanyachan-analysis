@@ -122,6 +122,18 @@ DEFAULT_SPECIAL_RULES = (
     SpecialRule("fukushima_dirt_1150", "★福島ダ1150特注★", _conditions(
         venue=("eq", "福島"), surface=("eq", "ダ"), distance=("eq", 1150),
         S=("ge", 55), S_rank=("in", (1, 2)))),
+    SpecialRule('fukushima_t1200_s', '★福島芝1200内枠S特注★', _conditions(
+        venue=('eq','福島'), surface=('eq','芝'), distance=('eq',1200),
+        frame=('in',(1,2,3,4)), S_rank=('eq',1)), score=0),
+    SpecialRule('fukushima_t1200_tua', '★福島芝1200内枠TUA特注★', _conditions(
+        venue=('eq','福島'), surface=('eq','芝'), distance=('eq',1200),
+        frame=('in',(1,2,3,4)), TUA_rank=('eq',1)), score=0),
+    SpecialRule('fukushima_d1700_arms', '★福島ダ1700湿馬場arms特注★', _conditions(
+        venue=('eq','福島'), surface=('eq','ダ'), distance=('eq',1700),
+        arms_rank=('eq',1), track_condition=('in',('稍重','重','不良'))), score=0),
+    SpecialRule('fukushima_d1700_arms2', '★福島ダ1700湿馬場arms2特注★', _conditions(
+        venue=('eq','福島'), surface=('eq','ダ'), distance=('eq',1700),
+        arms2_rank=('eq',1), track_condition=('in',('稍重','重','不良'))), score=0),
 )
 
 

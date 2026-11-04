@@ -8,6 +8,7 @@ from tua190_service import update_tua190_audit
 from s2_presentation import add_s2_screen_comments
 from s2_service import update_s2_audit
 from analysis import analyze_csv
+from track_condition_web import render_track_conditions
 from values import normalize_jockey
 from signals import add_live_comments, filter_kol_horses
 from config import load_settings
@@ -83,7 +84,9 @@ s2_record = update_s2_audit(main_csv_bytes, st.session_state)
 tua190_record = update_tua190_audit(main_csv_bytes, st.session_state)
 
 if df is not None:
-    batch = analyze_csv(df, course_stats, ext_comment_dict, settings=settings)
+    track_conditions = render_track_conditions(st, df)
+    batch = analyze_csv(df, course_stats, ext_comment_dict, settings=settings,
+                        track_conditions=track_conditions)
     res_df = format_analysis_frame(batch.frame, batch.notes, settings=settings)
     raw_csv_df = format_target_frame(batch.frame)
 
@@ -166,6 +169,12 @@ if df is not None:
         title = f"{sel_venue} {sel_race}R　{head}"
 
     # --- JRA公式 全開催・全レースの単勝オッズ更新 ---
+    if sel_race != 'ALL' and len(view_df):
+        from track_conditions import display_going
+        _going_row = view_df.iloc[0]
+        _going_id = str(_going_row.get('レースID', ''))
+        _going_surface = 'ダ' if 'ダ' in str(_going_row.get('条件','')) else '芝'
+        st.caption(display_going(track_conditions, _going_id[:8], sel_venue, _going_surface))
     race_targets = build_race_targets(res_df, date_text)
 
     with st.expander("💴 JRA単勝オッズ", expanded=False):

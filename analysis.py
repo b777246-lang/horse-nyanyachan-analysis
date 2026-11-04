@@ -8,6 +8,7 @@ from data_loader import jockey_from_main_row, normalize_main_frame
 from values import parse_racetrack
 from legacy_recommendations import evaluate_legacy, get_course_compatibility
 from recommendation_composition import RecommendationParts, compose_compatible_recommendation
+from track_conditions import going_for
 
 @dataclass
 class AnalysisBatch:
@@ -15,7 +16,8 @@ class AnalysisBatch:
     notes: dict
     recommendations: dict = field(default_factory=dict)
 
-def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS, registry=DEFAULT_REGISTRY):
+def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS, registry=DEFAULT_REGISTRY,
+                track_conditions=None):
     df = normalize_main_frame(df)
     df["arms_val"] = pd.to_numeric(df['arms'], errors="coerce").fillna(0)
     df["arms2_val"] = pd.to_numeric(df['arms2'], errors="coerce").fillna(0)
@@ -128,6 +130,7 @@ def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS
             "horse_name": name, "horse_no": umaban, "race_id": race_id,
             "jockey": jockey_from_main_row(row), "kol_odds": kol_odds,
             "horse_id": str(row.get('horse_id', '')).strip() if pd.notna(row.get('horse_id', '')) else '',
+            "track_condition": going_for(track_conditions, race_id[:8], venue_name, surface),
         }
         # 両エンジンは共通入力だけを参照し、相互に呼び出さない。
         legacy_result = evaluate_legacy(context, course_stats, settings=settings)
