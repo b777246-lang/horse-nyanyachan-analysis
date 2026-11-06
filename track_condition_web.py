@@ -7,6 +7,8 @@ from track_conditions import (OPTIONS, JST, targets_from_frame, resolve_record,
 
 
 def render_track_conditions(st, frame):
+    # Initialize new sessions only; preserve a user's explicit OFF choice.
+    st.session_state.setdefault('going_auto_enabled', True)
     targets = targets_from_frame(frame)
     records = st.session_state.setdefault('track_conditions', {})
     # Expired official records must not be reused by a later rerun/export.

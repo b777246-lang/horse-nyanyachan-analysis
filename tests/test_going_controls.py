@@ -35,12 +35,12 @@ class GoingControlTests(unittest.TestCase):
         app=AppTest.from_string(SCRIPT.replace('20261107',day))
         app.session_state['going_auto_start']=time(0)
         app.session_state['going_auto_end']=time(23,59)
-        app.run(timeout=30)
         def fetch(d,v):
             return [make_record(d,v,s,'重',source='jra') for s in ('芝','ダ')]
         with patch('track_condition_web.fetch_jra_track_conditions',side_effect=fetch) as mock:
-            app.checkbox(key='going_auto_enabled').check().run(timeout=30)
+            app.run(timeout=30)
             self.assertEqual(len(app.exception),0)
+            self.assertTrue(app.checkbox(key='going_auto_enabled').value)
             self.assertIn('湿馬場arms特注','\n'.join(t.value for t in app.text))
             self.assertEqual(mock.call_count,1)
             app.selectbox(key=f'going_{day}_福島_ダ').set_value('良')
@@ -49,8 +49,20 @@ class GoingControlTests(unittest.TestCase):
             self.assertFalse(app.session_state['going_auto_enabled'])
             self.assertNotIn('湿馬場arms特注','\n'.join(t.value for t in app.text))
 
+    def test_explicit_off_persists_across_reruns(self):
+        app=AppTest.from_string(SCRIPT)
+        app.session_state['going_auto_enabled']=False
+        with patch('track_condition_web.fetch_jra_track_conditions') as fetch:
+            app.run(timeout=30)
+            self.assertFalse(app.checkbox(key='going_auto_enabled').value)
+            app.run(timeout=30)
+            self.assertFalse(app.checkbox(key='going_auto_enabled').value)
+            fetch.assert_not_called()
+
     def test_manual_change_clear_and_failed_fetch(self):
-        app=AppTest.from_string(SCRIPT).run(timeout=30)
+        app=AppTest.from_string(SCRIPT)
+        app.session_state['going_auto_enabled']=False
+        app.run(timeout=30)
         self.assertEqual(len(app.exception),0)
         def text():return '\n'.join(t.value for t in app.text)
         self.assertNotIn('湿馬場arms特注',text())
