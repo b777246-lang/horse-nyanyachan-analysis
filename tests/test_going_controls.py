@@ -17,6 +17,27 @@ st.text(batch.frame.iloc[0]['総合評価・コース相性判定'])
 
 
 class GoingControlTests(unittest.TestCase):
+    def test_auto_fetch_reanalyzes_and_manual_apply_stops_auto(self):
+        from datetime import datetime,time
+        from track_conditions import JST,make_record
+        day=datetime.now(JST).strftime('%Y%m%d')
+        app=AppTest.from_string(SCRIPT.replace('20261107',day))
+        app.session_state['going_auto_start']=time(0)
+        app.session_state['going_auto_end']=time(23,59)
+        app.run(timeout=30)
+        def fetch(d,v):
+            return [make_record(d,v,s,'重',source='jra') for s in ('芝','ダ')]
+        with patch('track_condition_web.fetch_jra_track_conditions',side_effect=fetch) as mock:
+            app.checkbox(key='going_auto_enabled').check().run(timeout=30)
+            self.assertEqual(len(app.exception),0)
+            self.assertIn('湿馬場arms特注','\n'.join(t.value for t in app.text))
+            self.assertEqual(mock.call_count,1)
+            app.selectbox(key=f'going_{day}_福島_ダ').set_value('良')
+            app.button(key=f'FormSubmitter:going_{day}_福島_manual-手動指定を適用').click().run(timeout=30)
+            self.assertEqual(len(app.exception),0)
+            self.assertFalse(app.session_state['going_auto_enabled'])
+            self.assertNotIn('湿馬場arms特注','\n'.join(t.value for t in app.text))
+
     def test_manual_change_clear_and_failed_fetch(self):
         app=AppTest.from_string(SCRIPT).run(timeout=30)
         self.assertEqual(len(app.exception),0)
