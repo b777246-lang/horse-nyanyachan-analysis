@@ -1,5 +1,5 @@
 """Streamlit going controls, evaluated before special signals and exports."""
-from datetime import datetime, time
+from datetime import datetime
 from track_condition_schedule import run_scheduled
 from jra_track_condition import fetch_jra_track_conditions
 from track_conditions import (OPTIONS, JST, targets_from_frame, resolve_record,
@@ -50,13 +50,9 @@ def render_track_conditions(st, frame):
             st.rerun()
         st.caption('手動指定は選んだ日・競馬場の全レースに適用。天候変化時は再取得してください。')
         st.markdown('**15分おきの自動取得**')
-        st.checkbox('指定時間帯に自動取得する', key='going_auto_enabled')
-        st.time_input('開始時刻（日本時間）', value=time(8), step=900, key='going_auto_start')
-        st.time_input('終了時刻（日本時間）', value=time(16,30), step=900, key='going_auto_end')
-        valid_window = st.session_state['going_auto_start'] < st.session_state['going_auto_end']
-        if not valid_window:
-            st.warning('終了時刻は開始時刻より後にしてください。日をまたぐ指定はできません。')
-        st.caption('対象：CSVに含まれる当日の全開催場。開始時刻から15分間隔（実行に最大約30秒の遅れ）。')
+        st.checkbox('9:30～16:30に自動取得する', key='going_auto_enabled')
+        st.caption('日本時間9:30開始、15分おき、最終取得16:30（1開催場につき1日29回の取得枠）。')
+        st.caption('対象：CSVに含まれる当日の全開催場。実行に最大約30秒の遅れがあります。')
         st.caption('画面を開いている間に動作します。iPhoneの画面ロック・他アプリへの切替・通信切断中の実行は保証されません。再開時は最新分だけ取得します。')
         st.caption('手動指定を適用すると自動取得を停止します。失敗時は旧値を使わず、次の15分枠で再試行します。')
 

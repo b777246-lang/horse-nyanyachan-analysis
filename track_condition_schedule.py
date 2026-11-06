@@ -3,6 +3,8 @@ from datetime import datetime, time, timedelta
 from track_conditions import JST, record_key, resolve_record
 
 INTERVAL = timedelta(minutes=15)
+START_TIME = time(9, 30)
+END_TIME = time(16, 30)
 
 
 def schedule_slot(now, start, end):
@@ -26,8 +28,7 @@ def run_scheduled(state, targets, fetcher, *, now=None):
             changed = True
     if not state.get('going_auto_enabled', False):
         return changed
-    start = state.get('going_auto_start', time(8))
-    end = state.get('going_auto_end', time(16,30))
+    start, end = START_TIME, END_TIME
     slot = schedule_slot(now, start, end)
     if slot is None:
         return changed

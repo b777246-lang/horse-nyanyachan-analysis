@@ -15,12 +15,23 @@ batch=analyze_csv(frame,{},{},track_conditions=records)
 st.text(batch.frame.iloc[0]['総合評価・コース相性判定'])
 '''
 
+from datetime import datetime
+from track_conditions import JST
+
+class ScheduleClock(datetime):
+    @classmethod
+    def now(cls, tz=None):
+        value=cls(2026,11,7,9,30,tzinfo=JST)
+        return value.astimezone(tz) if tz else value.replace(tzinfo=None)
+
 
 class GoingControlTests(unittest.TestCase):
+    @patch('track_condition_schedule.datetime', ScheduleClock)
+    @patch('track_conditions.datetime', ScheduleClock)
     def test_auto_fetch_reanalyzes_and_manual_apply_stops_auto(self):
         from datetime import datetime,time
         from track_conditions import JST,make_record
-        day=datetime.now(JST).strftime('%Y%m%d')
+        day='20261107'
         app=AppTest.from_string(SCRIPT.replace('20261107',day))
         app.session_state['going_auto_start']=time(0)
         app.session_state['going_auto_end']=time(23,59)

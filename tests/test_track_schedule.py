@@ -7,8 +7,8 @@ from track_condition_schedule import run_scheduled,schedule_slot
 
 class ScheduleTests(unittest.TestCase):
     def setUp(self):
-        self.now=datetime(2026,11,7,8,0,tzinfo=JST)
-        self.state=dict(going_auto_enabled=True,going_auto_start=time(8),going_auto_end=time(16,30))
+        self.now=datetime(2026,11,7,9,30,tzinfo=JST)
+        self.state=dict(going_auto_enabled=True)
         self.targets=[('20261107','福島'),('20261107','京都'),('20261106','東京')]
     def fetcher(self,now):
         return Mock(side_effect=lambda d,v:[make_record(d,v,s,'重',source='jra',now=now) for s in ('芝','ダ')])
@@ -26,6 +26,25 @@ class ScheduleTests(unittest.TestCase):
         later=self.now+timedelta(minutes=15);fetch=self.fetcher(later)
         self.assertTrue(run_scheduled(self.state,self.targets,fetch,now=later))
         self.assertEqual(fetch.call_count,2)
+    def test_fixed_schedule_29_slots_and_ignores_old_settings(self):
+        self.state.update(going_auto_start=time(8),going_auto_end=time(20))
+        targets=[self.targets[0]]
+        before=self.now.replace(hour=9,minute=29)
+        fetch=Mock()
+        run_scheduled(self.state,targets,fetch,now=before)
+        fetch.assert_not_called()
+        times=[]
+        for minute in range(421):
+            now=self.now+timedelta(minutes=minute)
+            def retrieve(d,v):
+                times.append(now)
+                return [make_record(d,v,s,'重',source='jra',now=now) for s in ('芝','ダ')]
+            run_scheduled(self.state,targets,retrieve,now=now)
+        self.assertEqual(len(times),29)
+        self.assertEqual(times[0].strftime('%H:%M'),'09:30')
+        self.assertEqual(times[-1].strftime('%H:%M'),'16:30')
+        run_scheduled(self.state,targets,fetch,now=self.now.replace(hour=16,minute=31))
+        fetch.assert_not_called()
     def test_no_network_disabled_outside_window_or_other_date(self):
         fetch=Mock()
         self.state['going_auto_enabled']=False
