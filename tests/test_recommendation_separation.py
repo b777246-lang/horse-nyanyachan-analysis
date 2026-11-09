@@ -150,11 +150,11 @@ class RecommendationSeparationTests(unittest.TestCase):
 
     def test_special_and_shared_modules_do_not_depend_on_legacy_engine(self):
         for filename in ('signals.py', 'values.py', 'data_loader.py', 'odds_service.py', 'config.py'):
-            tree = ast.parse((ROOT / filename).read_text())
+            tree = ast.parse((ROOT / filename).read_text(encoding='utf-8'))
             imports = [node.module for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)]
             imports += [item.name for node in ast.walk(tree) if isinstance(node, ast.Import) for item in node.names]
             self.assertNotIn('legacy_recommendations', imports, filename)
-        tree = ast.parse((ROOT / 'legacy_recommendations.py').read_text())
+        tree = ast.parse((ROOT / 'legacy_recommendations.py').read_text(encoding='utf-8'))
         imports = [node.module for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)]
         self.assertNotIn('signals', imports)
         self.assertNotIn('analysis', imports)
