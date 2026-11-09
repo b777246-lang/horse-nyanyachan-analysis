@@ -104,7 +104,6 @@ DEFAULT_REGISTRY = SignalRegistry((
     SignalDefinition("kol", lambda row, settings: kol_alert_matches(
         row.get("KOLオッズ", ""), row.get("実オッズ", ""), row.get("人気", ""),
         row.get("騎手", ""), settings=settings), stage="live"),
-    SignalDefinition("fup", fup_matches, stage="live"),
 ))
 
 
