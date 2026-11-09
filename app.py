@@ -85,8 +85,11 @@ tua190_record = update_tua190_audit(main_csv_bytes, st.session_state)
 
 if df is not None:
     track_conditions = render_track_conditions(st, df)
-    batch = analyze_csv(df, course_stats, ext_comment_dict, settings=settings,
-                        track_conditions=track_conditions)
+    batch = analyze_csv(
+        df, course_stats, ext_comment_dict, settings=settings,
+        track_conditions=track_conditions,
+        history_db_path=(tua190_record or {}).get("history_path"),
+    )
     res_df = format_analysis_frame(batch.frame, batch.notes, settings=settings)
     raw_csv_df = format_target_frame(batch.frame)
 
