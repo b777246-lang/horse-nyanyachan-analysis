@@ -94,6 +94,7 @@ def load_previous_starts(db_path, entrants, *, maximum_gap_days=7):
             columns = {row[1] for row in db.execute("PRAGMA table_info(history)")}
             if "jockey" not in columns:
                 return {}, "history_snapshot_without_jockey"
+            snapshot_metadata = dict(db.execute("SELECT key,value FROM metadata"))
         else:
             return {}, "history_schema_unsupported"
         result = {}
@@ -125,7 +126,7 @@ def load_previous_starts(db_path, entrants, *, maximum_gap_days=7):
             if kind == "source":
                 latest = db.execute("SELECT MAX(race_date) FROM races WHERE race_date<?", (day,)).fetchone()[0]
             else:
-                latest = db.execute("SELECT MAX(race_date) FROM history WHERE race_date<?", (day,)).fetchone()[0]
+                latest = snapshot_metadata.get("source_latest_prior_date")
             if not latest:
                 return {}, "history_freshness_unknown"
             from datetime import datetime
