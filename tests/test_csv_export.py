@@ -11,7 +11,7 @@ from jra_odds import PLACE_CODES
 
 
 class CsvExportTests(unittest.TestCase):
-    def test_fup_comment_is_plain_in_csv_and_colored_in_html(self):
+    def test_retired_fup_comment_is_not_exported(self):
         latest = sorted(p for p in Path('.').glob('*.csv')
                         if re.fullmatch(r'\d{8}\.csv', p.name))[-1]
         data = pd.read_csv(latest, encoding='cp932', header=None, dtype=str)
@@ -34,14 +34,9 @@ class CsvExportTests(unittest.TestCase):
             self.assertFalse(at.exception)
         csv = pd.read_csv(io.StringIO(downloads['horse_analysis_result.csv']))
         comments = csv['総合評価・コース相性判定'].fillna('')
-        marked = comments[comments.str.contains('★F-UP特注★', regex=False)]
-        self.assertGreater(len(marked), 0)
+        self.assertFalse(comments.str.contains('★F-UP特注★', regex=False).any())
         self.assertFalse(comments.str.contains(r'<[^>]+>', regex=True).any())
-        self.assertTrue(marked.str.startswith('★F-UP特注★').all())
-        self.assertIn(
-            '<span style="color: #ff4b4b; font-weight: bold;">★F-UP特注★</span>',
-            downloads['horse_analysis_result.html'],
-        )
+        self.assertNotIn('★F-UP特注★', downloads['horse_analysis_result.html'])
 
 
 if __name__ == '__main__':
