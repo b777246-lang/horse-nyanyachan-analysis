@@ -133,11 +133,9 @@ class RecommendationSeparationTests(unittest.TestCase):
         self.assertNotIn('legacy', batch.frame.columns)
         self.assertNotIn('specials', batch.frame.columns)
 
-    def test_live_fup_is_added_removed_and_readded_from_fresh_base_without_score_changes(self):
+    def test_retired_live_fup_is_never_added(self):
         batch = analyze_csv(read_main_csv(FIXTURE / '20261018.csv'), load_course_data(), {})
-        eligible = batch.frame.apply(lambda row: fup_matches(dict(row, 人気=1)), axis=1)
-        self.assertTrue(eligible.any())
-        original = batch.frame.loc[[eligible[eligible].index[0]]].copy()
+        original = batch.frame.iloc[[0]].copy()
         horse = original.iloc[0]
         base = format_target_frame(original)
         for popularity in (1, 3, 2, 5):
@@ -145,12 +143,8 @@ class RecommendationSeparationTests(unittest.TestCase):
                 str(int(horse['馬番'])): dict(jra_odds=10, popularity=popularity)}}
             live = add_live_comments(apply_odds(base, odds))
             display = format_analysis_frame(live, batch.notes)
-            expected = popularity in (1, 2)
-            self.assertEqual(live.iloc[0]['総合評価・コース相性判定'].count('★F-UP特注★'), int(expected))
-            self.assertEqual(display.iloc[0]['総合評価・コース相性判定'].count('★F-UP特注★'), int(expected))
-            self.assertEqual('<span style="color: #ff4b4b; font-weight: bold;">★F-UP特注★</span>'
-                             in display.iloc[0]['総合評価・コース相性判定'], expected)
-            pd.testing.assert_frame_equal(add_live_comments(live), live)
+            self.assertNotIn('★F-UP特注★', live.iloc[0]['総合評価・コース相性判定'])
+            self.assertNotIn('★F-UP特注★', display.iloc[0]['総合評価・コース相性判定'])
             self.assertEqual(live.iloc[0]['score'], horse['score'])
         pd.testing.assert_frame_equal(base, format_target_frame(original))
 
