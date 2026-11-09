@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 import pandas as pd
 from config import DEFAULT_SETTINGS
 from signals import DEFAULT_REGISTRY
+from riding_targets import evaluate_riding_targets, load_previous_starts
 from data_loader import jockey_from_main_row, normalize_main_frame
 from values import parse_racetrack
 from legacy_recommendations import evaluate_legacy, get_course_compatibility
@@ -17,7 +18,7 @@ class AnalysisBatch:
     recommendations: dict = field(default_factory=dict)
 
 def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS, registry=DEFAULT_REGISTRY,
-                track_conditions=None):
+                track_conditions=None, history_db_path=None):
     df = normalize_main_frame(df)
     df["arms_val"] = pd.to_numeric(df['arms'], errors="coerce").fillna(0)
     df["arms2_val"] = pd.to_numeric(df['arms2'], errors="coerce").fillna(0)
@@ -54,6 +55,19 @@ def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS
     df["finish_up_count"] = df.groupby(["race_group", "finish_up_val"])[
         "finish_up_val"
     ].transform("count")
+
+    entrants = []
+    for _, entrant in df.iterrows():
+        entry_id = str(entrant.get("race_id", "") or "").strip()
+        entrants.append({
+            "entry_id": entry_id,
+            "horse_id": str(entrant.get("horse_id", "") or "").strip(),
+            "race_date": entry_id[:8],
+        })
+    previous_starts, riding_history_error = (
+        load_previous_starts(history_db_path, entrants)
+        if history_db_path else ({}, "history_db_unavailable")
+    )
 
     notes = {}
     recommendations = {}
@@ -128,6 +142,7 @@ def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS
             "S_rank": s_rank, "F_rank": f_rank, "fup": finish_up,
             "fup_rank": finish_up_rank, "fup_count": finish_up_count,
             "horse_name": name, "horse_no": umaban, "race_id": race_id,
+            "class_name": cond_name,
             "jockey": jockey_from_main_row(row), "kol_odds": kol_odds,
             "horse_id": str(row.get('horse_id', '')).strip() if pd.notna(row.get('horse_id', '')) else '',
             "track_condition": going_for(track_conditions, race_id[:8], venue_name, surface),
@@ -135,6 +150,9 @@ def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS
         # 両エンジンは共通入力だけを参照し、相互に呼び出さない。
         legacy_result = evaluate_legacy(context, course_stats, settings=settings)
         special_matches = registry.evaluate(context, settings, stage="pre")
+        riding_matches = (evaluate_riding_targets(context, previous_starts.get(race_id))
+                          if not riding_history_error else ())
+        special_matches = tuple(special_matches) + tuple(riding_matches)
         parts = RecommendationParts(legacy_result, special_matches)
         recommendations[original_index] = parts
         compatible = compose_compatible_recommendation(parts, settings=settings)
