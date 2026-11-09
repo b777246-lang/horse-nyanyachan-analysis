@@ -11,8 +11,8 @@ import unicodedata
 VERSION = "riding-targets-1.0.0"
 CONTINUING_KEY = "continuing_jockey_target"
 CHANGE_KEY = "new_jockey_target"
-CONTINUING_COMMENT = "★継続騎乗狙い目★"
-CHANGE_COMMENT = "★テン乗り狙い目★"
+CONTINUING_COMMENT = "★継続騎乗特注★"
+CHANGE_COMMENT = "★テン乗り特注★"
 ACTUAL_STATUSES = ("FINISHED", "DEMOTED", "DNF", "DISQUALIFIED")
 EXCLUDED_CHANGE_VENUES = frozenset({"福島", "新潟", "小倉"})
 
