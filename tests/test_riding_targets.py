@@ -87,7 +87,7 @@ class RidingTargetTests(unittest.TestCase):
                    "202611080000000001", "2024000001", "騎手A", "4", "父", ""]
             batch = analyze_csv(pd.DataFrame([row]), {}, {}, history_db_path=path)
             comment = batch.frame.iloc[0]["総合評価・コース相性判定"]
-            self.assertIn("★継続騎乗狙い目★", comment)
+            self.assertIn("★継続騎乗特注★", comment)
             self.assertNotIn("★F-UP特注★", comment)
 
 
