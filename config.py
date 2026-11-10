@@ -140,6 +140,10 @@ DEFAULT_SPECIAL_RULES = (
     SpecialRule('fukushima_t2000', '★福島芝2000特注★', _conditions(
         venue=('eq','福島'), surface=('eq','芝'), distance=('eq',2000),
         arms=('ge',90), arms_rank=('eq',1)), score=0),
+    SpecialRule('tokyo_d1600_s_win', '★東京ダ1600特注・単★', _conditions(
+        venue=('eq','東京'), surface=('eq','ダ'), distance=('eq',1600),
+        S=('ge',60), S_rank=('eq',1),
+        track_condition=('in',('稍重','重','不良'))), score=0),
 )
 
 
