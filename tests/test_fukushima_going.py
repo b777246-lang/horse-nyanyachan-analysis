@@ -14,7 +14,30 @@ def frame(surface='ダ',distance=1700):
                          for n,(fr,a,t,s) in enumerate([(1,110,200,60),(4,110,200,60),(5,90,180,50)],1)])
 
 
+def tokyo_frame(s_values=(60, 59, 50)):
+    return pd.DataFrame([['東1','1勝クラス','ダ','1600',str(fr),str(n),'',f'東京試験馬{n}',
+                          100,100,180,s,65,6,10,
+                          f'2026110705010101{n:02d}',f'20230010{n:02d}','騎手',3,'父','']
+                         for n,(fr,s) in enumerate(zip((1,2,3),s_values),1)])
+
+
 class WebGoingTests(unittest.TestCase):
+    def test_tokyo_d1600_s_single_boundaries_and_going(self):
+        key=record_key('20261107','東京','ダ')
+        for value in (None,'良','稍重','重','不良'):
+            records={} if value is None else {key:make_record(*key,value)}
+            batch=analyze_csv(tokyo_frame(),{},{},track_conditions=records)
+            expected={'tokyo_d1600_s_win'} if value in ('稍重','重','不良') else set()
+            self.assertEqual({m.key for m in batch.recommendations[0].specials},expected)
+            self.assertNotIn('tokyo_d1600_s_win',
+                             {m.key for m in batch.recommendations[1].specials})
+        for values in ((59.99,59,50),(60,60,50)):
+            batch=analyze_csv(tokyo_frame(values),{},{},
+                              track_conditions={key:make_record(*key,'重')})
+            matches=['tokyo_d1600_s_win' in {m.key for m in part.specials}
+                     for part in batch.recommendations.values()]
+            self.assertEqual(matches,[False,False,False] if values[0] < 60 else [True,True,False])
+
     def test_turf_ties_frames(self):
         batch=analyze_csv(frame('芝',1200),{},{})
         for n in (0,1):
