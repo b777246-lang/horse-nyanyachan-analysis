@@ -144,6 +144,18 @@ DEFAULT_SPECIAL_RULES = (
         venue=('eq','東京'), surface=('eq','ダ'), distance=('eq',1600),
         S=('ge',60), S_rank=('eq',1),
         track_condition=('in',('稍重','重','不良'))), score=0),
+    SpecialRule('chukyo_t2200', '★中京芝2200特注★', _conditions(
+        venue=('eq','中京'), surface=('eq','芝'), distance=('eq',2200),
+        arms2=('ge',110), arms2_rank=('eq',1), frame=('in',(1,2,3,4))), score=0),
+    SpecialRule('chukyo_t1600', '★中京芝1600特注★', _conditions(
+        venue=('eq','中京'), surface=('eq','芝'), distance=('eq',1600),
+        arms2=('ge',110), arms2_rank=('in',(1,2,3)), frame=('in',(1,2,3,4))), score=0),
+    SpecialRule('chukyo_d1900', '★中京ダ1900特注★', _conditions(
+        venue=('eq','中京'), surface=('eq','ダ'), distance=('eq',1900),
+        TUA_rank=('eq',1), track_condition=('eq','良')), score=0),
+    SpecialRule('chukyo_d1400', '★中京ダ1400特注★', _conditions(
+        venue=('eq','中京'), surface=('eq','ダ'), distance=('eq',1400),
+        arms2=('ge',120), arms2_rank=('in',(1,2)), frame=('in',(1,2,3,4))), score=0),
 )
 
 
