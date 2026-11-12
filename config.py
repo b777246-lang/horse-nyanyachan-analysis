@@ -156,6 +156,12 @@ DEFAULT_SPECIAL_RULES = (
     SpecialRule('chukyo_d1400', '★中京ダ1400特注★', _conditions(
         venue=('eq','中京'), surface=('eq','ダ'), distance=('eq',1400),
         arms2=('ge',120), arms2_rank=('in',(1,2)), frame=('in',(1,2,3,4))), score=0),
+    SpecialRule('fukushima_t2600', '★福島芝2600特注★', _conditions(
+        venue=('eq','福島'), surface=('eq','芝'), distance=('eq',2600),
+        arms=('ge',110), arms_rank=('in',(1,2)), track_condition=('eq','良')), score=0),
+    SpecialRule('fukushima_t2600_goldship', '★ゴルシ軸特注★', _conditions(
+        venue=('eq','福島'), surface=('eq','芝'), distance=('eq',2600),
+        TUA=('ge',180), TUA_rank=('eq',1), sire_name=('eq','ゴールドシップ')), score=0),
 )
 
 

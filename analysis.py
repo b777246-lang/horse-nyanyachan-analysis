@@ -143,6 +143,7 @@ def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS
             "fup_rank": finish_up_rank, "fup_count": finish_up_count,
             "horse_name": name, "horse_no": umaban, "race_id": race_id,
             "class_name": cond_name,
+            "sire_name": str(row.get("sire_name", "")).strip() if pd.notna(row.get("sire_name", "")) else "",
             "jockey": jockey_from_main_row(row), "kol_odds": kol_odds,
             "horse_id": str(row.get('horse_id', '')).strip() if pd.notna(row.get('horse_id', '')) else '',
             "track_condition": going_for(track_conditions, race_id[:8], venue_name, surface),
