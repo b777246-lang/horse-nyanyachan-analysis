@@ -242,7 +242,10 @@ if df is not None:
         st.info(f"表示中の{missing_jockeys}頭は騎手データ未取得のためKOL判定保留です。新CSVは16列目=レースID、17列目=血統登録番号、18列目=騎手名です。騎手列を確認してください。")
     screen_df = add_tua190_screen_comments(view_df, tua190_record)
     screen_df = add_s2_screen_comments(screen_df, s2_record)
-    st.markdown(render_html_table(screen_df, settings=settings), unsafe_allow_html=True)
+    st.markdown(
+        render_html_table(screen_df, settings=settings, show_race_columns=False),
+        unsafe_allow_html=True,
+    )
 
     render_cushion_panel(view_df, normalize_main_frame(df), sel_venue, sel_race)
 

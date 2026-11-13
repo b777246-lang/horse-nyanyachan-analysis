@@ -6,6 +6,8 @@ import hashlib
 from pathlib import Path
 import sqlite3
 
+from csv22_compat import csv21_bytes
+
 STATE_KEY = '_tua190_internal_audit'
 
 
@@ -71,7 +73,9 @@ def update_tua190_audit(content, state, *, snapshot_path=None):
     converted = {}
     try:
         from s2_shared.adapter import convert_bytes
-        converted = convert_bytes(content)
+        # 共通判定器は固定21列契約。22列目の今走Rレベルは検証用文書から
+        # 分離するが、軽量DBとの対応確認には元22列bytesのSHA-256を使う。
+        converted = convert_bytes(csv21_bytes(content))
         if not converted['complete']:
             record['report'] = _fallback(converted, 'csv_validation_failed', invalid=True)
         else:

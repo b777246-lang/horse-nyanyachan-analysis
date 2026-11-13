@@ -13,6 +13,7 @@ from csv22_compat import csv21_bytes
 from data_loader import normalize_main_frame
 from formatting import render_html_table
 from s2_service import update_s2_audit
+from tua190_service import update_tua190_audit
 from tua190_history_snapshot import create_snapshot
 
 
@@ -68,6 +69,17 @@ class RaceLevelTests(unittest.TestCase):
             self.assertIn('<th>前走Rレベル</th>', html)
             self.assertIn('<td>高＋</td>', html)
 
+    def test_mobile_screen_table_omits_repeated_race_and_condition_only(self):
+        frame = analyze_csv(pd.DataFrame([row('普通')]), {}, {}).frame
+        compact = render_html_table(frame, show_race_columns=False)
+        full = render_html_table(frame)
+        self.assertIn('class="custom-horse-table compact-horse-table"', compact)
+        self.assertNotIn('<th>レース</th>', compact)
+        self.assertNotIn('<th>条件</th>', compact)
+        self.assertIn('<th>前走Rレベル</th>', compact)
+        self.assertIn('<th>レース</th>', full)
+        self.assertIn('<th>条件</th>', full)
+
     def test_new_tua_snapshot_carries_r_level_without_separate_db(self):
         with tempfile.TemporaryDirectory(dir=Path(__file__).parent) as folder:
             root = Path(folder); source = root/'source.db'; source_csv = root/'input.csv'; output = root/'history.sqlite'
@@ -81,6 +93,10 @@ class RaceLevelTests(unittest.TestCase):
             create_snapshot(source, source_csv, output)
             with closing(sqlite3.connect(output)) as db:
                 self.assertEqual(db.execute('SELECT r_level,r_level_status FROM history').fetchone(), ('低★', 'AVAILABLE'))
+            record = update_tua190_audit(source_csv.read_bytes(), {}, snapshot_path=output)
+            self.assertEqual(record['status'], 'EVALUATED')
+            self.assertEqual(record['history_path'], str(output.resolve()))
+            self.assertIsNone(record['error'])
 
 
 if __name__ == '__main__':

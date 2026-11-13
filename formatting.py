@@ -84,6 +84,34 @@ SCREEN_CSS = """
     .custom-horse-table th:nth-child(18) {
         white-space: normal !important;
     }
+
+    /* スマホ向け画面表は、レース情報を上部見出しへ集約した16列表示。 */
+    .compact-horse-table th:nth-child(1),  .compact-horse-table td:nth-child(1)  { width: 4.0%; }
+    .compact-horse-table th:nth-child(2),  .compact-horse-table td:nth-child(2)  { width: 4.0%; }
+    .compact-horse-table th:nth-child(3),  .compact-horse-table td:nth-child(3)  { width: 4.0%; }
+    .compact-horse-table th:nth-child(4),  .compact-horse-table td:nth-child(4)  { width: 13.0%; }
+    .compact-horse-table th:nth-child(5),  .compact-horse-table td:nth-child(5)  { width: 5.0%; }
+    .compact-horse-table th:nth-child(6),  .compact-horse-table td:nth-child(6)  { width: 5.0%; }
+    .compact-horse-table th:nth-child(7),  .compact-horse-table td:nth-child(7)  { width: 4.0%; }
+    .compact-horse-table th:nth-child(8),  .compact-horse-table td:nth-child(8)  { width: 4.5%; }
+    .compact-horse-table th:nth-child(9),  .compact-horse-table td:nth-child(9)  { width: 4.5%; }
+    .compact-horse-table th:nth-child(10), .compact-horse-table td:nth-child(10) { width: 4.5%; }
+    .compact-horse-table th:nth-child(11), .compact-horse-table td:nth-child(11) { width: 3.5%; }
+    .compact-horse-table th:nth-child(12), .compact-horse-table td:nth-child(12) { width: 3.5%; }
+    .compact-horse-table th:nth-child(13), .compact-horse-table td:nth-child(13) { width: 5.5%; }
+    .compact-horse-table th:nth-child(14), .compact-horse-table td:nth-child(14) { width: 25.0%; }
+    .compact-horse-table th:nth-child(15), .compact-horse-table td:nth-child(15) { width: 5.5%; }
+    .compact-horse-table th:nth-child(16), .compact-horse-table td:nth-child(16) { width: 5.5%; }
+    .compact-horse-table th:nth-child(14),
+    .compact-horse-table td:nth-child(14) {
+        white-space: normal !important;
+        overflow: visible !important;
+        overflow-wrap: anywhere;
+        text-align: left !important;
+        line-height: 1.25;
+    }
+    .compact-horse-table th:nth-child(15),
+    .compact-horse-table th:nth-child(16) { white-space: normal !important; }
     .rank-1 { background-color: #fff2b2 !important; font-weight: bold; }
     .rank-2 { background-color: #e6f2ff !important; }
     .rank-3 { background-color: #d4edda !important; }
@@ -140,11 +168,10 @@ def get_cell_html(val, rank):
     else:
         return f"<td>{val}</td>"
 
-def render_html_table(dataframe, *, settings=DEFAULT_SETTINGS):
-    html = ['<div class="table-container"><table class="custom-horse-table">']
+def render_html_table(dataframe, *, settings=DEFAULT_SETTINGS, show_race_columns=True):
+    table_class = "custom-horse-table" if show_race_columns else "custom-horse-table compact-horse-table"
+    html = [f'<div class="table-container"><table class="{table_class}">']
     display_columns = [
-        "レース",
-        "条件",
         "枠番",
         "馬番",
         "推印",
@@ -162,6 +189,8 @@ def render_html_table(dataframe, *, settings=DEFAULT_SETTINGS):
         "KOLオッズ",
         "乖離率(%)",
     ]
+    if show_race_columns:
+        display_columns[0:0] = ["レース", "条件"]
     html.append("<thead><tr>")
     for col in display_columns:
         html.append(f"<th>{col}</th>")
@@ -169,8 +198,9 @@ def render_html_table(dataframe, *, settings=DEFAULT_SETTINGS):
     html.append("<tbody>")
     for _, row in dataframe.iterrows():
         html.append("<tr>")
-        html.append(f"<td>{row['レース']}</td>")
-        html.append(f"<td>{row['条件']}</td>")
+        if show_race_columns:
+            html.append(f"<td>{row['レース']}</td>")
+            html.append(f"<td>{row['条件']}</td>")
         wakuban = decimal_value(row["枠番"])
         background = WAKUBAN_COLORS.get(wakuban)
         if background:

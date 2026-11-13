@@ -179,7 +179,13 @@ class RecommendationSeparationTests(unittest.TestCase):
             csv = pd.read_csv(io.StringIO(downloads['horse_analysis_result.csv']), dtype=str)
             self.assertEqual(csv['レースID'].tolist(), ordered['レースID'].tolist())
             display = format_analysis_frame(ordered, batch.notes)
-            expected = render_html_table(add_s2_screen_comments(display[display['venue'].eq(at.get('button_group')[0].value)], at.session_state[S2_KEY]))
+            expected = render_html_table(
+                add_s2_screen_comments(
+                    display[display['venue'].eq(at.get('button_group')[0].value)],
+                    at.session_state[S2_KEY],
+                ),
+                show_race_columns=False,
+            )
             self.assertIn(expected, [element.value for element in at.markdown])
             next(button for button in at.button if button.label == '🔄 初期配列に戻す').click().run()
             self.assertFalse(at.exception)
