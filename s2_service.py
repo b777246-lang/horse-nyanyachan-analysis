@@ -1,6 +1,7 @@
 """S2の非表示・研究用接続。既存の評価、コメント、表示、出力へ結果を渡さない。"""
 import hashlib
 from pathlib import Path
+from csv22_compat import csv21_bytes
 
 STATE_KEY = '_s2_internal_audit'
 CONNECTION_VERSION = 's2-hidden-1'
@@ -51,7 +52,7 @@ def update_s2_audit(content, state):
             return previous
         # 依存の読込失敗もS2内で扱うため、公開APIをここでimportする。
         from s2_shared import evaluate_csv_bytes
-        report = evaluate_csv_bytes(content)
+        report = evaluate_csv_bytes(csv21_bytes(content))
         if (report['research_only'] is not True or report['prospective_ready'] is not False
                 or report['prospective_verified'] is not False):
             raise ValueError('S2 research/prospective flags must remain research-only/false')

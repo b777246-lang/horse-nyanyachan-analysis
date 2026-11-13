@@ -47,10 +47,10 @@ class DataLoaderTests(unittest.TestCase):
 
     def test_normalization_preserves_extra_columns_and_supports_old_csv(self):
         frame = pd.DataFrame([[''] * 22])
-        frame[21] = 'future input'
+        frame[21] = '高＋'
         normalized = normalize_main_frame(frame)
         self.assertIn('horse_name', normalized.columns)
-        self.assertEqual(normalized.at[0, 21], 'future input')
+        self.assertEqual(normalized.at[0, 'race_level'], '高＋')
         pd.testing.assert_frame_equal(normalize_main_frame(normalized), normalized)
         old = normalize_main_frame(frame.iloc[:, :14])
         self.assertEqual(old.at[0, 'jockey'], '')

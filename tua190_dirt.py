@@ -8,6 +8,7 @@ from pathlib import Path
 import sqlite3
 
 from s2_shared.adapter import convert_bytes
+from csv22_compat import csv21_bytes
 
 
 CONDITION_ID = 'TUA190_DIRT'
@@ -148,7 +149,7 @@ def _history_completeness(first_date, target_day, age):
 
 def evaluate_csv_bytes(raw, history_db_path):
     """Return one audit row for every CSV horse. Never changes fixed-eight output."""
-    converted = convert_bytes(raw)
+    converted = convert_bytes(csv21_bytes(raw))
     base = {
         'schema': 'tua190-dirt-audit-1', 'condition_id': CONDITION_ID,
         'condition_version': VERSION, 'research_only': RESEARCH_ONLY,

@@ -89,12 +89,17 @@ def load_previous_starts(db_path, entrants, *, maximum_gap_days=7):
         tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
         if {"race_horses", "races"} <= tables:
             kind = "source"
+            race_columns={row[1] for row in db.execute("PRAGMA table_info(races)")}
+            source_level="r.r_level" if "r_level" in race_columns else "NULL AS r_level"
+            source_status="r.r_level_status" if "r_level_status" in race_columns else "NULL AS r_level_status"
         elif {"history", "metadata"} <= tables:
             kind = "snapshot"
             columns = {row[1] for row in db.execute("PRAGMA table_info(history)")}
             if "jockey" not in columns:
                 return {}, "history_snapshot_without_jockey"
             snapshot_metadata = dict(db.execute("SELECT key,value FROM metadata"))
+            snapshot_level="r_level" if "r_level" in columns else "NULL AS r_level"
+            snapshot_status="r_level_status" if "r_level_status" in columns else "NULL AS r_level_status"
         else:
             return {}, "history_schema_unsupported"
         result = {}
@@ -105,14 +110,15 @@ def load_previous_starts(db_path, entrants, *, maximum_gap_days=7):
             if not re.fullmatch(r"\d{18}", entry_id) or not re.fullmatch(r"\d{10}", horse_id) or not re.fullmatch(r"\d{8}", day):
                 continue
             if kind == "source":
-                sql = """SELECT h.target_id,h.race_id,r.race_date,h.jockey,
-                                h.finish_position,h.finish_status
+                sql = f"""SELECT h.target_id,h.race_id,r.race_date,h.jockey,
+                                h.finish_position,h.finish_status,{source_level},{source_status}
                          FROM race_horses h JOIN races r USING(race_id)
                          WHERE h.horse_registration_number=? AND r.race_date<?
                            AND h.finish_status IN (?,?,?,?)
                          ORDER BY r.race_date DESC,h.target_id DESC LIMIT 1"""
             else:
-                sql = """SELECT target_id,race_id,race_date,jockey,finish_position,finish_status
+                sql = f"""SELECT target_id,race_id,race_date,jockey,finish_position,finish_status,
+                                  {snapshot_level},{snapshot_status}
                          FROM history WHERE horse_registration_number=? AND race_date<?
                            AND finish_status IN (?,?,?,?)
                          ORDER BY race_date DESC,target_id DESC LIMIT 1"""

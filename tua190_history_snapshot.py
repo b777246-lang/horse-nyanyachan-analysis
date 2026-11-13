@@ -10,6 +10,7 @@ import sqlite3
 import tempfile
 
 from s2_shared.adapter import convert_bytes
+from csv22_compat import csv21_bytes
 
 
 def _sha_file(path):
@@ -26,7 +27,7 @@ def create_snapshot(source_path, csv_path, output_path):
     if output.exists() or output in (source, csv_path):
         raise ValueError('既存ファイルを上書きしません。新しい保存先を指定してください。')
     raw = csv_path.read_bytes()
-    converted = convert_bytes(raw)
+    converted = convert_bytes(csv21_bytes(raw))
     if not converted['complete']:
         raise ValueError('元21列CSVが不正です: ' + str(converted['errors'][:3]))
     doc = converted['document']
@@ -45,6 +46,11 @@ def create_snapshot(source_path, csv_path, output_path):
     temp_path = None
     try:
         first_date = src.execute('SELECT MIN(race_date) FROM races').fetchone()[0]
+        horse_columns={row[1] for row in src.execute('PRAGMA table_info(race_horses)')}
+        race_columns={row[1] for row in src.execute('PRAGMA table_info(races)')}
+        jockey_expr='h.jockey' if 'jockey' in horse_columns else 'NULL AS jockey'
+        level_expr='r.r_level' if 'r_level' in race_columns else 'NULL AS r_level'
+        level_status_expr='r.r_level_status' if 'r_level_status' in race_columns else 'NULL AS r_level_status'
         latest_prior = src.execute(
             'SELECT MAX(race_date) FROM races WHERE race_date < ?', (target_date,)
         ).fetchone()[0]
@@ -59,17 +65,19 @@ def create_snapshot(source_path, csv_path, output_path):
             dst.execute('''CREATE TABLE history (
                 horse_registration_number TEXT NOT NULL,target_id TEXT PRIMARY KEY,
                 race_id TEXT NOT NULL,race_date TEXT NOT NULL,surface TEXT,
-                finish_position INTEGER,popularity INTEGER,finish_status TEXT NOT NULL)''')
+                finish_position INTEGER,popularity INTEGER,finish_status TEXT NOT NULL,
+                jockey TEXT,r_level TEXT,r_level_status TEXT)''')
             rows = 0
             for start in range(0, len(horse_ids), 500):
                 batch = horse_ids[start:start + 500]
                 marks = ','.join('?' for _ in batch)
                 sql = f'''SELECT h.horse_registration_number,h.target_id,h.race_id,
-                                 r.race_date,r.surface,h.finish_position,h.popularity,h.finish_status
+                                 r.race_date,r.surface,h.finish_position,h.popularity,h.finish_status,
+                                 {jockey_expr},{level_expr},{level_status_expr}
                           FROM race_horses h JOIN races r USING(race_id)
                           WHERE h.horse_registration_number IN ({marks}) AND r.race_date<?'''
                 selected = src.execute(sql, (*batch, target_date)).fetchall()
-                dst.executemany('INSERT INTO history VALUES (?,?,?,?,?,?,?,?)',
+                dst.executemany('INSERT INTO history VALUES (?,?,?,?,?,?,?,?,?,?,?)',
                                 (tuple(row) for row in selected))
                 rows += len(selected)
             dst.execute('CREATE INDEX ix_tua190_history_horse_date '
@@ -82,6 +90,7 @@ def create_snapshot(source_path, csv_path, output_path):
                 'requested_horses': str(len(horse_ids)), 'history_rows': str(rows),
                 'career_policy': 'JRA flat turf+dirt starts before target; CANCELLED/EXCLUDED excluded',
                 'previous_policy': 'latest JRA actual start; NULL finish/popularity is UNCONFIRMED',
+                'race_level_policy': 'race r_level copied as-is; unavailable stays NULL',
                 'research_only': 'true', 'prospective_ready': 'false',
                 'prospective_verified': 'false',
             }

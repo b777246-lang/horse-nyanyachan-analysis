@@ -49,14 +49,14 @@ SCREEN_CSS = """
         line-height: 1.15;
     }
 
-    /* 17列を画面幅100%に収める */
+    /* 18列を画面幅100%に収める */
     .custom-horse-table th:nth-child(1),  .custom-horse-table td:nth-child(1)  { width: 3.5%; }
     .custom-horse-table th:nth-child(2),  .custom-horse-table td:nth-child(2)  { width: 6.0%; }
     .custom-horse-table th:nth-child(3),  .custom-horse-table td:nth-child(3)  { width: 3.0%; }
     .custom-horse-table th:nth-child(4),  .custom-horse-table td:nth-child(4)  { width: 3.0%; }
     .custom-horse-table th:nth-child(5),  .custom-horse-table td:nth-child(5)  { width: 3.5%; }
     .custom-horse-table th:nth-child(6),  .custom-horse-table td:nth-child(6)  { width: 10.0%; }
-    .custom-horse-table th:nth-child(7),  .custom-horse-table td:nth-child(7)  { width: 5.0%; }
+    .custom-horse-table th:nth-child(7),  .custom-horse-table td:nth-child(7)  { width: 4.0%; }
     .custom-horse-table th:nth-child(8),  .custom-horse-table td:nth-child(8)  { width: 3.5%; }
     .custom-horse-table th:nth-child(9),  .custom-horse-table td:nth-child(9)  { width: 3.2%; }
     .custom-horse-table th:nth-child(10), .custom-horse-table td:nth-child(10) { width: 3.4%; }
@@ -64,13 +64,14 @@ SCREEN_CSS = """
     .custom-horse-table th:nth-child(12), .custom-horse-table td:nth-child(12) { width: 2.8%; }
     .custom-horse-table th:nth-child(13), .custom-horse-table td:nth-child(13) { width: 2.8%; }
     .custom-horse-table th:nth-child(14), .custom-horse-table td:nth-child(14) { width: 5.5%; }
-    .custom-horse-table th:nth-child(15), .custom-horse-table td:nth-child(15) { width: 30.0%; }
-    .custom-horse-table th:nth-child(16), .custom-horse-table td:nth-child(16) { width: 5.5%; }
+    .custom-horse-table th:nth-child(15), .custom-horse-table td:nth-child(15) { width: 5.0%; }
+    .custom-horse-table th:nth-child(16), .custom-horse-table td:nth-child(16) { width: 25.0%; }
     .custom-horse-table th:nth-child(17), .custom-horse-table td:nth-child(17) { width: 5.5%; }
+    .custom-horse-table th:nth-child(18), .custom-horse-table td:nth-child(18) { width: 5.5%; }
 
     /* 長文の総合評価だけ折り返して全内容を表示 */
-    .custom-horse-table th:nth-child(15),
-    .custom-horse-table td:nth-child(15) {
+    .custom-horse-table th:nth-child(16),
+    .custom-horse-table td:nth-child(16) {
         white-space: normal !important;
         overflow: visible !important;
         overflow-wrap: anywhere;
@@ -79,8 +80,8 @@ SCREEN_CSS = """
     }
 
     /* KOL・乖離率は小さくても読みやすく */
-    .custom-horse-table th:nth-child(16),
-    .custom-horse-table th:nth-child(17) {
+    .custom-horse-table th:nth-child(17),
+    .custom-horse-table th:nth-child(18) {
         white-space: normal !important;
     }
     .rank-1 { background-color: #fff2b2 !important; font-weight: bold; }
@@ -148,6 +149,7 @@ def render_html_table(dataframe, *, settings=DEFAULT_SETTINGS):
         "馬番",
         "推印",
         "馬名",
+        "前走Rレベル",
         "実オッズ",
         "人気",
         "arms",
@@ -182,6 +184,7 @@ def render_html_table(dataframe, *, settings=DEFAULT_SETTINGS):
         html.append(f"<td>{row['馬番']}</td>")
         html.append(f"<td>{row['推印']}</td>")
         html.append(f"<td>{row['馬名']}</td>")
+        html.append(f"<td>{row.get('前走Rレベル', '')}</td>")
         html.append(f"<td>{row.get('実オッズ', '')}</td>")
         html.append(f"<td>{row.get('人気', '')}</td>")
         html.append(str(row["arms"]))

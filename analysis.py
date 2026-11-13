@@ -10,6 +10,7 @@ from values import parse_racetrack
 from legacy_recommendations import evaluate_legacy, get_course_compatibility
 from recommendation_composition import RecommendationParts, compose_compatible_recommendation
 from track_conditions import going_for
+from race_levels import previous_r_level
 
 @dataclass
 class AnalysisBatch:
@@ -153,6 +154,7 @@ def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS
         special_matches = registry.evaluate(context, settings, stage="pre")
         riding_matches = (evaluate_riding_targets(context, previous_starts.get(race_id))
                           if not riding_history_error else ())
+        previous_level = previous_r_level(previous_starts.get(race_id))
         special_matches = tuple(special_matches) + tuple(riding_matches)
         parts = RecommendationParts(legacy_result, special_matches)
         recommendations[original_index] = parts
@@ -187,6 +189,8 @@ def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS
             "馬番": umaban,
             "推印": push_mark,
             "馬名": name,
+            "今走Rレベル": row.get('race_level',''),
+            "前走Rレベル": previous_level,
             "KOLオッズ": "" if pd.isna(kol_odds) else float(kol_odds),
             "実オッズ": "",
             "オッズ差": "",

@@ -169,7 +169,8 @@ if df is not None:
     else:
         view_df = venue_df[venue_df["race_no"] == sel_race]
         head = view_df["header"].iloc[0] if len(view_df) else ""
-        title = f"{sel_venue} {sel_race}R　{head}"
+        current_level = view_df["今走Rレベル"].iloc[0] if len(view_df) else ""
+        title = f"{sel_venue} {sel_race}R　{head}　Rレベル：{current_level or '未取得'}"
 
     # --- JRA公式 全開催・全レースの単勝オッズ更新 ---
     if sel_race != 'ALL' and len(view_df):

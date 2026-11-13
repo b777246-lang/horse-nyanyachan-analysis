@@ -1,4 +1,5 @@
 import csv
+from contextlib import closing
 import io
 import json
 from pathlib import Path
@@ -149,13 +150,15 @@ class Tua190Tests(unittest.TestCase):
 
     def test_coverage_and_future_history_are_rejected(self):
         snapshot = self.snapshot()
-        with sqlite3.connect(snapshot) as db:
+        with closing(sqlite3.connect(snapshot)) as db:
             db.execute("DELETE FROM requested_horses WHERE horse_registration_number='2023000001'")
+            db.commit()
         result = update_tua190_audit(csv21(), {}, snapshot_path=snapshot)
         self.assertIn('coverage', result['error']['message'])
-        with sqlite3.connect(snapshot) as db:
+        with closing(sqlite3.connect(snapshot)) as db:
             db.execute("INSERT INTO requested_horses VALUES ('2023000001')")
             db.execute("UPDATE history SET race_date='20261024'")
+            db.commit()
         result = update_tua190_audit(csv21(), {}, snapshot_path=snapshot)
         self.assertIn('future_results', result['error']['message'])
 
@@ -219,9 +222,10 @@ class Tua190Tests(unittest.TestCase):
                     self.assertIs(result['prospective_verified'], False)
 
     def test_age_and_history_limits_and_cancelled_starts(self):
-        with sqlite3.connect(self.db) as db:
+        with closing(sqlite3.connect(self.db)) as db:
             db.execute("INSERT INTO races VALUES ('2026101905010101','20261019','ダ')")
             db.execute("INSERT INTO race_horses VALUES ('cancelled','2026101905010101','2023000001',1,1,'CANCELLED')")
+            db.commit()
         row = evaluate_csv_bytes(csv21(), self.db)['audit'][0]
         self.assertEqual(row['state'], 'MATCH')
         self.assertEqual(row['details']['career_jra_flat_before'], 1)

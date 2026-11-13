@@ -8,7 +8,7 @@ from config import DEFAULT_SETTINGS
 def build_html_report(dataframe, report_title="競馬指数 総合分析レポート", *, settings=DEFAULT_SETTINGS):
     report_html_table = render_html_table(dataframe, settings=settings)
     # 出力HTMLは画面幅に押し込まず、列幅を確保して横スクロールする。
-    widths = (4, 8, 3, 3, 3, 10, 5, 3, 4, 4, 4, 3, 3, 5, 26, 6, 6)
+    widths = (4, 8, 3, 3, 3, 10, 4, 5, 3, 4, 4, 4, 3, 3, 5, 25, 6, 6)
     colgroup = "<colgroup>" + "".join(
         f'<col style="width: {width}%;">' for width in widths
     ) + "</colgroup>"
@@ -58,8 +58,8 @@ def build_html_report(dataframe, report_title="競馬指数 総合分析レポ�
                     background-color: #f0f2f6;
                     font-weight: 600;
                 }}
-                .custom-horse-table th:nth-child(15),
-                .custom-horse-table td:nth-child(15) {{
+                .custom-horse-table th:nth-child(16),
+                .custom-horse-table td:nth-child(16) {{
                     white-space: normal !important;
                     overflow-wrap: anywhere;
                     text-align: left !important;
@@ -83,7 +83,10 @@ def build_html_report(dataframe, report_title="競馬指数 総合分析レポ�
 
 
 def build_target_csv(frame):
-    return frame.drop(columns=["original_index", "score", "venue", "race_no", "header", "age"], errors="ignore").to_csv(index=False, encoding="cp932", errors="ignore")
+    # RレベルはWeb画面の表示情報。既存ダウンロードCSVの列契約は変更しない。
+    return frame.drop(columns=["original_index", "score", "venue", "race_no", "header", "age",
+                               "今走Rレベル", "前走Rレベル"], errors="ignore").to_csv(
+        index=False, encoding="cp932", errors="ignore")
 
 
 def clean_eval_text_for_target(val):

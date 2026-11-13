@@ -4,6 +4,7 @@ import os
 import re
 from pathlib import Path
 import pandas as pd
+from race_levels import validate_current_levels
 
 def load_course_data():
     course_stats = {}
@@ -85,6 +86,7 @@ def normalize_main_frame(frame):
     names[18] = 'age'
     names[19] = 'sire_name'
     names[20] = 'course_layout'
+    names[21] = 'race_level'
     frame = frame.rename(columns=names).copy()
     if 'age' not in frame.columns:
         frame['age'] = ''
@@ -96,6 +98,8 @@ def normalize_main_frame(frame):
     if 'course_layout' not in frame.columns:
         frame['course_layout'] = ''
     frame['course_layout'] = frame['course_layout'].fillna('').astype(str).str.strip()
+    if 'race_level' not in frame.columns:
+        frame['race_level'] = ''
     missing = [name for name in MAIN_COLUMNS[:14] if name not in frame.columns]
     if missing:
         raise ValueError('メインCSVの必須列が不足しています: ' + ', '.join(missing))
@@ -104,4 +108,4 @@ def normalize_main_frame(frame):
             frame[name] = ''
     frame.attrs['has_horse_id'] = has_horse_id
     frame.attrs['has_age'] = has_age
-    return frame
+    return validate_current_levels(frame)
