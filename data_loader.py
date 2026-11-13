@@ -2,9 +2,16 @@
 import glob
 import os
 import re
+import unicodedata
 from pathlib import Path
 import pandas as pd
 from race_levels import validate_current_levels
+
+
+def normalize_horse_name_for_match(value):
+    """Normalize only the comment lookup key; preserve the displayed name."""
+    text = unicodedata.normalize("NFKC", str(value or "")).strip()
+    return text.lstrip("$*").strip()
 
 def load_course_data():
     course_stats = {}
@@ -53,7 +60,7 @@ def load_comments(source):
             for _, row in frame.iterrows():
                 values = [str(v).strip() for v in row.values if pd.notna(v)]
                 if len(values) >= 6 and values[2] and values[5]:
-                    comments[values[2]] = values[5]
+                    comments[normalize_horse_name_for_match(values[2])] = values[5]
         except Exception:
             pass
     return comments

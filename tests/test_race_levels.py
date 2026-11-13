@@ -33,6 +33,12 @@ def raw(level='普通'):
 
 
 class RaceLevelTests(unittest.TestCase):
+    def test_external_comment_matches_prefixed_name_without_changing_display(self):
+        values = row('普通')
+        values[7] = '$海外馬'
+        frame = analyze_csv(pd.DataFrame([values]), {}, {'海外馬': '外部コメント'}).frame
+        self.assertEqual(frame.iloc[0]['馬名'], '$海外馬')
+        self.assertIn('外部コメント', frame.iloc[0]['総合評価・コース相性判定'])
     def test_csv21_and_csv22_are_compatible_and_s2_stays_fixed21(self):
         self.assertEqual(normalize_main_frame(pd.DataFrame([row()])).iloc[0]['race_level'], '')
         self.assertEqual(normalize_main_frame(pd.DataFrame([row('高ー')])).iloc[0]['race_level'], '高－')

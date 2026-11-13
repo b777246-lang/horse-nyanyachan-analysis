@@ -4,11 +4,20 @@ from pathlib import Path
 
 import pandas as pd
 
-from data_loader import latest_csv, normalize_main_frame, read_main_csv
+from data_loader import latest_csv, load_comments, normalize_horse_name_for_match, normalize_main_frame, read_main_csv
 import io
 
 
 class DataLoaderTests(unittest.TestCase):
+    def test_overseas_prefix_is_removed_only_for_comment_matching(self):
+        source = io.BytesIO(
+            '場,R,$海外馬,馬番,印,ドルコメント\n場,R,*持込馬,馬番,印,星コメント\n'.encode('cp932')
+        )
+        self.assertEqual(load_comments(source), {
+            '海外馬': 'ドルコメント', '持込馬': '星コメント',
+        })
+        self.assertEqual(normalize_horse_name_for_match('$海外馬'), '海外馬')
+        self.assertEqual(normalize_horse_name_for_match('*持込馬'), '持込馬')
     def test_new_csv_preserves_registration_number_and_reads_jockey(self):
         text = ','.join([''] * 15 + ['202610100504030101', '0024102281', '戸崎圭太'])
         frame = normalize_main_frame(read_main_csv(io.StringIO(text)))

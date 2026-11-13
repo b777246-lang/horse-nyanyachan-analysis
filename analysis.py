@@ -5,7 +5,7 @@ import pandas as pd
 from config import DEFAULT_SETTINGS
 from signals import DEFAULT_REGISTRY
 from riding_targets import evaluate_riding_targets, load_previous_starts
-from data_loader import jockey_from_main_row, normalize_main_frame
+from data_loader import jockey_from_main_row, normalize_horse_name_for_match, normalize_main_frame
 from values import parse_racetrack
 from legacy_recommendations import evaluate_legacy, get_course_compatibility
 from recommendation_composition import RecommendationParts, compose_compatible_recommendation
@@ -163,15 +163,16 @@ def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS
         special_comments = tuple(match.comment for match in special_matches if match.comment)
 
         evaluation_before_external = eval_text_raw
-        if ext_comment_dict and name in ext_comment_dict:
-            ext_c = ext_comment_dict[name]
+        comment_key = normalize_horse_name_for_match(name)
+        if ext_comment_dict and comment_key in ext_comment_dict:
+            ext_c = ext_comment_dict[comment_key]
             eval_text_raw = f"{ext_c} ▼ {eval_text_raw}" if eval_text_raw else ext_c
 
         eval_text_csv = eval_text_raw
 
         notes[original_index] = {
             "evaluation": evaluation_before_external,
-            "external_comment": ext_comment_dict.get(name, ""),
+            "external_comment": ext_comment_dict.get(comment_key, ""),
             "special_comments": special_comments,
             "ranks": {"arms": arms_rank, "arms2": arms2_rank, "TUA": tua_rank,
                       "S": s_rank, "F": f_rank, "厩舎F-UP2": finish_up_rank},
