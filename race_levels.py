@@ -2,6 +2,8 @@
 import unicodedata
 
 R_LEVELS=frozenset(("低－","低＋","普通","高－","高＋","低★","高★"))
+JRA_VENUES={'01':'札幌','02':'函館','03':'福島','04':'新潟','05':'東京',
+            '06':'中山','07':'中京','08':'京都','09':'阪神','10':'小倉'}
 
 def normalize_r_level(value):
     text=unicodedata.normalize("NFKC",str(value or "")).strip()
@@ -25,3 +27,15 @@ def previous_r_level(previous):
     if not previous or previous.get('r_level_status') not in (None,'','AVAILABLE'):return ''
     try:return normalize_r_level(previous.get('r_level'))
     except ValueError:return ''
+
+def previous_race_fields(previous):
+    if not previous:
+        return {'previous_r_level':'','previous_venue':'','previous_surface':'',
+                'previous_finish_position':None}
+    race_id=str(previous.get('race_id','') or '').strip()
+    return {
+        'previous_r_level':previous_r_level(previous),
+        'previous_venue':JRA_VENUES.get(race_id[8:10],'') if len(race_id)>=10 else '',
+        'previous_surface':str(previous.get('surface','') or '').strip(),
+        'previous_finish_position':previous.get('finish_position'),
+    }

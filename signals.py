@@ -55,6 +55,13 @@ def condition_matches(condition, row):
         return actual <= expected
     if condition.operator == "in":
         return actual in expected
+    if condition.operator == "contains":
+        return str(expected) in str(actual)
+    if condition.operator == "between":
+        try:
+            return expected[0] <= actual <= expected[1]
+        except TypeError:
+            return False
     if condition.operator == "not_contains_any":
         return not any(value in str(actual) for value in expected)
     raise ValueError(f"未対応の判定演算子: {condition.operator}")

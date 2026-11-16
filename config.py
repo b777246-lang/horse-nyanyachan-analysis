@@ -168,6 +168,12 @@ DEFAULT_SPECIAL_RULES = (
     SpecialRule('niigata_prev_high_star_arms', '★前走高★新潟特注★', _conditions(
         venue=('eq','新潟'), previous_r_level=('eq','高★'),
         arms_rank=('in',(1,2,3)), arms=('ge',110)), score=0),
+    SpecialRule('local_prev_high_star_maiden', '★ローカル前走高★特注★', _conditions(
+        venue=('in',('福島','新潟','小倉')), surface=('in',('芝','ダ')),
+        condition=('contains','未勝利'),
+        previous_venue=('in',('札幌','函館','東京','中山','中京','京都','阪神')),
+        previous_surface=('in',('芝','ダ')), previous_r_level=('eq','高★'),
+        previous_finish_position=('between',(2,9))), score=0),
 )
 
 
@@ -215,6 +221,8 @@ def load_settings(provider: SettingsProvider | None = None) -> AnalysisSettings:
         if rule.key in {"kol", "fup"} or not rule.key or not rule.conditions:
             raise ValueError("狙い目のキーまたは条件が不正です")
         for condition in rule.conditions:
-            if condition.operator not in {"eq", "ne", "ge", "le", "in", "not_contains_any"}:
+            if condition.operator not in {
+                    "eq", "ne", "ge", "le", "in", "contains", "between",
+                    "not_contains_any"}:
                 raise ValueError(f"未対応の判定演算子: {condition.operator}")
     return settings
