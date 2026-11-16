@@ -162,6 +162,12 @@ DEFAULT_SPECIAL_RULES = (
     SpecialRule('fukushima_t2600_goldship', '★ゴルシ軸特注★', _conditions(
         venue=('eq','福島'), surface=('eq','芝'), distance=('eq',2600),
         TUA=('ge',180), TUA_rank=('eq',1), sire_name=('eq','ゴールドシップ')), score=0),
+    SpecialRule('kokura_prev_high_plus_s', '★前走高＋小倉特注★', _conditions(
+        venue=('eq','小倉'), S=('ge',55), previous_r_level=('eq','高＋'),
+        S_rank=('eq',1)), score=0),
+    SpecialRule('niigata_prev_high_star_arms', '★前走高★新潟特注★', _conditions(
+        venue=('eq','新潟'), previous_r_level=('eq','高★'),
+        arms_rank=('in',(1,2,3)), arms=('ge',110)), score=0),
 )
 
 

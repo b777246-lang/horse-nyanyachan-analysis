@@ -135,6 +135,7 @@ def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS
         finish_up_count = row["finish_up_count"]
         finish_up_rank = int(row["finish_up_rank"])
 
+        previous_level = previous_r_level(previous_starts.get(race_id))
         context = {
             "race": race_raw, "venue": venue_name, "condition": cond_name, "surface": surface,
             "distance": distance, "frame": wakuban,
@@ -148,13 +149,13 @@ def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS
             "jockey": jockey_from_main_row(row), "kol_odds": kol_odds,
             "horse_id": str(row.get('horse_id', '')).strip() if pd.notna(row.get('horse_id', '')) else '',
             "track_condition": going_for(track_conditions, race_id[:8], venue_name, surface),
+            "previous_r_level": previous_level,
         }
         # 両エンジンは共通入力だけを参照し、相互に呼び出さない。
         legacy_result = evaluate_legacy(context, course_stats, settings=settings)
         special_matches = registry.evaluate(context, settings, stage="pre")
         riding_matches = (evaluate_riding_targets(context, previous_starts.get(race_id))
                           if not riding_history_error else ())
-        previous_level = previous_r_level(previous_starts.get(race_id))
         special_matches = tuple(special_matches) + tuple(riding_matches)
         parts = RecommendationParts(legacy_result, special_matches)
         recommendations[original_index] = parts
