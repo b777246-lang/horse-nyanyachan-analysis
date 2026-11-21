@@ -17,6 +17,7 @@ from cushion_viewer import render_cushion_panel
 from formatting import SCREEN_CSS, format_analysis_frame, render_html_table
 from export import build_html_report, build_target_csv, format_target_frame
 from odds_service import build_race_targets, cached_odds_by_race, update_all_odds, apply_odds
+from training_context import load_training_courses, default_training_path
 
 try:
     from jra_odds import fetch_jra_win_odds_auto
@@ -55,6 +56,9 @@ uploaded_file = st.sidebar.file_uploader(
 uploaded_ext_comment = st.sidebar.file_uploader(
     "💬 外部コメントCSVを選択（任意）", type=["csv"]
 )
+uploaded_training = st.sidebar.file_uploader(
+    "🏋 当日調教CSVを選択（任意）", type=["csv"]
+)
 
 
 df = None
@@ -78,6 +82,16 @@ else:
 ext_comment_dict = load_comments(
     uploaded_ext_comment if uploaded_ext_comment is not None else latest_csv(comments=True)
 )
+training_courses = {}
+training_source = uploaded_training
+if training_source is None:
+    candidate = default_training_path(source_name)
+    training_source = candidate if candidate is not None and candidate.is_file() else None
+if training_source is not None:
+    try:
+        training_courses = load_training_courses(training_source)
+    except Exception as exc:
+        st.sidebar.error(f"調教CSVを読み込めません: {exc}")
 
 # 元バイト列によるS2研究照合。結果は表示・旧評価・出力には接続しない。
 s2_record = update_s2_audit(main_csv_bytes, st.session_state)
@@ -89,6 +103,7 @@ if df is not None:
         df, course_stats, ext_comment_dict, settings=settings,
         track_conditions=track_conditions,
         history_db_path=(tua190_record or {}).get("history_path"),
+        training_courses=training_courses,
     )
     res_df = format_analysis_frame(batch.frame, batch.notes, settings=settings)
     raw_csv_df = format_target_frame(batch.frame)

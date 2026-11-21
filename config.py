@@ -174,6 +174,18 @@ DEFAULT_SPECIAL_RULES = (
         previous_venue=('in',('札幌','函館','東京','中山','中京','京都','阪神')),
         previous_surface=('in',('芝','ダ')), previous_r_level=('eq','高★'),
         previous_finish_position=('between',(2,9))), score=0),
+    SpecialRule('nakamura_hill_f', '★中村厩舎特注条件★', _conditions(
+        trainer=('eq','中村直也'), training_course=('eq','坂路'), F=('ge',65)), score=0),
+    SpecialRule('shimizu_wood_arms', '★清水久厩舎特注条件★', _conditions(
+        trainer=('eq','清水久詞'), training_course=('eq','ウッド'), arms=('ge',100)), score=0),
+    SpecialRule('kanari_wood_arms2', '★金成厩舎特注条件★', _conditions(
+        trainer=('eq','金成貴史'), training_course=('eq','ウッド'),
+        arms2=('ge',110), arms2_rank=('in',(1,2,3))), score=0),
+    SpecialRule('ohashi_wood_tua', '★大橋厩舎特注条件★', _conditions(
+        trainer=('eq','大橋勇樹'), training_course=('eq','ウッド'),
+        TUA=('ge',180), TUA_rank=('in',(1,2,3))), score=0),
+    SpecialRule('owada_hill_arms', '★大和田厩舎特注条件★', _conditions(
+        trainer=('eq','大和田成'), training_course=('eq','坂路'), arms=('ge',90)), score=0),
 )
 
 

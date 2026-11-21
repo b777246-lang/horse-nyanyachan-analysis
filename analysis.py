@@ -11,6 +11,7 @@ from legacy_recommendations import evaluate_legacy, get_course_compatibility
 from recommendation_composition import RecommendationParts, compose_compatible_recommendation
 from track_conditions import going_for
 from race_levels import previous_race_fields
+from training_context import normalize_trainer
 
 @dataclass
 class AnalysisBatch:
@@ -19,8 +20,9 @@ class AnalysisBatch:
     recommendations: dict = field(default_factory=dict)
 
 def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS, registry=DEFAULT_REGISTRY,
-                track_conditions=None, history_db_path=None):
+                track_conditions=None, history_db_path=None, training_courses=None):
     df = normalize_main_frame(df)
+    training_courses = training_courses or {}
     df["arms_val"] = pd.to_numeric(df['arms'], errors="coerce").fillna(0)
     df["arms2_val"] = pd.to_numeric(df['arms2'], errors="coerce").fillna(0)
     df["tua_val"] = pd.to_numeric(df['TUA'], errors="coerce").fillna(0)
@@ -148,6 +150,8 @@ def analyze_csv(df, course_stats, ext_comment_dict, *, settings=DEFAULT_SETTINGS
             "sire_name": str(row.get("sire_name", "")).strip() if pd.notna(row.get("sire_name", "")) else "",
             "jockey": jockey_from_main_row(row), "kol_odds": kol_odds,
             "horse_id": str(row.get('horse_id', '')).strip() if pd.notna(row.get('horse_id', '')) else '',
+            "trainer": normalize_trainer(row.get("trainer", "")),
+            "training_course": training_courses.get(race_id, ""),
             "track_condition": going_for(track_conditions, race_id[:8], venue_name, surface),
             **previous_fields,
         }

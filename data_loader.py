@@ -94,6 +94,7 @@ def normalize_main_frame(frame):
     names[19] = 'sire_name'
     names[20] = 'course_layout'
     names[21] = 'race_level'
+    names[22] = 'trainer'
     frame = frame.rename(columns=names).copy()
     if 'age' not in frame.columns:
         frame['age'] = ''
@@ -107,6 +108,9 @@ def normalize_main_frame(frame):
     frame['course_layout'] = frame['course_layout'].fillna('').astype(str).str.strip()
     if 'race_level' not in frame.columns:
         frame['race_level'] = ''
+    if 'trainer' not in frame.columns:
+        frame['trainer'] = ''
+    frame['trainer'] = frame['trainer'].fillna('').astype(str).str.strip()
     missing = [name for name in MAIN_COLUMNS[:14] if name not in frame.columns]
     if missing:
         raise ValueError('メインCSVの必須列が不足しています: ' + ', '.join(missing))
